@@ -1,0 +1,9 @@
+{
+  "$schema": "https://dot.net/standard/stylecop.json",
+  "settings": {
+    "documentationRules": {
+      "documentInterfaces": false,
+      "documentExposedElements": false
+    }
+  }
+}
