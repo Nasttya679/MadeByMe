@@ -100,7 +100,7 @@ dotnet restore
 dotnet build
 ```
 
-1. Before running application, make sure that PostgreSQL database is running localy on PC
+1. Before running application, make sure that PostgreSQL database is running locally on PC
 
 2. Create migrations if not exist in folder - "Infrastrucure/Migrations/"
 
@@ -228,9 +228,9 @@ terraform apply
 
 4. In AWS console -> EC2 -> Load Balancers find "app-alb" and copy its ARN
 
-5. In AWS console -> Route53 -> Hosted zones - find or create subdomain type A "madebyme.trainee-keycloack.store" and set ARN of current created Application Load Balancer "app-alb". Set Alias to that record and find or past ARN of this Application Load Balancer
+5. In AWS console -> Route53 -> Hosted zones - find or create subdomain type A "madebyme.trainee-keycloack.store" and set ARN of current created Application Load Balancer "app-alb". Set Alias to that record and find or copy-paste ARN of this Application Load Balancer
 
-6. After that application is sucure with  HTTPS certificates and is available by domain:
+6. After that application is secure with HTTPS certificates and is available by domain:
 
 ```bash
 https://madebyme.trainee-keycloack.store
