@@ -1,0 +1,113 @@
+﻿@model MadeByMe.Application.DTOs.UpdateProfileDto
+
+@{
+    ViewData["Title"] = "Редагування профілю";
+}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редагування профілю - MadeByMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
+            <nav class="space-x-4">
+                <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a href="/Account/Profile" class="text-orange-600 font-medium">Профіль</a>
+                    <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
+                    @if (!User.IsInRole("Seller"))
+                    {
+                        <form action="/Account/BecomeSeller" method="post" class="inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="text-yellow-600 hover:text-yellow-700">Стати продавцем</button>
+                        </form>
+                    }
+                    <form action="/Account/Logout" method="post" class="inline">
+                        <button type="submit" class="text-red-600 hover:text-red-700">Вийти</button>
+                    </form>
+                }
+                else
+                {
+                    <a href="/Account/Login" class="text-orange-600 font-medium hover:underline">Увійти</a>
+                    <a href="/Account/Register" class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition">Реєстрація</a>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8">Редагування профілю</h2>
+
+                <form asp-action="EditProfile" method="post" class="space-y-6">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="UserId" />
+
+                    <div class="space-y-4">
+                        <div>
+                            <label asp-for="UserName" class="block text-sm font-medium text-gray-700">Ім'я користувача</label>
+                            <input asp-for="UserName" 
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <span asp-validation-for="UserName" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Email" class="block text-sm font-medium text-gray-700">Електронна пошта</label>
+                            <input asp-for="Email" type="email"
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <span asp-validation-for="Email" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700">Номер мобільного</label>
+                            <input asp-for="PhoneNumber"
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <span asp-validation-for="PhoneNumber" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Address" class="block text-sm font-medium text-gray-700">Адреса</label>
+                            <input asp-for="Address"
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <span asp-validation-for="Address" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="ProfilePicture" class="block text-sm font-medium text-gray-700">URL аватара</label>
+                            <input asp-for="ProfilePicture"
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <span asp-validation-for="ProfilePicture" class="mt-1 text-sm text-red-600"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-6">
+                        <a href="/Account/Profile" 
+                           class="text-gray-600 hover:text-gray-800 transition-colors">
+                            Повернутися до профілю
+                        </a>
+                        <button type="submit" 
+                                class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition duration-200">
+                            Зберегти зміни
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }
+</body>
+</html>
