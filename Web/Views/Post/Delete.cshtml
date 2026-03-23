@@ -1,0 +1,31 @@
+﻿@model MadeByMe.Domain.Entities.Post
+
+@{
+    ViewData["Title"] = "Delete Post";
+}
+
+<h1>Видалити пост</h1>
+
+<div>
+    <h3>Ви дійсно хочете видалити наступний пост?</h3>
+    <div>
+        <strong>Назва:</strong> @Model.Title
+    </div>
+    <div>
+        <strong>Опис:</strong> @Model.Description
+    </div>
+    <div>
+        <strong>Ціна:</strong> @Model.Price
+    </div>
+    <div>
+        <strong>Категорія:</strong> @Model.Category.Name
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Видалити</button>
+    @Html.AntiForgeryToken()
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Скасувати</a>
+</form>
+
