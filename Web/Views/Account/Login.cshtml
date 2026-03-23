@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <div class="flex items-center justify-center flex-grow">
+        <div class="bg-white shadow-lg rounded-2xl w-full max-w-sm p-8 animate-fade-in mx-auto">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+            <form method="post" action="/Account/Login">
+                @Html.AntiForgeryToken()
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input id="email" name="email" type="email" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <button type="submit"
+                        class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition duration-200">
+                    Login
+                </button>
+            </form>
+            <p class="mt-4 text-sm text-center text-gray-600">
+                Don't have an account?
+                <a href="/Account/Register" class="text-orange-600 hover:underline">Register</a>
+            </p>
+        </div>
+    </div>
+    <style>
+        @@keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
+        }
+    </style>
+
+</body>
+</html>

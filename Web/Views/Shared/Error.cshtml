@@ -1,0 +1,16 @@
+﻿@model MadeByMe.Application.ViewModels.ErrorViewModel
+
+@{
+    ViewData["Title"] = "Помилка";
+}
+
+<h1 class="text-danger">Сталася помилка.</h1>
+
+<p class="text-muted">На жаль, запит не може бути виконано. Ми працюємо над вирішенням проблеми.</p>
+
+@if (Model?.ShowRequestId == true)
+{
+    <p>
+        <strong>ID запиту:</strong> <code>@Model.RequestId</code>
+    </p>
+}

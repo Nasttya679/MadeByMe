@@ -1,0 +1,11 @@
+﻿@model MadeByMe.Application.DTOs.CreateCommentDto
+
+<form asp-controller="Comment" asp-action="Create" method="post">
+    <input type="hidden" asp-for="PostId" />
+    <div class="form-group">
+        <label>Ваш коментар</label>
+        <textarea asp-for="Content" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Залишити коментар</button>
+</form>

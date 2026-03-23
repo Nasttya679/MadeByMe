@@ -87,6 +87,7 @@ StyleCopReport.xml
 *.ilk
 *.meta
 *.obj
+*.bin
 *.idb
 *.iobj
 *.pch
@@ -416,3 +417,16 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+
+
+
+
+IAC-Terraform/.terraform/
+
+IAC-Terraform/terraform.tfvars
+
+*.tfstate
+*.tfstate.*
+
+*.tfvars.json
