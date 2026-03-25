@@ -1,8 +1,9 @@
-﻿using MadeByMe.Application.DTOs;
+﻿using System.Collections.Generic;
+using MadeByMe.Application.Common;
+using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
-using MadeByMe.Application.Services.Interfaces;
-using System.Collections.Generic;
 
 namespace MadeByMe.Application.Services.Implementations
 {
@@ -15,47 +16,61 @@ namespace MadeByMe.Application.Services.Implementations
             _categoryRepository = categoryRepository;
         }
 
-        public List<Category> GetAllCategories()
+        public Result<List<Category>> GetAllCategories()
         {
-            return _categoryRepository.GetAll();
+            var categories = _categoryRepository.GetAll();
+            return Result<List<Category>>.Success(categories);
         }
 
-        public Category GetCategoryById(int id)
+        public Result<Category> GetCategoryById(int id)
         {
-            return _categoryRepository.GetById(id)!; // ! щоб сказати: точно не null
+            var category = _categoryRepository.GetById(id);
+
+            if (category == null)
+            {
+                return Result<Category>.Failure($"Категорію з ID {id} не знайдено.");
+            }
+
+            return Result<Category>.Success(category);
         }
 
-        public Category CreateCategory(CreateCategoryDto dto)
+        public Result<Category> CreateCategory(CreateCategoryDto dto)
         {
             var category = new Category
             {
-                Name = dto.Name
+                Name = dto.Name,
             };
 
             _categoryRepository.Add(category);
-            return category;
+            return Result<Category>.Success(category);
         }
 
-        public Category UpdateCategory(int id, UpdateCategoryDto dto)
+        public Result<Category> UpdateCategory(int id, UpdateCategoryDto dto)
         {
             var category = _categoryRepository.GetById(id);
-            if (category != null)
+
+            if (category == null)
             {
-                category.Name = dto.Name;
-                _categoryRepository.Update(category);
+                return Result<Category>.Failure("Категорію для оновлення не знайдено.");
             }
-            return category!;
+
+            category.Name = dto.Name;
+            _categoryRepository.Update(category);
+
+            return Result<Category>.Success(category);
         }
 
-        public bool DeleteCategory(int id)
+        public Result DeleteCategory(int id)
         {
             var category = _categoryRepository.GetById(id);
-            if (category != null)
+
+            if (category == null)
             {
-                _categoryRepository.Delete(category);
-                return true;
+                return Result.Failure("Категорію для видалення не знайдено.");
             }
-            return false;
+
+            _categoryRepository.Delete(category);
+            return Result.Success();
         }
     }
 }

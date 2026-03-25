@@ -1,75 +1,78 @@
-﻿using MadeByMe.Application.Services;
-using MadeByMe.Application.DTOs;
+﻿using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Http;
-using System.IO;
-using System.Threading.Tasks;
-using MadeByMe.Infrastructure.Data;
-using MadeByMe.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace MadeByMe.src.Controllers
+namespace MadeByMe.Web.Controllers
 {
     public class PostController : Controller
     {
         private readonly IPostService _postService;
         private readonly ICommentService _commentService;
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPhotoService _photoService;
+        private readonly ICategoryService _categoryService;
 
         public PostController(
-            IPostService postService, 
-            ICommentService commentService, 
-            ApplicationDbContext context, 
+            IPostService postService,
+            ICommentService commentService,
             UserManager<ApplicationUser> userManager,
-            IPhotoService photoService)
+            IPhotoService photoService,
+            ICategoryService categoryService)
         {
             _postService = postService;
             _commentService = commentService;
-            _context = context;
             _userManager = userManager;
             _photoService = photoService;
+            _categoryService = categoryService;
         }
 
         public IActionResult Index(string searchTerm)
         {
-            var posts = _postService.SearchPosts(searchTerm);
+            var result = _postService.SearchPosts(searchTerm);
 
-            var postsList = posts.Select(post => new PostResponseDto
+            if (result.IsFailure)
+            {
+                TempData["Error"] = result.ErrorMessage;
+                return View(new List<PostResponseDto>());
+            }
+
+            var postsList = result.Value.Select(post => new PostResponseDto
             {
                 Id = post.Id,
                 Title = post.Title,
                 Description = post.Description,
                 Price = post.Price,
-                PhotoUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
+                PhotoUrl = post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
                 Rating = post.Rating,
                 Status = post.Status,
                 CategoryName = post.Category,
                 SellerName = post.Seller,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
             }).ToList();
 
             return View(postsList);
         }
 
-        public IActionResult Details(int id) 
+        public IActionResult Details(int id)
         {
-            var post = _postService.GetPostById(id);
-            if (post == null)
-                return NotFound();
+            var postResult = _postService.GetPostById(id);
+            if (postResult.IsFailure)
+            {
+                return NotFound(postResult.ErrorMessage);
+            }
 
-            var comments = _commentService.GetCommentsForPost(id);
+            var commentsResult = _commentService.GetCommentsForPost(id);
+            var comments = commentsResult.IsSuccess ? commentsResult.Value : new List<Comment>();
 
             var viewModel = new PostDetailsViewModel
             {
-                Post = post,
-                CommentsList = comments
+                Post = postResult.Value,
+                CommentsList = comments,
             };
 
             return View(viewModel);
@@ -78,13 +81,7 @@ namespace MadeByMe.src.Controllers
         [Authorize(Roles = "Seller")]
         public IActionResult Create()
         {
-            var categories = _context.Categories.Select(c => new SelectListItem
-            {
-                Value = c.CategoryId.ToString(),
-                Text = c.Name
-            }).ToList();
-
-            ViewBag.Categories = categories;
+            LoadCategoriesToViewBag();
             return View();
         }
 
@@ -95,24 +92,24 @@ namespace MadeByMe.src.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var categories = _context.Categories.Select(c => new SelectListItem
-                {
-                    Value = c.CategoryId.ToString(),
-                    Text = c.Name
-                }).ToList();
-
-                ViewBag.Categories = categories;
+                LoadCategoriesToViewBag();
                 return View(createPostDto);
             }
 
             var userId = _userManager.GetUserId(User);
-            var post = _postService.CreatePost(createPostDto, userId);
+            var postResult = _postService.CreatePost(createPostDto, userId!);
+
+            if (postResult.IsFailure)
+            {
+                ModelState.AddModelError(string.Empty, postResult.ErrorMessage);
+                LoadCategoriesToViewBag();
+                return View(createPostDto);
+            }
 
             if (createPostDto.Photo != null)
             {
-                var photo = await _photoService.SavePhotoAsync(createPostDto.Photo, post.Id);
-                _context.Photos.Add(photo);
-                await _context.SaveChangesAsync();
+                // Сервіс зберігає і файл, і запис в базу
+                await _photoService.SavePhotoAsync(createPostDto.Photo, postResult.Value.Id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -121,30 +118,30 @@ namespace MadeByMe.src.Controllers
         [Authorize(Roles = "Seller")]
         public IActionResult Edit(int id)
         {
-            var post = _postService.GetPostById(id);
-            if (post == null)
-                return NotFound();
+            var postResult = _postService.GetPostById(id);
+            if (postResult.IsFailure)
+            {
+                return NotFound(postResult.ErrorMessage);
+            }
 
-            var currentUserId = _userManager.GetUserId(User); 
+            var post = postResult.Value;
+            var currentUserId = _userManager.GetUserId(User);
+
             if (post.SellerId != currentUserId)
+            {
                 return Forbid();
+            }
 
             var updateDto = new UpdatePostDto
             {
                 Title = post.Title,
                 Description = post.Description,
                 Price = post.Price,
-                CategoryId = post.CategoryId
+                CategoryId = post.CategoryId,
             };
 
-            var categories = _context.Categories.Select(c => new SelectListItem
-            {
-                Value = c.CategoryId.ToString(),
-                Text = c.Name
-            }).ToList();
-
-            ViewBag.Categories = categories;
-            ViewBag.CurrentPhoto = post.Photos.FirstOrDefault()?.FilePath;
+            LoadCategoriesToViewBag();
+            ViewBag.CurrentPhoto = post.Photos?.FirstOrDefault()?.FilePath;
 
             return View(updateDto);
         }
@@ -155,33 +152,44 @@ namespace MadeByMe.src.Controllers
         public async Task<IActionResult> Edit(int id, UpdatePostDto updatePostDto)
         {
             if (!ModelState.IsValid)
+            {
+                LoadCategoriesToViewBag();
                 return View(updatePostDto);
+            }
 
-            var post = _postService.GetPostById(id);
-            if (post == null)
-                return NotFound();
+            var postResult = _postService.GetPostById(id);
+            if (postResult.IsFailure)
+            {
+                return NotFound(postResult.ErrorMessage);
+            }
 
+            var post = postResult.Value;
             var currentUserId = _userManager.GetUserId(User);
+
             if (post.SellerId != currentUserId)
+            {
                 return Forbid();
+            }
 
             if (updatePostDto.Photo != null)
             {
-                // Delete old photo
-                var oldPhoto = post.Photos.FirstOrDefault();
+                var oldPhoto = post.Photos?.FirstOrDefault();
                 if (oldPhoto != null)
                 {
+                    // Сервіс видаляє і файл, і запис з бази
                     _photoService.DeletePhoto(oldPhoto);
-                    _context.Photos.Remove(oldPhoto);
                 }
 
-                // Save new photo
-                var newPhoto = await _photoService.SavePhotoAsync(updatePostDto.Photo, post.Id);
-                _context.Photos.Add(newPhoto);
+                await _photoService.SavePhotoAsync(updatePostDto.Photo, post.Id);
             }
 
-            var updatedPost = _postService.UpdatePost(id, updatePostDto);
-            await _context.SaveChangesAsync();
+            var updateResult = _postService.UpdatePost(id, updatePostDto);
+            if (updateResult.IsFailure)
+            {
+                ModelState.AddModelError(string.Empty, updateResult.ErrorMessage);
+                LoadCategoriesToViewBag();
+                return View(updatePostDto);
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -189,44 +197,74 @@ namespace MadeByMe.src.Controllers
         [Authorize(Roles = "Seller")]
         public IActionResult Delete(int id)
         {
-            var post = _postService.GetPostById(id);
-            if (post == null)
-                return NotFound();
+            var postResult = _postService.GetPostById(id);
+            if (postResult.IsFailure)
+            {
+                return NotFound(postResult.ErrorMessage);
+            }
 
+            var post = postResult.Value;
             var currentUserId = _userManager.GetUserId(User);
+
             if (post.SellerId != currentUserId)
+            {
                 return Forbid();
+            }
 
             return View(post);
         }
 
         [Authorize(Roles = "Seller")]
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
+        [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var post = _postService.GetPostById(id);
-            if (post == null)
-                return NotFound();
-
-            var currentUserId = _userManager.GetUserId(User);
-            if (post.SellerId != currentUserId)
-                return Forbid();
-
-            // Delete associated photos
-            foreach (var photo in post.Photos)
+            var postResult = _postService.GetPostById(id);
+            if (postResult.IsFailure)
             {
-                _photoService.DeletePhoto(photo);
-                _context.Photos.Remove(photo);
+                return NotFound(postResult.ErrorMessage);
             }
 
-            bool isDeleted = _postService.DeletePost(id);
-            await _context.SaveChangesAsync();
+            var post = postResult.Value;
+            var currentUserId = _userManager.GetUserId(User);
 
-            if (!isDeleted)
-                return NotFound();
+            if (post.SellerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            if (post.Photos != null)
+            {
+                foreach (var photo in post.Photos)
+                {
+                    _photoService.DeletePhoto(photo);
+                }
+            }
+
+            var deleteResult = _postService.DeletePost(id);
+            if (deleteResult.IsFailure)
+            {
+                TempData["Error"] = deleteResult.ErrorMessage;
+                return RedirectToAction(nameof(Index));
+            }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private void LoadCategoriesToViewBag()
+        {
+            var categoriesResult = _categoryService.GetAllCategories();
+
+            var categories = categoriesResult.IsSuccess
+                ? categoriesResult.Value.Select(c => new SelectListItem
+                {
+                    Value = c.CategoryId.ToString(),
+                    Text = c.Name,
+                }).ToList()
+                : new List<SelectListItem>();
+
+            ViewBag.Categories = categories;
         }
     }
 }

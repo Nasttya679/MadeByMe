@@ -1,14 +1,18 @@
-using MadeByMe.Domain.Entities;
-using MadeByMe.Application.DTOs;
 using System.Collections.Generic;
+using MadeByMe.Application.Common;
+using MadeByMe.Application.DTOs;
+using MadeByMe.Domain.Entities;
 
 namespace MadeByMe.Application.Services.Interfaces
 {
     public interface ICommentService
     {
-        List<Comment> GetCommentsForPost(int postId);
-        Comment GetCommentById(int id);
-        Comment AddComment(CreateCommentDto dto, string userId);
-        bool DeleteComment(int id);
+        Result<List<Comment>> GetCommentsForPost(int postId);
+
+        Result<Comment> GetCommentById(int id);
+
+        Result<Comment> AddComment(CreateCommentDto dto, string userId);
+
+        Result DeleteComment(int id);
     }
 }

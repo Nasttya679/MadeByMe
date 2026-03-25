@@ -1,14 +1,14 @@
 using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Repositories.Interfaces;
 using MadeByMe.Infrastructure.Data;
+using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-
-namespace MadeByMe.Infrastructure.Repositories.Implementations {
-        
+namespace MadeByMe.Infrastructure.Repositories.Implementations
+{
     public class PostRepository : IPostRepository
     {
         private readonly ApplicationDbContext _context;
+
         public PostRepository(ApplicationDbContext context) => _context = context;
 
         public List<Post> GetAll() => _context.Posts.Include(p => p.Category)

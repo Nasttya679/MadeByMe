@@ -19,7 +19,7 @@
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="space-x-4">
                 <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity.IsAuthenticated)
+                @if (User.Identity!.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
                     <a href="/Cart" class="text-orange-600 font-medium">Кошик</a>
@@ -60,13 +60,13 @@
                             @foreach (var item in Model.Items)
                             {
                                 <div class="p-6 flex items-center space-x-4">
-                                    <img src="@item.Product.ImageUrl" 
+                                    <img src="@item.Product!.ImageUrl" 
                                          alt="@item.Product.Name" 
                                          class="w-24 h-24 object-cover rounded-lg" />
                                     
                                     <div class="flex-1">
                                         <h3 class="text-lg font-semibold text-gray-800">@item.Product.Name</h3>
-                                        <p class="text-gray-600">Продавець: @item.Product.Seller.UserName</p>
+                                        <p class="text-gray-600">Продавець: @item.Product.Seller!.UserName</p>
                                         <div class="mt-2 flex items-center space-x-4">
                                             <form action="/Cart/UpdateQuantity" method="post" class="flex items-center border rounded-lg">
                                                 @Html.AntiForgeryToken()

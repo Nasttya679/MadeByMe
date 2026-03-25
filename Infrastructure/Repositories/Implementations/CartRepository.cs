@@ -1,6 +1,6 @@
 using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Repositories.Interfaces;
 using MadeByMe.Infrastructure.Data;
+using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MadeByMe.Infrastructure.Repositories.Implementations

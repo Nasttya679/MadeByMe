@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MadeByMe.Infrastructure.Repositories.Implementations
 {

@@ -1,5 +1,3 @@
-
-
 namespace MadeByMe.Application.ViewModels
 {
     public class ErrorViewModel

@@ -1,34 +1,32 @@
-using MadeByMe.Domain.Entities;
-using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Domain.Entities;
+using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace MadeByMe.Application.Services.Implementations
 {
     public class PhotoService : IPhotoService
     {
         private readonly string _uploadPath;
+        private readonly IPhotoRepository _photoRepository;
 
-        public PhotoService()
+        public PhotoService(IPhotoRepository photoRepository)
         {
+            _photoRepository = photoRepository;
             _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
             EnsureDirectoryExists();
         }
 
-        private void EnsureDirectoryExists()
-        {
-            if (!Directory.Exists(_uploadPath))
-            {
-                Directory.CreateDirectory(_uploadPath);
-            }
-        }
-
-        public async Task<Photo> SavePhotoAsync(IFormFile file, int? postId = null)
+        public async Task<Result<Photo>> SavePhotoAsync(IFormFile file, int? postId = null)
         {
             if (file == null || file.Length == 0)
-                throw new ArgumentException("No file uploaded");
+            {
+                return Result<Photo>.Failure("Файл не завантажено або він порожній.");
+            }
 
             EnsureDirectoryExists();
 
@@ -40,38 +38,50 @@ namespace MadeByMe.Application.Services.Implementations
                 await file.CopyToAsync(stream);
             }
 
-            return new Photo
+            var photo = new Photo
             {
                 FileName = fileName,
                 FilePath = $"/images/{fileName}",
                 ContentType = file.ContentType,
                 FileSize = file.Length,
-                PostId = postId
+                PostId = postId,
             };
+
+            _photoRepository.Add(photo);
+
+            return Result<Photo>.Success(photo);
         }
 
-        public void DeletePhoto(Photo photo)
+        public Result DeletePhoto(Photo photo)
         {
-            if (photo == null)
-                return;
+            if (photo == null || string.IsNullOrEmpty(photo.FileName))
+            {
+                return Result.Failure("Фото не передано для видалення або ім'я файлу порожнє.");
+            }
 
             var filePath = Path.Combine(_uploadPath, photo.FileName);
+
             if (File.Exists(filePath))
             {
-                try
-                {
-                    File.Delete(filePath);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error deleting photo file: {ex.Message}");
-                }
+                File.Delete(filePath);
             }
+
+            _photoRepository.Delete(photo);
+
+            return Result.Success();
         }
 
         public string GetPhotoUrl(Photo photo)
         {
             return photo?.FilePath ?? "/images/default.jpg";
+        }
+
+        private void EnsureDirectoryExists()
+        {
+            if (!Directory.Exists(_uploadPath))
+            {
+                Directory.CreateDirectory(_uploadPath);
+            }
         }
     }
 }

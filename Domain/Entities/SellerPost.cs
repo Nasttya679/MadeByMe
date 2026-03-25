@@ -1,24 +1,23 @@
-
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MadeByMe.Domain.Entities
 {
-	public class SellerPost
+    public class SellerPost
     {
         [Key]
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
         [Required]
-        public string SellerId { get; set; } 
+        public string? SellerId { get; set; }
 
         [ForeignKey("SellerId")]
-        public ApplicationUser Seller { get; set; }
+        public ApplicationUser? Seller { get; set; }
 
         [Required]
-        public int PostId { get; set; } 
+        public int PostId { get; set; }
 
         [ForeignKey("PostId")]
-        public Post Post { get; set; }
+        public Post? Post { get; set; }
     }
 }

@@ -1,14 +1,16 @@
-
-
+using System.Threading.Tasks;
+using MadeByMe.Application.Common;
 using MadeByMe.Domain.Entities;
-using MadeByMe.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 
-namespace MadeByMe.Application.Services.Interfaces {
+namespace MadeByMe.Application.Services.Interfaces
+{
     public interface IPhotoService
     {
-        Task<Photo> SavePhotoAsync(IFormFile file, int? postId = null);
-        void DeletePhoto(Photo photo);
+        Task<Result<Photo>> SavePhotoAsync(IFormFile file, int? postId = null);
+
+        Result DeletePhoto(Photo photo);
+
         string GetPhotoUrl(Photo photo);
     }
-}   
+}

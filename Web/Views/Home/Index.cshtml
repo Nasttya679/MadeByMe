@@ -12,7 +12,7 @@
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="flex items-center flex-wrap justify-end gap-x-3 gap-y-2">
-                @if (User.Identity.IsAuthenticated && User.IsInRole("Seller"))
+                @if (User.Identity!.IsAuthenticated && User.IsInRole("Seller"))
                 {
                     <a href="/Post/Create" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200" title="Додати товар">
                         <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +147,7 @@
                                         @post.Title
                                     </a>
                                 </h3>
-                                <p class="mt-1 text-sm text-gray-500">@post.SellerName.UserName</p>
+                                <p class="mt-1 text-sm text-gray-500">@post.SellerName!.UserName</p>
                             </div>
                             <p class="text-base font-semibold text-orange-600">$@post.Price</p>
                         </div>

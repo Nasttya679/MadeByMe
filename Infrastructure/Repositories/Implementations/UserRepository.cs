@@ -2,7 +2,6 @@ using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 
-
 namespace MadeByMe.Infrastructure.Repositories.Implementations
 {
     public class UserRepository : IUserRepository

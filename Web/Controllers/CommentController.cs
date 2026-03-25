@@ -1,103 +1,93 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-using System.Linq;
-using System.Threading.Tasks;
-using MadeByMe.Application.Services;
-using MadeByMe.Application.DTOs;
-using MadeByMe.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
-using MadeByMe.Infrastructure.Data;
-using MadeByMe.Application.ViewModels;
+﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
-public class CommentController : Controller
+namespace MadeByMe.Web.Controllers
 {
-	private readonly ApplicationDbContext _context;
-	private readonly ICommentService _commentService;
-    private readonly UserManager<ApplicationUser> _userManager;
-
-    public CommentController(ApplicationDbContext context, ICommentService commentService, UserManager<ApplicationUser> userManager = null)
+    public class CommentController : Controller
     {
-        _context = context;
-        _commentService = commentService;
-        _userManager = userManager;
+        private readonly ICommentService _commentService;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public CommentController(ICommentService commentService, UserManager<ApplicationUser> userManager)
+        {
+            _commentService = commentService;
+            _userManager = userManager;
+        }
+
+        /*
+        public IActionResult Index()
+        {
+           var result = _commentService.GetAllComments();
+           if (result.IsFailure) return View(new List<Comment>());
+           return View(result.Value);
+        }
+        */
+
+        public IActionResult Details(int id)
+        {
+            var result = _commentService.GetCommentById(id);
+
+            if (result.IsFailure)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            return View(result.Value);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(CreateCommentDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(dto);
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            var result = _commentService.AddComment(dto, userId!);
+
+            if (result.IsFailure)
+            {
+                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                return View(dto);
+            }
+
+            return RedirectToAction("Details", "Post", new { id = result.Value.PostId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult Delete(int id)
+        {
+            var result = _commentService.GetCommentById(id);
+            if (result.IsFailure)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            var comment = result.Value;
+            var currentUserName = User.Identity?.Name;
+
+            if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == currentUserName))
+            {
+                var deleteResult = _commentService.DeleteComment(id);
+
+                if (deleteResult.IsFailure)
+                {
+                    TempData["Error"] = deleteResult.ErrorMessage;
+                }
+
+                return RedirectToAction("Details", "Post", new { id = comment.PostId });
+            }
+
+            return Forbid();
+        }
     }
-
-    public async Task<IActionResult> Index()
-	{
-		var comments = await _context.Comments.ToListAsync();
-		return View(comments);
-	}
-
-	public async Task<IActionResult> Details(int id) // ?
-	{
-		var comment = await _context.Comments.FindAsync(id);
-		if (comment == null) return NotFound();
-
-		return View(comment);
-	}
-
-	//TODO: add create comment view
-	//public IActionResult Create(int postId)
-	//{
-	//	return View(new Comment { PostId = postId });
-	//}
-
-	[HttpPost]
-	[ValidateAntiForgeryToken]
-	public IActionResult Create(CreateCommentDto dto)
-	{
-        foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-        {
-            Console.WriteLine(error.ErrorMessage);
-        }
-
-        if (!ModelState.IsValid)
-		{
-            return View(dto);
-        }
-
-        var userId = _userManager.GetUserId(User);
-
-        var comment = _commentService.AddComment(dto, userId);
-
-		return RedirectToAction("Details", "Post", new { id = comment.PostId });
-	}
-
-	[HttpPost]
-	[ValidateAntiForgeryToken]
-	[Authorize]
-	public IActionResult Delete(int id)
-	{
-        var comment = _commentService.GetCommentById(id);
-        if (comment == null)
-            return NotFound();
-
-        
-        if (User.IsInRole("Admin"))
-        {
-            _commentService.DeleteComment(id);
-            return RedirectToAction("Details", "Post", new { id = comment.PostId });
-        }
-
-        var currentUserName = User.Identity.Name;
-        if (comment.User.UserName == currentUserName)
-        {
-            _commentService.DeleteComment(id);
-            return RedirectToAction("Details", "Post", new { id = comment.PostId });
-        }
-
-        return Forbid();
-
-		//if (!_commentService.DeleteComment(id))
-		//{
-		//	return NotFound();
-		//}
-		//else
-		//{
-		//	return RedirectToAction("Index");
-		//}
-
-	}
 }

@@ -1,42 +1,41 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using MadeByMe.Application.Services;
-using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Data;
-using MadeByMe.Application.ViewModels;
+﻿using System.Diagnostics;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Application.ViewModels;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MadeByMe.src.Controllers
+namespace MadeByMe.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
         private readonly IPostService _postService;
 
-        public HomeController(ILogger<HomeController> logger, IPostService postService)
+        public HomeController(IPostService postService)
         {
-            _logger = logger;
             _postService = postService;
         }
 
         public IActionResult Index()
         {
-            var posts = _postService.GetAllPosts();
+            var result = _postService.GetAllPosts();
 
-            var postsList = posts.Select(post => new PostResponseDto
+            if (result.IsFailure)
+            {
+                return View(new List<PostResponseDto>());
+            }
+
+            var postsList = result.Value.Select(post => new PostResponseDto
             {
                 Id = post.Id,
                 Title = post.Title,
                 Description = post.Description,
                 Price = post.Price,
-                PhotoUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
+                PhotoUrl = post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
                 Rating = post.Rating,
                 Status = post.Status,
                 CategoryName = post.Category,
                 SellerName = post.Seller,
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
             }).ToList();
 
             return View(postsList);
@@ -52,7 +51,7 @@ namespace MadeByMe.src.Controllers
         {
             return View(new ErrorViewModel
             {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
             });
         }
     }

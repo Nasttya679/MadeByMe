@@ -1,15 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
-using MadeByMe.Application.Services.Interfaces;
-using MadeByMe.Application.Services;
+﻿using System.Linq;
 using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
-using MadeByMe.Infrastructure.Data;
-using MadeByMe.Application.ViewModels;
-
+using Microsoft.AspNetCore.Mvc;
 
 public class CartController : Controller
 {
@@ -27,9 +22,16 @@ public class CartController : Controller
     public IActionResult Index()
     {
         var buyerId = _userManager.GetUserId(User);
-        var cartViewModel = _cartService.GetUserCart(buyerId);
 
-        return View(cartViewModel);
+        var result = _cartService.GetUserCart(buyerId!);
+
+        if (result.IsFailure)
+        {
+            TempData["Error"] = result.ErrorMessage;
+            return View(new CartViewModel());
+        }
+
+        return View(result.Value);
     }
 
     [HttpPost]
@@ -38,13 +40,14 @@ public class CartController : Controller
     {
         var buyerId = _userManager.GetUserId(User);
 
-        var result = _buyerCartService.AddToCart(buyerId, dto);
-        if (!result)
+        var result = _buyerCartService.AddToCart(buyerId!, dto);
+
+        if (result.IsFailure)
         {
-            return BadRequest("Помилка при додаванні товару");
+            return BadRequest(result.ErrorMessage);
         }
 
-        return RedirectToAction("Index", new { buyerId });
+        return RedirectToAction("Index");
     }
 
     [HttpPost]
@@ -53,13 +56,15 @@ public class CartController : Controller
     {
         var buyerId = _userManager.GetUserId(User);
 
-        var result = _buyerCartService.RemoveFromCart(buyerId, postId);
-        if (!result)
+        var result = _buyerCartService.RemoveFromCart(buyerId!, postId);
+
+        if (result.IsFailure)
         {
-            return NotFound();
+            TempData["Error"] = result.ErrorMessage;
+            return RedirectToAction("Index");
         }
 
-        return RedirectToAction("Index", new { buyerId });
+        return RedirectToAction("Index");
     }
 
     [HttpPost]
@@ -67,17 +72,19 @@ public class CartController : Controller
     public IActionResult UpdateQuantity(int productId, string action)
     {
         var buyerId = _userManager.GetUserId(User);
-        var cart = _cartService.GetUserCartEntity(buyerId);
-        
-        if (cart == null)
+
+        var cartResult = _cartService.GetUserCartEntity(buyerId!);
+        if (cartResult.IsFailure)
         {
-            return NotFound();
+            return NotFound(cartResult.ErrorMessage);
         }
 
-        var cartItem = cart.BuyerCarts.FirstOrDefault(bc => bc.PostId == productId);
+        var cart = cartResult.Value;
+
+        var cartItem = cart.BuyerCarts?.FirstOrDefault(bc => bc.PostId == productId);
         if (cartItem == null)
         {
-            return NotFound();
+            return NotFound("Товар у кошику не знайдено.");
         }
 
         if (action == "increase")
@@ -89,7 +96,12 @@ public class CartController : Controller
             cartItem.Quantity--;
         }
 
-        _cartService.UpdateCartItem(cartItem);
+        var updateResult = _cartService.UpdateCartItem(cartItem);
+        if (updateResult.IsFailure)
+        {
+            TempData["Error"] = updateResult.ErrorMessage;
+        }
+
         return RedirectToAction("Index");
     }
 
@@ -97,14 +109,19 @@ public class CartController : Controller
     {
         var buyerId = _userManager.GetUserId(User);
 
-        var cart = _cartService.GetUserCartEntity(buyerId);
-        if (cart == null)
+        var cartResult = _cartService.GetUserCartEntity(buyerId!);
+        if (cartResult.IsFailure)
         {
-            return NotFound();
+            return NotFound(cartResult.ErrorMessage);
         }
 
-        var total = _cartService.GetCartTotal(cart.CartId);
-        return View("CartTotal", total);
+        var totalResult = _cartService.GetCartTotal(cartResult.Value.CartId);
+        if (totalResult.IsFailure)
+        {
+            return BadRequest(totalResult.ErrorMessage);
+        }
+
+        return View("CartTotal", totalResult.Value);
     }
 
     [HttpPost]
@@ -112,13 +129,20 @@ public class CartController : Controller
     {
         var buyerId = _userManager.GetUserId(User);
 
-        var cart = _cartService.GetUserCartEntity(buyerId);
-        if (cart == null || !cart.BuyerCarts.Any())
+        var cartResult = _cartService.GetUserCartEntity(buyerId!);
+
+        if (cartResult.IsFailure || cartResult.Value.BuyerCarts == null || !cartResult.Value.BuyerCarts.Any())
         {
             return View("EmptyCartError");
         }
 
-        _cartService.ClearCart(cart.CartId);
+        var clearResult = _cartService.ClearCart(cartResult.Value.CartId);
+        if (clearResult.IsFailure)
+        {
+            TempData["Error"] = clearResult.ErrorMessage;
+            return RedirectToAction("Index");
+        }
+
         return View("CheckoutSuccess");
     }
 
@@ -127,13 +151,17 @@ public class CartController : Controller
     public IActionResult ClearCart()
     {
         var buyerId = _userManager.GetUserId(User);
-        var cart = _cartService.GetUserCartEntity(buyerId);
-        
-        if (cart != null)
+        var cartResult = _cartService.GetUserCartEntity(buyerId!);
+
+        if (cartResult.IsSuccess)
         {
-            _cartService.ClearCart(cart.CartId);
+            var clearResult = _cartService.ClearCart(cartResult.Value.CartId);
+            if (clearResult.IsFailure)
+            {
+                return BadRequest(clearResult.ErrorMessage);
+            }
         }
-        
+
         return Ok();
     }
 }

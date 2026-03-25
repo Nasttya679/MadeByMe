@@ -1,17 +1,19 @@
-
-using MadeByMe.Domain.Entities;
-using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Common;
 using MadeByMe.Application.ViewModels;
+using MadeByMe.Domain.Entities;
 
-
-namespace MadeByMe.Application.Services.Interfaces {
-
+namespace MadeByMe.Application.Services.Interfaces
+{
     public interface ICartService
     {
-        Cart GetUserCartEntity(string buyerId);
-        CartViewModel GetUserCart(string buyerId);
-        decimal GetCartTotal(int cartId);
-        void ClearCart(int cartId);
-        void UpdateCartItem(BuyerCart cartItem);
+        Result<Cart> GetUserCartEntity(string buyerId);
+
+        Result<CartViewModel> GetUserCart(string buyerId);
+
+        Result<decimal> GetCartTotal(int cartId);
+
+        Result ClearCart(int cartId);
+
+        Result UpdateCartItem(BuyerCart cartItem);
     }
 }

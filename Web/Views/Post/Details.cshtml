@@ -1,7 +1,7 @@
 ﻿@model  MadeByMe.Application.ViewModels.PostDetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Post.Title;
+    ViewData["Title"] = Model.Post!.Title;
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -23,7 +23,7 @@
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="space-x-4">
                 <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity.IsAuthenticated)
+                @if (User.Identity!.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
@@ -96,7 +96,7 @@
                         <div class="mt-2 flex items-center">
                             <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                                 <span class="text-lg font-medium text-gray-600">
-                                    @Model.Post.Seller.UserName.Substring(0, 1).ToUpper()
+                                    @Model.Post.Seller!.UserName!.Substring(0, 1).ToUpper()
                                 </span>
                             </div>
                             <div class="ml-3">
@@ -142,7 +142,7 @@
 
             <!-- Comments Section -->
             <div class="border-t border-gray-200 p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Відгуки (@Model.CommentsList.Count)</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Відгуки (@Model.CommentsList!.Count)</h2>
                 
                 @if (User.Identity.IsAuthenticated)
                 {
@@ -167,7 +167,7 @@
                             <div class="flex items-center mb-2">
                                 <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                                     <span class="text-sm font-medium text-gray-600">
-                                        @comment.User.UserName.Substring(0, 1).ToUpper()
+                                        @comment.User!.UserName!.Substring(0, 1).ToUpper()
                                     </span>
                                 </div>
                                 <div class="ml-3">

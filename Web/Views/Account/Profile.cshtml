@@ -19,7 +19,7 @@
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="space-x-4">
                 <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity.IsAuthenticated)
+                @if (User.Identity!.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-orange-600 font-medium">Профіль</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>

@@ -1,9 +1,9 @@
-﻿using MadeByMe.Domain.Entities;
+﻿using System.Collections.Generic;
+using MadeByMe.Application.Common;
 using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
-using MadeByMe.Application.Services.Interfaces;
-using System.Collections.Generic;
-using MadeByMe.Application.Services.Interfaces;
 
 namespace MadeByMe.Application.Services.Implementations
 {
@@ -16,38 +16,47 @@ namespace MadeByMe.Application.Services.Implementations
             _commentRepository = commentRepository;
         }
 
-        public List<Comment> GetCommentsForPost(int postId)
+        public Result<List<Comment>> GetCommentsForPost(int postId)
         {
-            return _commentRepository.GetByPostId(postId);
+            var comments = _commentRepository.GetByPostId(postId);
+            return Result<List<Comment>>.Success(comments);
         }
 
-        public Comment GetCommentById(int id)
+        public Result<Comment> GetCommentById(int id)
         {
-            return _commentRepository.GetById(id)!;
+            var comment = _commentRepository.GetById(id);
+
+            if (comment == null)
+            {
+                return Result<Comment>.Failure($"Коментар з ID {id} не знайдено.");
+            }
+
+            return Result<Comment>.Success(comment);
         }
 
-        public Comment AddComment(CreateCommentDto dto, string userId)
+        public Result<Comment> AddComment(CreateCommentDto dto, string userId)
         {
             var comment = new Comment
             {
                 UserId = userId,
                 PostId = dto.PostId,
-                Content = dto.Content
+                Content = dto.Content,
             };
 
             _commentRepository.Add(comment);
-            return comment;
+            return Result<Comment>.Success(comment);
         }
 
-        public bool DeleteComment(int id)
+        public Result DeleteComment(int id)
         {
             var comment = _commentRepository.GetById(id);
-            if (comment != null)
+            if (comment == null)
             {
-                _commentRepository.Delete(comment);
-                return true;
+                return Result.Failure("Коментар для видалення не знайдено.");
             }
-            return false;
+
+            _commentRepository.Delete(comment);
+            return Result.Success();
         }
     }
 }

@@ -1,7 +1,8 @@
-﻿using MadeByMe.Application.DTOs;
+﻿using MadeByMe.Application.Common;
+using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
-using MadeByMe.Application.Services.Interfaces;
 
 namespace MadeByMe.Application.Services.Implementations
 {
@@ -21,13 +22,14 @@ namespace MadeByMe.Application.Services.Implementations
             _buyerCartRepo = buyerCartRepo;
         }
 
-        public bool AddToCart(string userId, AddToCartDto addToCartDto)
+        public Result AddToCart(string userId, AddToCartDto addToCartDto)
         {
-            // Перевірка існування поста
             var post = _postRepo.GetById(addToCartDto.PostId);
-            if (post == null) throw new KeyNotFoundException("Товар не знайдено.");
+            if (post == null)
+            {
+                return Result.Failure("Товар не знайдено.");
+            }
 
-            // Отримати або створити кошик користувача
             var cart = _cartRepo.GetCartByBuyerId(userId);
             if (cart == null)
             {
@@ -35,7 +37,6 @@ namespace MadeByMe.Application.Services.Implementations
                 _cartRepo.AddCart(cart);
             }
 
-            // Перевірка, чи товар уже в кошику
             var existingItem = _buyerCartRepo.GetItem(cart.CartId, addToCartDto.PostId);
             if (existingItem != null)
             {
@@ -48,27 +49,32 @@ namespace MadeByMe.Application.Services.Implementations
                 {
                     CartId = cart.CartId,
                     PostId = addToCartDto.PostId,
-                    Quantity = addToCartDto.Quantity
+                    Quantity = addToCartDto.Quantity,
                 };
                 _buyerCartRepo.AddItem(cartItem);
             }
 
-            return true;
+            return Result.Success();
         }
 
-        public bool RemoveFromCart(string buyerId, int postId)
+        public Result RemoveFromCart(string buyerId, int postId)
         {
             var cart = _cartRepo.GetCartByBuyerId(buyerId);
-            if (cart == null) return false;
 
-            var item = _buyerCartRepo.GetItem(cart.CartId, postId);
-            if (item != null)
+            if (cart == null)
             {
-                _buyerCartRepo.RemoveItem(item);
-                return true;
+                return Result.Failure("Кошик користувача не знайдено.");
             }
 
-            return false;
+            var item = _buyerCartRepo.GetItem(cart.CartId, postId);
+
+            if (item == null)
+            {
+                return Result.Failure("Товар не знайдено у кошику.");
+            }
+
+            _buyerCartRepo.RemoveItem(item);
+            return Result.Success();
         }
     }
 }

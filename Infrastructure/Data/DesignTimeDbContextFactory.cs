@@ -1,7 +1,7 @@
 ﻿using MadeByMe.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Design;
 using MadeByMe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>

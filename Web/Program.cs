@@ -1,13 +1,13 @@
-using MadeByMe.Domain.Entities;
 using MadeByMe.Application.Services;
+using MadeByMe.Application.Services.Implementations;
+using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
+using MadeByMe.Infrastructure.Repositories.Implementations;
+using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using MadeByMe.Application.Services.Interfaces;
-using MadeByMe.Application.Services.Implementations;
-using MadeByMe.Infrastructure.Repositories.Interfaces;
-using MadeByMe.Infrastructure.Repositories.Implementations;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -16,11 +16,13 @@ var builder = WebApplication.CreateBuilder(args);
 // ---------------------------
 // 1. Підключення до БД
 // ---------------------------
-string connectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION") 
+string? connectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrEmpty(connectionString))
+{
     throw new InvalidOperationException("Connection string not found");
+}
 
 // ---------------------------
 // 2. DbContext з ретраями
@@ -53,6 +55,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IApplicationUserService, ApplicationUserService>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -85,71 +88,88 @@ builder.Services.ConfigureApplicationCookie(options =>
 // 5. Static files
 // ---------------------------
 builder.Services.AddDirectoryBrowser();
+
 var app = builder.Build();
-
-// Ensure wwwroot/images
-var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
-Directory.CreateDirectory(wwwrootPath);
-Directory.CreateDirectory(Path.Combine(wwwrootPath, "images"));
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(wwwrootPath),
-    RequestPath = "",
-    ServeUnknownFileTypes = true,
-    DefaultContentType = "application/octet-stream"
-});
-
-// ---------------------------
-// 6. Seed ролей
-// ---------------------------
-async Task SeedRoles(IServiceProvider serviceProvider)
-{
-    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { "User", "Seller", "Admin" };
-    foreach (var role in roles)
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-}
-
-// ---------------------------
-// 7. Міграції
-// ---------------------------
-try
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.MigrateAsync();
-}
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Database initialization failed");
-    throw;
-}
 
 // ---------------------------
 // 8. Middleware
 // ---------------------------
+app.UseMiddleware<MadeByMe.Web.Middlewares.ExceptionHandlingMiddleware>();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
+// Перевірка та створення папок для зображень
+var wwwrootPath = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
+if (!Directory.Exists(wwwrootPath))
+{
+    Directory.CreateDirectory(wwwrootPath);
+}
+
+var imagesPath = Path.Combine(wwwrootPath, "images");
+if (!Directory.Exists(imagesPath))
+{
+    Directory.CreateDirectory(imagesPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(wwwrootPath),
+    RequestPath = string.Empty,
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream",
+});
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
-);
+// ---------------------------
+// 6. Seed ролей (Логіка методу)
+// ---------------------------
+async Task SeedRoles(IServiceProvider serviceProvider)
+{
+    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    string[] roles = { "User", "Seller", "Admin" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
 
-// Seed ролей
+// ---------------------------
+// 7. Міграції та Seed ролей (Об'єднано в один scope)
+// ---------------------------
 using (var scope = app.Services.CreateScope())
 {
-    await SeedRoles(scope.ServiceProvider);
+    var services = scope.ServiceProvider;
+    try
+    {
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
+
+        // Виклик Seed ролей
+        await SeedRoles(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Помилка під час ініціалізації бази даних або створення ролей");
+    }
 }
+
+// ---------------------------
+// Маршрутизація
+// ---------------------------
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // ---------------------------
 // 9. Запуск на HTTP

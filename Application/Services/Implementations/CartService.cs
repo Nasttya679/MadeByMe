@@ -1,9 +1,10 @@
-﻿using MadeByMe.Application.ViewModels;
-using MadeByMe.Domain.Entities;
-using MadeByMe.Application.Services.Interfaces;
-using MadeByMe.Infrastructure.Repositories.Interfaces;
-using MadeByMe.Infrastructure.Repositories.Implementations;
+﻿using System.Collections.Generic;
 using System.Linq;
+using MadeByMe.Application.Common;
+using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Application.ViewModels;
+using MadeByMe.Domain.Entities;
+using MadeByMe.Infrastructure.Repositories.Interfaces;
 
 namespace MadeByMe.Application.Services.Implementations
 {
@@ -23,27 +24,42 @@ namespace MadeByMe.Application.Services.Implementations
             _postRepo = postRepo;
         }
 
-        public Cart? GetUserCartEntity(string buyerId)
+        public Result<Cart> GetUserCartEntity(string buyerId)
         {
-            return _cartRepo.GetCartByBuyerId(buyerId);
+            var cart = _cartRepo.GetCartByBuyerId(buyerId);
+            if (cart == null)
+            {
+                return Result<Cart>.Failure("Кошик користувача не знайдено.");
+            }
+
+            return Result<Cart>.Success(cart);
         }
 
-        public CartViewModel GetUserCart(string buyerId)
+        public Result<CartViewModel> GetUserCart(string buyerId)
         {
             var cart = _cartRepo.GetCartByBuyerId(buyerId);
             if (cart == null || cart.BuyerCarts == null || !cart.BuyerCarts.Any())
             {
-                return new CartViewModel
+                // Порожній кошик - це не помилка, це просто успішний порожній результат
+                return Result<CartViewModel>.Success(new CartViewModel
                 {
-                    Items = new System.Collections.Generic.List<CartItem>(),
-                    TotalPrice = 0
-                };
+                    Items = new List<CartItem>(),
+                    TotalPrice = 0,
+                });
             }
 
-            var items = cart.BuyerCarts.Select(bc =>
+            var items = new List<CartItem>();
+            foreach (var bc in cart.BuyerCarts)
             {
                 var post = _postRepo.GetById(bc.PostId);
-                return new CartItem
+
+                // Усуваємо ризик NullReferenceException!
+                if (post == null)
+                {
+                    return Result<CartViewModel>.Failure($"Товар з ID {bc.PostId} більше не існує.");
+                }
+
+                items.Add(new CartItem
                 {
                     Id = bc.CartItemId,
                     ProductId = bc.PostId,
@@ -54,37 +70,64 @@ namespace MadeByMe.Application.Services.Implementations
                         Name = post.Title,
                         Price = post.Price,
                         ImageUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
-                        Seller = post.Seller
-                    }
-                };
-            }).ToList();
+                        Seller = post.Seller,
+                    },
+                });
+            }
 
-            var total = items.Sum(i => i.Product.Price * i.Quantity);
+            var total = items.Sum(i => i.Product!.Price * i.Quantity);
 
-            return new CartViewModel
+            return Result<CartViewModel>.Success(new CartViewModel
             {
                 Items = items,
-                TotalPrice = total
-            };
+                TotalPrice = total,
+            });
         }
 
-        public decimal GetCartTotal(int cartId)
+        public Result<decimal> GetCartTotal(int cartId)
         {
             var items = _buyerCartRepo.GetItemsByCartId(cartId);
-            if (items == null || !items.Any()) return 0;
+            if (items == null || !items.Any())
+            {
+                return Result<decimal>.Success(0);
+            }
 
-            return items.Sum(bc => bc.Quantity * _postRepo.GetById(bc.PostId).Price);
+            decimal total = 0;
+            foreach (var bc in items)
+            {
+                var post = _postRepo.GetById(bc.PostId);
+                if (post == null)
+                {
+                    // Знову ж таки, захищаємось від помилки бази даних
+                    return Result<decimal>.Failure($"Помилка розрахунку: товар з ID {bc.PostId} не знайдено.");
+                }
+
+                total += bc.Quantity * post.Price;
+            }
+
+            return Result<decimal>.Success(total);
         }
 
-        public void ClearCart(int cartId)
+        public Result ClearCart(int cartId)
         {
             var items = _buyerCartRepo.GetItemsByCartId(cartId);
-            _buyerCartRepo.RemoveRange(items);
+            if (items != null && items.Any())
+            {
+                _buyerCartRepo.RemoveRange(items);
+            }
+
+            return Result.Success();
         }
 
-        public void UpdateCartItem(BuyerCart cartItem)
+        public Result UpdateCartItem(BuyerCart cartItem)
         {
+            if (cartItem == null)
+            {
+                return Result.Failure("Недійсні дані для оновлення кошика.");
+            }
+
             _buyerCartRepo.UpdateItem(cartItem);
+            return Result.Success();
         }
     }
 }

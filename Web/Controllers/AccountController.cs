@@ -1,15 +1,11 @@
-﻿using MadeByMe.Application.Services;
-using MadeByMe.Application.DTOs;
-using MadeByMe.Application.ViewModels;
+﻿using MadeByMe.Application.DTOs;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using MadeByMe.Application.Services.Interfaces;
 
-namespace MadeByMe.src.Controllers
+namespace MadeByMe.Web.Controllers
 {
     public class AccountController : Controller
     {
@@ -17,9 +13,10 @@ namespace MadeByMe.src.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IApplicationUserService _ApplicationUserService;
 
-        public AccountController(UserManager<ApplicationUser> userManager,
-                                 SignInManager<ApplicationUser> signInManager,
-                                 IApplicationUserService applicationUserService)
+        public AccountController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IApplicationUserService applicationUserService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -35,18 +32,19 @@ namespace MadeByMe.src.Controllers
         public async Task<IActionResult> Register(RegisterDto dto)
         {
             if (!ModelState.IsValid)
+            {
                 return View(dto);
+            }
 
             var user = new ApplicationUser
             {
                 UserName = dto.UserName,
                 Email = dto.Email,
                 PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address
-               
+                Address = dto.Address,
             };
 
-            var result = await _userManager.CreateAsync(user, dto.Password);
+            var result = await _userManager.CreateAsync(user, dto.Password!);
             if (result.Succeeded)
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
@@ -55,12 +53,14 @@ namespace MadeByMe.src.Controllers
             }
 
             foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
 
             return View(dto);
         }
 
-        public IActionResult Login() 
+        public IActionResult Login()
         {
             return View();
         }
@@ -72,24 +72,26 @@ namespace MadeByMe.src.Controllers
             {
                 Console.WriteLine(error.ErrorMessage);
             }
+
             Console.WriteLine("ModelState.IsValid: " + ModelState.IsValid);
             Console.WriteLine("Email: " + dto.Email);
             Console.WriteLine("Password: " + dto.Password);
 
-
             if (!ModelState.IsValid)
+            {
                 return View(dto);
+            }
 
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByEmailAsync(dto.Email!);
             Console.WriteLine("User found: " + (user != null));
 
             if (user == null)
             {
-                ModelState.AddModelError("", "Невірна електронна пошта або пароль");
+                ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
                 return View(dto);
             }
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password!, false);
 
             Console.WriteLine("SignIn success: " + result.Succeeded);
             if (result.Succeeded)
@@ -97,9 +99,8 @@ namespace MadeByMe.src.Controllers
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");
             }
-               
 
-            ModelState.AddModelError("", "Невірна електронна пошта або пароль");
+            ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
             return View(dto);
         }
 
@@ -114,10 +115,12 @@ namespace MadeByMe.src.Controllers
         public async Task<IActionResult> Profile()
         {
             var userId = _userManager.GetUserId(User);
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByIdAsync(userId!);
 
             if (user == null)
+            {
                 return RedirectToAction(nameof(Login));
+            }
 
             return View(user);
         }
@@ -128,7 +131,9 @@ namespace MadeByMe.src.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
+            {
                 return RedirectToAction(nameof(Login));
+            }
 
             var dto = new UpdateProfileDto
             {
@@ -136,8 +141,7 @@ namespace MadeByMe.src.Controllers
                 Email = currentUser.Email,
                 UserName = currentUser.UserName,
                 PhoneNumber = currentUser.PhoneNumber,
-                Address = currentUser.Address               
-                
+                Address = currentUser.Address,
             };
 
             return View(dto);
@@ -149,21 +153,28 @@ namespace MadeByMe.src.Controllers
         public async Task<IActionResult> EditProfile(UpdateProfileDto dto)
         {
             if (!ModelState.IsValid)
+            {
                 return View("EditProfile", dto);
+            }
 
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
+            {
                 return RedirectToAction(nameof(Login));
+            }
 
             dto.UserId = currentUser.Id;
-            var updatedUser = _ApplicationUserService.UpdateUser(currentUser.Id, dto);
 
-            if (updatedUser == null)
-                return NotFound();
+            var result = _ApplicationUserService.UpdateUser(currentUser.Id, dto);
+
+            if (result.IsFailure)
+            {
+                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                return View("EditProfile", dto);
+            }
 
             return RedirectToAction(nameof(Profile));
         }
-
 
         public IActionResult AccessDenied()
         {
@@ -174,31 +185,27 @@ namespace MadeByMe.src.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BecomeSeller()
         {
-            //var user = await _userManager.GetUserAsync(User);
-            //if (user == null)
-            //{
-            //    return RedirectToAction("Login", "Account");
-            //}
-            //var role_f = await _userManager.GetRolesAsync(user);
-            //foreach (var role in role_f)
-            //{
-            //    Console.WriteLine($"Роль користувача: {role}");
-            //}
-
-            //if (!await _userManager.IsInRoleAsync(user, "Seller"))
-            //{
-            //    Console.WriteLine("ПОчаток циклу\n");
-            //    await _userManager.AddToRoleAsync(user, "Seller");
-            //    await _signInManager.RefreshSignInAsync(user);
-
-            //    var roles = await _userManager.GetRolesAsync(user);
-            //    foreach (var role in roles)
-            //    {
-            //        Console.WriteLine($"Роль користувача: {role}");
-            //    }
-
-            //}
-
+            // var user = await _userManager.GetUserAsync(User);
+            // if (user == null)
+            // {
+            // return RedirectToAction("Login", "Account");
+            // }
+            // var role_f = await _userManager.GetRolesAsync(user);
+            // foreach (var role in role_f)
+            // {
+            // Console.WriteLine($"Роль користувача: {role}");
+            // }
+            // if (!await _userManager.IsInRoleAsync(user, "Seller"))
+            // {
+            // Console.WriteLine("ПОчаток циклу\n");
+            // await _userManager.AddToRoleAsync(user, "Seller");
+            // await _signInManager.RefreshSignInAsync(user);
+            // var roles = await _userManager.GetRolesAsync(user);
+            // foreach (var role in roles)
+            // {
+            // Console.WriteLine($"Роль користувача: {role}");
+            // }
+            // }
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -215,7 +222,5 @@ namespace MadeByMe.src.Controllers
 
             return RedirectToAction("Profile", "Account");
         }
-
     }
-
 }
