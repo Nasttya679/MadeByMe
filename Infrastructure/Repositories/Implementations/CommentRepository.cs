@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories.Interfaces;

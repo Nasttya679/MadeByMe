@@ -4,6 +4,7 @@ using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
@@ -49,9 +50,11 @@ namespace MadeByMe.Web.Controllers
             {
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 await _userManager.AddToRoleAsync(user, "User");
+                Log.Information("Користувача успішно зареєстровано: {Email}", dto.Email);
                 return RedirectToAction("Index", "Home");
             }
 
+            Log.Warning("Невдала спроба реєстрації для {Email}. Помилки: {@Errors}", dto.Email, result.Errors.Select(e => e.Description));
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
@@ -87,6 +90,7 @@ namespace MadeByMe.Web.Controllers
 
             if (user == null)
             {
+                Log.Warning("Невдала спроба входу: користувача з email {Email} не знайдено", dto.Email);
                 ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
                 return View(dto);
             }
@@ -96,10 +100,12 @@ namespace MadeByMe.Web.Controllers
             Console.WriteLine("SignIn success: " + result.Succeeded);
             if (result.Succeeded)
             {
+                Log.Information("Користувач {Email} успішно увійшов у систему", dto.Email);
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");
             }
 
+            Log.Warning("Невдала спроба входу для {Email}: невірний пароль", dto.Email);
             ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
             return View(dto);
         }
@@ -107,6 +113,7 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
+            Log.Information("Користувач {UserName} вийшов із системи", User.Identity?.Name ?? "Невідомий");
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
@@ -169,15 +176,18 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Користувачу {Email} не вдалося оновити профіль. Причина: {ErrorMessage}", currentUser.Email, result.ErrorMessage);
                 ModelState.AddModelError(string.Empty, result.ErrorMessage);
                 return View("EditProfile", dto);
             }
 
+            Log.Information("Користувач {Email} успішно оновив свій профіль", currentUser.Email);
             return RedirectToAction(nameof(Profile));
         }
 
         public IActionResult AccessDenied()
         {
+            Log.Warning("Відмовлено в доступі для користувача {UserName} до захищеного ресурсу", User.Identity?.Name ?? "Неавторизований");
             return View();
         }
 
@@ -216,6 +226,7 @@ namespace MadeByMe.Web.Controllers
             if (!roles.Contains("Seller"))
             {
                 await _userManager.AddToRoleAsync(user, "Seller");
+                Log.Information("Користувач {Email} отримав роль 'Seller'", user.Email);
             }
 
             await _signInManager.RefreshSignInAsync(user);

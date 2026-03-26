@@ -4,6 +4,7 @@ using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
@@ -33,6 +34,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Коментар з ID {CommentId} не знайдено. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 return NotFound(result.ErrorMessage);
             }
 
@@ -45,6 +47,7 @@ namespace MadeByMe.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Помилка валідації при спробі створення коментаря до поста {PostId}", dto.PostId);
                 return View(dto);
             }
 
@@ -54,10 +57,12 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося додати коментар до поста {PostId} для користувача {UserId}. Причина: {ErrorMessage}", dto.PostId, userId, result.ErrorMessage);
                 ModelState.AddModelError(string.Empty, result.ErrorMessage);
                 return View(dto);
             }
 
+            Log.Information("Користувач {UserId} успішно додав коментар до поста {PostId}", userId, dto.PostId);
             return RedirectToAction("Details", "Post", new { id = result.Value.PostId });
         }
 
@@ -69,6 +74,7 @@ namespace MadeByMe.Web.Controllers
             var result = _commentService.GetCommentById(id);
             if (result.IsFailure)
             {
+                Log.Warning("Спроба видалення: коментар з ID {CommentId} не знайдено", id);
                 return NotFound(result.ErrorMessage);
             }
 
@@ -81,12 +87,18 @@ namespace MadeByMe.Web.Controllers
 
                 if (deleteResult.IsFailure)
                 {
+                    Log.Error("Не вдалося видалити коментар {CommentId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
                     TempData["Error"] = deleteResult.ErrorMessage;
+                }
+                else
+                {
+                    Log.Information("Коментар {CommentId} успішно видалено користувачем {UserName}", id, currentUserName);
                 }
 
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }
 
+            Log.Warning("Користувач {UserName} намагався видалити коментар {CommentId} без відповідних прав доступу", currentUserName, id);
             return Forbid();
         }
     }

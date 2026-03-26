@@ -2,6 +2,7 @@
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
@@ -20,6 +21,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося отримати список категорій. Причина: {ErrorMessage}", result.ErrorMessage);
                 TempData["Error"] = result.ErrorMessage;
                 return View(new List<Category>());
             }
@@ -33,6 +35,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося знайти детальну інформацію про категорію {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 return NotFound(result.ErrorMessage);
             }
 
@@ -50,6 +53,7 @@ namespace MadeByMe.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Помилка валідації форми при спробі створити нову категорію");
                 return View(createCategoryDto);
             }
 
@@ -57,10 +61,12 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося створити категорію. Причина: {ErrorMessage}", result.ErrorMessage);
                 ModelState.AddModelError(string.Empty, result.ErrorMessage);
                 return View(createCategoryDto);
             }
 
+            Log.Information("Нову категорію успішно створено");
             return RedirectToAction(nameof(Index));
         }
 
@@ -70,6 +76,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося завантажити категорію {CategoryId} для редагування. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 return NotFound(result.ErrorMessage);
             }
 
@@ -86,6 +93,7 @@ namespace MadeByMe.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Помилка валідації форми при редагуванні категорії {CategoryId}", id);
                 return View(updateCategoryDto);
             }
 
@@ -93,10 +101,12 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося оновити категорію {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 ModelState.AddModelError(string.Empty, result.ErrorMessage);
                 return View(updateCategoryDto);
             }
 
+            Log.Information("Категорію {CategoryId} успішно оновлено", id);
             return RedirectToAction(nameof(Index));
         }
 
@@ -106,6 +116,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося завантажити сторінку видалення для категорії {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 return NotFound(result.ErrorMessage);
             }
 
@@ -121,10 +132,12 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Не вдалося видалити категорію {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
                 TempData["Error"] = result.ErrorMessage;
                 return RedirectToAction(nameof(Index));
             }
 
+            Log.Information("Категорію {CategoryId} успішно видалено", id);
             return RedirectToAction(nameof(Index));
         }
     }

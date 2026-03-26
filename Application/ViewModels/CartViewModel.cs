@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using MadeByMe.Domain.Entities;
+﻿using MadeByMe.Domain.Entities;
 
 namespace MadeByMe.Application.ViewModels
 {

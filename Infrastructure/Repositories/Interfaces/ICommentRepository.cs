@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using MadeByMe.Domain.Entities;
 
 namespace MadeByMe.Infrastructure.Repositories.Interfaces

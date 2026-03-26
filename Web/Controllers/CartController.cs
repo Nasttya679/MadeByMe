@@ -1,10 +1,11 @@
-﻿using System.Linq;
+﻿using Humanizer;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 
 public class CartController : Controller
 {
@@ -27,6 +28,7 @@ public class CartController : Controller
 
         if (result.IsFailure)
         {
+            Log.Warning("Не вдалося завантажити кошик для покупця {BuyerId}. Причина: {ErrorMessage}", buyerId, result.ErrorMessage);
             TempData["Error"] = result.ErrorMessage;
             return View(new CartViewModel());
         }
@@ -44,9 +46,11 @@ public class CartController : Controller
 
         if (result.IsFailure)
         {
+            Log.Warning("Не вдалося додати товар {PostId} у кошик для покупця {BuyerId}. Причина: {ErrorMessage}", dto.PostId, buyerId, result.ErrorMessage);
             return BadRequest(result.ErrorMessage);
         }
 
+        Log.Information("Товар {PostId} успішно додано у кошик покупцем {BuyerId}", dto.PostId, buyerId);
         return RedirectToAction("Index");
     }
 
@@ -60,10 +64,12 @@ public class CartController : Controller
 
         if (result.IsFailure)
         {
+            Log.Warning("Не вдалося видалити товар {PostId} з кошика покупця {BuyerId}. Причина: {ErrorMessage}", postId, buyerId, result.ErrorMessage);
             TempData["Error"] = result.ErrorMessage;
             return RedirectToAction("Index");
         }
 
+        Log.Information("Товар {PostId} видалено з кошика покупцем {BuyerId}", postId, buyerId);
         return RedirectToAction("Index");
     }
 
@@ -99,7 +105,12 @@ public class CartController : Controller
         var updateResult = _cartService.UpdateCartItem(cartItem);
         if (updateResult.IsFailure)
         {
+            Log.Warning("Не вдалося оновити кількість товару {PostId} у кошику покупця {BuyerId}. Причина: {ErrorMessage}", productId, buyerId, updateResult.ErrorMessage);
             TempData["Error"] = updateResult.ErrorMessage;
+        }
+        else
+        {
+            Log.Information("Покупець {BuyerId} змінив кількість товару {PostId} на {Quantity}", buyerId, productId, cartItem.Quantity);
         }
 
         return RedirectToAction("Index");
@@ -133,16 +144,19 @@ public class CartController : Controller
 
         if (cartResult.IsFailure || cartResult.Value.BuyerCarts == null || !cartResult.Value.BuyerCarts.Any())
         {
+            Log.Warning("Покупець {BuyerId} намагався оформити замовлення з порожнім кошиком", buyerId);
             return View("EmptyCartError");
         }
 
         var clearResult = _cartService.ClearCart(cartResult.Value.CartId);
         if (clearResult.IsFailure)
         {
+            Log.Error("КРИТИЧНА ПОМИЛКА: Покупець {BuyerId} оформив замовлення, але не вдалося очистити кошик {CartId}. Причина: {ErrorMessage}", buyerId, cartResult.Value.CartId, clearResult.ErrorMessage);
             TempData["Error"] = clearResult.ErrorMessage;
             return RedirectToAction("Index");
         }
 
+        Log.Information("УСПІШНЕ ЗАМОВЛЕННЯ: Покупець {BuyerId} успішно оформив замовлення і кошик очищено", buyerId);
         return View("CheckoutSuccess");
     }
 
@@ -158,8 +172,11 @@ public class CartController : Controller
             var clearResult = _cartService.ClearCart(cartResult.Value.CartId);
             if (clearResult.IsFailure)
             {
+                Log.Warning("Не вдалося очистити кошик для покупця {BuyerId}. Причина: {ErrorMessage}", buyerId, clearResult.ErrorMessage);
                 return BadRequest(clearResult.ErrorMessage);
             }
+
+            Log.Information("Покупець {BuyerId} повністю очистив свій кошик", buyerId);
         }
 
         return Ok();

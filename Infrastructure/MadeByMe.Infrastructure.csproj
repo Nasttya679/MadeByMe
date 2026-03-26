@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1005;SA1309;SA1101;SA1413;SA1118</NoWarn>
+    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1005;SA1309;SA1101;SA1413;SA1118;SA1600</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

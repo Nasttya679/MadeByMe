@@ -1,6 +1,4 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using Serilog;
 
 namespace MadeByMe.Web.Middlewares
 {
@@ -27,7 +25,7 @@ namespace MadeByMe.Web.Middlewares
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            Console.WriteLine($"[Глобальна помилка]: {exception.Message}");
+            Log.Error(exception, "Сталася необроблена помилка під час виконання запиту {Path}. Повідомлення: {Message}", context.Request.Path, exception.Message);
 
             context.Response.Redirect("/Home/Error");
 

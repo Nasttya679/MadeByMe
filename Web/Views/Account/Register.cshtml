@@ -68,14 +68,14 @@
                     <div>
                         <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700">Номер мобільного телефону</label>
                         <div class="mt-1 relative rounded-lg shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">+380</span>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                                <span class="text-gray-500 sm:text-sm">+38</span>
                             </div>
-                            <input asp-for="PhoneNumber" type="tel" placeholder="XX XXX XX XX"
-                                   class="mt-1 block w-full pl-12 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
+                            <input asp-for="PhoneNumber" type="tel" placeholder="XXX XXX XX XX" style="padding-left: 3.0rem !important;"
+                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
                         </div>
                         <span asp-validation-for="PhoneNumber" class="mt-1 text-sm text-red-600"></span>
-                        <p class="mt-1 text-sm text-gray-500">Введіть номер у форматі: XX XXX XX XX</p>
+                        <p class="mt-1 text-sm text-gray-500">Введіть номер у форматі: XXX XXX XX XX</p>
                     </div>
 
                     <div>

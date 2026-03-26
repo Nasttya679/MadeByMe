@@ -1,4 +1,3 @@
-using MadeByMe.Application.Services;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
@@ -8,10 +7,13 @@ using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Serilog;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 // ---------------------------
 // 1. Підключення до БД
@@ -174,8 +176,7 @@ app.MapControllerRoute(
 // ---------------------------
 // 9. Запуск на HTTP
 // ---------------------------
-string urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5000";
-app.Urls.Clear();
-app.Urls.Add(urls);
-
+// string urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5000";
+// app.Urls.Clear();
+// app.Urls.Add(urls);
 app.Run();

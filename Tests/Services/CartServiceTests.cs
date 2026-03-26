@@ -2,7 +2,6 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
-using Xunit;
 
 namespace MadeByMe.Tests.Services
 {

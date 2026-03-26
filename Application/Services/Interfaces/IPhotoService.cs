@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using MadeByMe.Application.Common;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Http;

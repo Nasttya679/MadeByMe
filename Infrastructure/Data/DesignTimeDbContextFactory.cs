@@ -1,5 +1,4 @@
-﻿using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Data;
+﻿using MadeByMe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

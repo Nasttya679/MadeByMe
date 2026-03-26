@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using MadeByMe.Application.Common;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Domain.Entities;

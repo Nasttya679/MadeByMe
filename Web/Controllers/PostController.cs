@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
@@ -37,6 +38,7 @@ namespace MadeByMe.Web.Controllers
 
             if (result.IsFailure)
             {
+                Log.Warning("Помилка при пошуку постів за запитом '{SearchTerm}': {ErrorMessage}", searchTerm, result.ErrorMessage);
                 TempData["Error"] = result.ErrorMessage;
                 return View(new List<PostResponseDto>());
             }
@@ -55,6 +57,7 @@ namespace MadeByMe.Web.Controllers
                 CreatedAt = post.CreatedAt,
             }).ToList();
 
+            Log.Information("Відображено {Count} постів для запиту '{SearchTerm}'", postsList.Count, searchTerm ?? "усі");
             return View(postsList);
         }
 
@@ -63,6 +66,7 @@ namespace MadeByMe.Web.Controllers
             var postResult = _postService.GetPostById(id);
             if (postResult.IsFailure)
             {
+                Log.Warning("Спроба перегляду деталей: пост з ID {PostId} не знайдено", id);
                 return NotFound(postResult.ErrorMessage);
             }
 
@@ -75,6 +79,7 @@ namespace MadeByMe.Web.Controllers
                 CommentsList = comments,
             };
 
+            Log.Information("Перегляд деталей поста: {PostTitle} (ID: {PostId})", postResult.Value.Title, id);
             return View(viewModel);
         }
 
@@ -92,6 +97,7 @@ namespace MadeByMe.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Помилка валідації при створенні нового поста");
                 LoadCategoriesToViewBag();
                 return View(createPostDto);
             }
@@ -101,6 +107,7 @@ namespace MadeByMe.Web.Controllers
 
             if (postResult.IsFailure)
             {
+                Log.Error("Не вдалося створити пост для користувача {UserId}. Причина: {ErrorMessage}", userId, postResult.ErrorMessage);
                 ModelState.AddModelError(string.Empty, postResult.ErrorMessage);
                 LoadCategoriesToViewBag();
                 return View(createPostDto);
@@ -110,8 +117,10 @@ namespace MadeByMe.Web.Controllers
             {
                 // Сервіс зберігає і файл, і запис в базу
                 await _photoService.SavePhotoAsync(createPostDto.Photo, postResult.Value.Id);
+                Log.Information("Фото для поста {PostId} успішно збережено", postResult.Value.Id);
             }
 
+            Log.Information("Користувач {UserId} успішно створив пост '{PostTitle}' (ID: {PostId})", userId, createPostDto.Title, postResult.Value.Id);
             return RedirectToAction(nameof(Index));
         }
 
@@ -121,6 +130,7 @@ namespace MadeByMe.Web.Controllers
             var postResult = _postService.GetPostById(id);
             if (postResult.IsFailure)
             {
+                Log.Warning("Спроба редагування: пост з ID {PostId} не знайдено", id);
                 return NotFound(postResult.ErrorMessage);
             }
 
@@ -129,6 +139,7 @@ namespace MadeByMe.Web.Controllers
 
             if (post.SellerId != currentUserId)
             {
+                Log.Warning("Відмовлено в доступі: користувач {UserId} намагався редагувати чужий пост {PostId}", currentUserId, id);
                 return Forbid();
             }
 
@@ -153,6 +164,7 @@ namespace MadeByMe.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
+                Log.Warning("Помилка валідації при оновленні поста {PostId}", id);
                 LoadCategoriesToViewBag();
                 return View(updatePostDto);
             }
@@ -168,6 +180,7 @@ namespace MadeByMe.Web.Controllers
 
             if (post.SellerId != currentUserId)
             {
+                Log.Warning("Незаконна спроба оновлення: користувач {UserId} намагався змінити пост {PostId}", currentUserId, id);
                 return Forbid();
             }
 
@@ -178,19 +191,23 @@ namespace MadeByMe.Web.Controllers
                 {
                     // Сервіс видаляє і файл, і запис з бази
                     _photoService.DeletePhoto(oldPhoto);
+                    Log.Information("Старе фото для поста {PostId} видалено", id);
                 }
 
                 await _photoService.SavePhotoAsync(updatePostDto.Photo, post.Id);
+                Log.Information("Нове фото для поста {PostId} збережено", id);
             }
 
             var updateResult = _postService.UpdatePost(id, updatePostDto);
             if (updateResult.IsFailure)
             {
+                Log.Error("Не вдалося оновити пост {PostId}. Причина: {ErrorMessage}", id, updateResult.ErrorMessage);
                 ModelState.AddModelError(string.Empty, updateResult.ErrorMessage);
                 LoadCategoriesToViewBag();
                 return View(updatePostDto);
             }
 
+            Log.Information("Користувач {UserId} успішно оновив пост {PostId}", currentUserId, id);
             return RedirectToAction(nameof(Index));
         }
 
@@ -200,6 +217,7 @@ namespace MadeByMe.Web.Controllers
             var postResult = _postService.GetPostById(id);
             if (postResult.IsFailure)
             {
+                Log.Warning("Спроба видалення: пост {PostId} не знайдено", id);
                 return NotFound(postResult.ErrorMessage);
             }
 
@@ -208,6 +226,7 @@ namespace MadeByMe.Web.Controllers
 
             if (post.SellerId != currentUserId)
             {
+                Log.Warning("Спроба видалення: користувач {UserId} не має прав на видалення поста {PostId}", currentUserId, id);
                 return Forbid();
             }
 
@@ -231,6 +250,7 @@ namespace MadeByMe.Web.Controllers
 
             if (post.SellerId != currentUserId)
             {
+                Log.Warning("Незаконна спроба підтвердження видалення: користувач {UserId}, пост {PostId}", currentUserId, id);
                 return Forbid();
             }
 
@@ -240,15 +260,19 @@ namespace MadeByMe.Web.Controllers
                 {
                     _photoService.DeletePhoto(photo);
                 }
+
+                Log.Information("Усі фото, пов'язані з постом {PostId}, видалено", id);
             }
 
             var deleteResult = _postService.DeletePost(id);
             if (deleteResult.IsFailure)
             {
+                Log.Error("Помилка при видаленні поста {PostId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
                 TempData["Error"] = deleteResult.ErrorMessage;
                 return RedirectToAction(nameof(Index));
             }
 
+            Log.Information("Пост {PostId} успішно видалено користувачем {UserId}", id, currentUserId);
             return RedirectToAction(nameof(Index));
         }
 

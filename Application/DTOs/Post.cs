@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MadeByMe.Domain.Entities;
-using MadeByMe.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 
 namespace MadeByMe.Application.DTOs
