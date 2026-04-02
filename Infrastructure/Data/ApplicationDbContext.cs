@@ -119,6 +119,10 @@ namespace MadeByMe.Infrastructure.Data
 
         public DbSet<Photo> Photos { get; set; }
 
+        public DbSet<Order> Orders { get; set; }
+
+        public DbSet<OrderItem> OrderItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

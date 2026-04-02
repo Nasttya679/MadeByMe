@@ -3,18 +3,23 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
+using Serilog;
 
 namespace MadeByMe.Tests.Services
 {
     public class CommentServiceTests
     {
         private readonly Mock<ICommentRepository> _commentRepoMock;
+        private readonly Mock<IPostRepository> _postRepoMock;
         private readonly CommentService _commentService;
 
         public CommentServiceTests()
         {
+            Log.Logger = Serilog.Core.Logger.None;
             _commentRepoMock = new Mock<ICommentRepository>();
-            _commentService = new CommentService(_commentRepoMock.Object);
+            _postRepoMock = new Mock<IPostRepository>();
+
+            _commentService = new CommentService(_commentRepoMock.Object, _postRepoMock.Object);
         }
 
         [Fact]
@@ -45,6 +50,7 @@ namespace MadeByMe.Tests.Services
         public void GetCommentsForPost_ShouldCallRepositoryWithCorrectPostId()
         {
             int postId = 10;
+            _commentRepoMock.Setup(repo => repo.GetByPostId(postId)).Returns(new List<Comment>());
             _commentService.GetCommentsForPost(postId);
             _commentRepoMock.Verify(repo => repo.GetByPostId(postId), Times.Once);
         }
@@ -141,6 +147,27 @@ namespace MadeByMe.Tests.Services
             int id = 10;
             _commentService.DeleteComment(id);
             _commentRepoMock.Verify(repo => repo.GetById(id), Times.Once);
+        }
+
+        [Fact]
+        public void AddComment_ShouldUpdatePostRatingAutomatically()
+        {
+            var post = new Post { Id = 1, Rating = 0 };
+            var dto = new CreateCommentDto { PostId = 1, Stars = 4, Content = "Good" };
+
+            var commentsAfterAdding = new List<Comment>
+            {
+                new Comment { Stars = 5 },
+                new Comment { Stars = 4 },
+            };
+
+            _postRepoMock.Setup(repo => repo.GetById(1)).Returns(post);
+            _commentRepoMock.Setup(repo => repo.GetByPostId(1)).Returns(commentsAfterAdding);
+
+            _commentService.AddComment(dto, "user-1");
+
+            Assert.Equal(4.5m, post.Rating);
+            _postRepoMock.Verify(repo => repo.Update(post), Times.Once);
         }
     }
 }

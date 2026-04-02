@@ -3,6 +3,7 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
+using Serilog;
 
 namespace MadeByMe.Tests.Services
 {
@@ -13,6 +14,7 @@ namespace MadeByMe.Tests.Services
 
         public CategoryServiceTests()
         {
+            Log.Logger = Serilog.Core.Logger.None;
             _categoryRepoMock = new Mock<ICategoryRepository>();
             _categoryService = new CategoryService(_categoryRepoMock.Object);
         }
@@ -43,6 +45,7 @@ namespace MadeByMe.Tests.Services
         [Fact]
         public void GetAllCategories_ShouldCallRepositoryOnce()
         {
+            _categoryRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Category>());
             _categoryService.GetAllCategories();
             _categoryRepoMock.Verify(repo => repo.GetAll(), Times.Once);
         }

@@ -16,6 +16,6 @@ namespace MadeByMe.Application.Services.Interfaces
 
         Result DeletePost(int id);
 
-        Result<List<Post>> SearchPosts(string searchTerm);
+        Result<List<Post>> GetFilteredPosts(string? searchTerm, int? categoryId, string? sortBy);
     }
 }

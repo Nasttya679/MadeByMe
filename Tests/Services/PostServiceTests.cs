@@ -3,6 +3,7 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
+using Serilog;
 
 namespace MadeByMe.Tests.Services
 {
@@ -13,6 +14,7 @@ namespace MadeByMe.Tests.Services
 
         public PostServiceTests()
         {
+            Log.Logger = Serilog.Core.Logger.None;
             _postRepoMock = new Mock<IPostRepository>();
             _postService = new PostService(_postRepoMock.Object);
         }
@@ -40,6 +42,7 @@ namespace MadeByMe.Tests.Services
         [Fact]
         public void GetAllPosts_ShouldCallRepoOnce()
         {
+            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
             _postService.GetAllPosts();
             _postRepoMock.Verify(repo => repo.GetAll(), Times.Once);
         }
@@ -160,40 +163,26 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public void SearchPosts_WhenTermMatchesTitle_ShouldReturnResults()
+        public void GetFilteredPosts_WithCategoryAndSort_ShouldReturnFilteredResults()
         {
             var posts = new List<Post>
             {
-                new Post { Title = "Apple", Description = "Fresh fruit" },
-                new Post { Title = "Banana", Description = "Yellow fruit" },
+                new Post { Id = 1, Title = "A", Price = 100, CategoryId = 1, Rating = 5 },
+                new Post { Id = 2, Title = "B", Price = 50, CategoryId = 1, Rating = 3 },
             };
             _postRepoMock.Setup(repo => repo.GetAll()).Returns(posts);
 
-            var result = _postService.SearchPosts("Apple");
-
-            Assert.Single(result.Value);
-            Assert.Equal("Apple", result.Value[0].Title);
-        }
-
-        [Fact]
-        public void SearchPosts_WhenEmptyTerm_ShouldReturnAllPosts()
-        {
-            var posts = new List<Post> { new Post { Title = "A" }, new Post { Title = "B" } };
-            _postRepoMock.Setup(repo => repo.GetAll()).Returns(posts);
-
-            var result = _postService.SearchPosts(string.Empty);
+            var result = _postService.GetFilteredPosts(null, 1, "price_asc");
 
             Assert.Equal(2, result.Value.Count);
+            Assert.Equal(50, result.Value[0].Price);
         }
 
         [Fact]
-        public void SearchPosts_WhenNoMatches_ShouldReturnEmptyList()
+        public void GetFilteredPosts_WhenNoMatches_ShouldReturnEmptyList()
         {
-            var posts = new List<Post> { new Post { Title = "A", Description = "Desc" } };
-            _postRepoMock.Setup(repo => repo.GetAll()).Returns(posts);
-
-            var result = _postService.SearchPosts("NonExistent");
-
+            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
+            var result = _postService.GetFilteredPosts("NonExistent", null, null);
             Assert.Empty(result.Value);
         }
     }

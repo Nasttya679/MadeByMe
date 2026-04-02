@@ -17,7 +17,7 @@ namespace MadeByMe.Application.Services.Implementations
         {
             var posts = _repo.GetAll();
             Log.Information("Отримано список усіх постів. Кількість: {Count}", posts.Count);
-            return Result<List<Post>>.Success(_repo.GetAll());
+            return Result<List<Post>>.Success(posts);
         }
 
         public Result<Post> GetPostById(int id)
@@ -90,18 +90,37 @@ namespace MadeByMe.Application.Services.Implementations
             return Result.Success();
         }
 
-        public Result<List<Post>> SearchPosts(string searchTerm)
+        public Result<List<Post>> GetFilteredPosts(string? searchTerm, int? categoryId, string? sortBy)
         {
-            Log.Information("Пошук постів за запитом: '{SearchTerm}'", searchTerm ?? "усі");
+            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm, categoryId, sortBy);
 
-            var posts = _repo.GetAll();
-            if (!string.IsNullOrEmpty(searchTerm))
+            var posts = _repo.GetAll().AsQueryable();
+
+            if (categoryId.HasValue && categoryId > 0)
             {
-                posts = posts.Where(p => p.Title!.Contains(searchTerm) || p.Description!.Contains(searchTerm)).ToList();
+                posts = posts.Where(p => p.CategoryId == categoryId);
             }
 
-            Log.Information("Пошук завершено. Знайдено результатів: {Count}", posts.Count);
-            return Result<List<Post>>.Success(posts);
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var lowerSearch = searchTerm.ToLower();
+                posts = posts.Where(p => p.Title!.ToLower().Contains(lowerSearch) ||
+                                         p.Description!.ToLower().Contains(lowerSearch));
+            }
+
+            posts = sortBy switch
+            {
+                "price_asc" => posts.OrderBy(p => p.Price),
+                "price_desc" => posts.OrderByDescending(p => p.Price),
+                "rating" => posts.OrderByDescending(p => p.Rating),
+                "newest" => posts.OrderByDescending(p => p.CreatedAt),
+                _ => posts.OrderByDescending(p => p.CreatedAt)
+            };
+
+            var resultList = posts.ToList();
+            Log.Information("Фільтрація завершена. Знайдено: {Count}", resultList.Count);
+
+            return Result<List<Post>>.Success(resultList);
         }
     }
 }

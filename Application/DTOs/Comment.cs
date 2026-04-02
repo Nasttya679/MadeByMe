@@ -10,6 +10,9 @@ namespace MadeByMe.Application.DTOs
         [Required]
         [MaxLength(1000)]
         public string? Content { get; set; }
+
+        [Range(1, 5)]
+        public int Stars { get; set; } = 5;
     }
 
     public class CommentResponseDto
@@ -23,5 +26,7 @@ namespace MadeByMe.Application.DTOs
         public string? AuthorName { get; set; }
 
         public string? AuthorAvatar { get; set; }
+
+        public int Stars { get; set; }
     }
 }

@@ -32,16 +32,21 @@ namespace MadeByMe.Web.Controllers
             _categoryService = categoryService;
         }
 
-        public IActionResult Index(string searchTerm)
+        public IActionResult Index(string? searchTerm, int? categoryId, string? sortBy)
         {
-            var result = _postService.SearchPosts(searchTerm);
+            var result = _postService.GetFilteredPosts(searchTerm, categoryId, sortBy);
 
             if (result.IsFailure)
             {
-                Log.Warning("Помилка при пошуку постів за запитом '{SearchTerm}': {ErrorMessage}", searchTerm, result.ErrorMessage);
                 TempData["Error"] = result.ErrorMessage;
                 return View(new List<PostResponseDto>());
             }
+
+            LoadCategoriesToViewBag();
+
+            ViewBag.CurrentSearch = searchTerm;
+            ViewBag.CurrentCategory = categoryId;
+            ViewBag.CurrentSort = sortBy;
 
             var postsList = result.Value.Select(post => new PostResponseDto
             {
@@ -57,7 +62,7 @@ namespace MadeByMe.Web.Controllers
                 CreatedAt = post.CreatedAt,
             }).ToList();
 
-            Log.Information("Відображено {Count} постів для запиту '{SearchTerm}'", postsList.Count, searchTerm ?? "усі");
+            Log.Information("Каталог відображено успішно. Знайдено товарів: {Count}", postsList.Count);
             return View(postsList);
         }
 
@@ -115,7 +120,6 @@ namespace MadeByMe.Web.Controllers
 
             if (createPostDto.Photo != null)
             {
-                // Сервіс зберігає і файл, і запис в базу
                 await _photoService.SavePhotoAsync(createPostDto.Photo, postResult.Value.Id);
                 Log.Information("Фото для поста {PostId} успішно збережено", postResult.Value.Id);
             }
@@ -189,7 +193,6 @@ namespace MadeByMe.Web.Controllers
                 var oldPhoto = post.Photos?.FirstOrDefault();
                 if (oldPhoto != null)
                 {
-                    // Сервіс видаляє і файл, і запис з бази
                     _photoService.DeletePhoto(oldPhoto);
                     Log.Information("Старе фото для поста {PostId} видалено", id);
                 }
