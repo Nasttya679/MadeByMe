@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
+using Xunit;
 
 namespace MadeByMe.Tests.Services
 {
@@ -19,24 +21,24 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public void UpdateUser_WhenUserNotFound_ShouldReturnFailure()
+        public async Task UpdateUserAsync_WhenUserNotFound_ShouldReturnFailure()
         {
             string userId = "invalid-id";
             var dto = new UpdateProfileDto();
 
-            _userRepositoryMock.Setup(repo => repo.GetById(userId))
-                               .Returns((ApplicationUser)null!);
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(userId))
+                               .ReturnsAsync((ApplicationUser)null!);
 
-            var result = _userService.UpdateUser(userId, dto);
+            var result = await _userService.UpdateUserAsync(userId, dto);
 
             Assert.True(result.IsFailure);
             Assert.Equal("Користувача з таким ідентифікатором не знайдено.", result.ErrorMessage);
 
-            _userRepositoryMock.Verify(repo => repo.Update(It.IsAny<ApplicationUser>()), Times.Never);
+            _userRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
         [Fact]
-        public void UpdateUser_WithValidFullData_ShouldUpdateAllFieldsAndReturnSuccess()
+        public async Task UpdateUserAsync_WithValidFullData_ShouldUpdateAllFieldsAndReturnSuccess()
         {
             string userId = "valid-id";
             var existingUser = new ApplicationUser
@@ -58,21 +60,21 @@ namespace MadeByMe.Tests.Services
                 Address = "New Address",
             };
 
-            _userRepositoryMock.Setup(repo => repo.GetById(userId))
-                               .Returns(existingUser);
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(userId))
+                               .ReturnsAsync(existingUser);
 
-            var result = _userService.UpdateUser(userId, dto);
+            var result = await _userService.UpdateUserAsync(userId, dto);
 
             Assert.True(result.IsSuccess);
             Assert.Equal("NewName", result.Value.UserName);
             Assert.Equal("new@email.com", result.Value.Email);
             Assert.Equal("New Address", result.Value.Address);
 
-            _userRepositoryMock.Verify(repo => repo.Update(existingUser), Times.Once);
+            _userRepositoryMock.Verify(repo => repo.UpdateAsync(existingUser), Times.Once);
         }
 
         [Fact]
-        public void UpdateUser_WithPartialNullData_ShouldKeepOldValuesAndReturnSuccess()
+        public async Task UpdateUserAsync_WithPartialNullData_ShouldKeepOldValuesAndReturnSuccess()
         {
             string userId = "valid-id";
             var existingUser = new ApplicationUser
@@ -91,10 +93,10 @@ namespace MadeByMe.Tests.Services
                 Address = null,
             };
 
-            _userRepositoryMock.Setup(repo => repo.GetById(userId))
-                               .Returns(existingUser);
+            _userRepositoryMock.Setup(repo => repo.GetByIdAsync(userId))
+                               .ReturnsAsync(existingUser);
 
-            var result = _userService.UpdateUser(userId, dto);
+            var result = await _userService.UpdateUserAsync(userId, dto);
 
             Assert.True(result.IsSuccess);
 
@@ -102,7 +104,7 @@ namespace MadeByMe.Tests.Services
 
             Assert.Equal("old@email.com", result.Value.Email);
 
-            _userRepositoryMock.Verify(repo => repo.Update(existingUser), Times.Once);
+            _userRepositoryMock.Verify(repo => repo.UpdateAsync(existingUser), Times.Once);
         }
     }
 }

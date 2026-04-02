@@ -1,6 +1,7 @@
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace MadeByMe.Infrastructure.Repositories.Implementations
 {
@@ -13,41 +14,40 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context = context;
         }
 
-        public BuyerCart? GetItem(int cartId, int postId)
+        public async Task<BuyerCart?> GetItemAsync(int cartId, int postId)
         {
-            return _context.BuyerCarts.FirstOrDefault(bc => bc.CartId == cartId && bc.PostId == postId);
+            return await _context.BuyerCarts.FirstOrDefaultAsync(bc => bc.CartId == cartId && bc.PostId == postId);
         }
 
-        public void AddItem(BuyerCart item)
+        public async Task AddItemAsync(BuyerCart item)
         {
             _context.BuyerCarts.Add(item);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveItem(BuyerCart item)
+        public async Task RemoveItemAsync(BuyerCart item)
         {
             _context.BuyerCarts.Remove(item);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateItem(BuyerCart item)
+        public async Task UpdateItemAsync(BuyerCart item)
         {
             _context.BuyerCarts.Update(item);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveRange(IEnumerable<BuyerCart> items)
+        public async Task RemoveRangeAsync(IEnumerable<BuyerCart> items)
         {
             _context.BuyerCarts.RemoveRange(items);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        // ----> Реалізація методу GetItemsByCartId
-        public IEnumerable<BuyerCart> GetItemsByCartId(int cartId)
+        public async Task<IEnumerable<BuyerCart>> GetItemsByCartIdAsync(int cartId)
         {
-            return _context.BuyerCarts
+            return await _context.BuyerCarts
                 .Where(bc => bc.CartId == cartId)
-                .ToList();
+                .ToListAsync();
         }
     }
 }

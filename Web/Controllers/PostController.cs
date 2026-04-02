@@ -3,42 +3,39 @@ using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class PostController : Controller
+    public class PostController : BaseController
     {
         private readonly IPostService _postService;
         private readonly ICommentService _commentService;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IPhotoService _photoService;
         private readonly ICategoryService _categoryService;
 
         public PostController(
             IPostService postService,
             ICommentService commentService,
-            UserManager<ApplicationUser> userManager,
             IPhotoService photoService,
             ICategoryService categoryService)
         {
             _postService = postService;
             _commentService = commentService;
-            _userManager = userManager;
             _photoService = photoService;
             _categoryService = categoryService;
         }
 
-        public IActionResult Index(string? searchTerm, int? categoryId, string? sortBy)
+        public async Task<IActionResult> Index(string searchTerm)
         {
-            var result = _postService.GetFilteredPosts(searchTerm, categoryId, sortBy);
+            var result = await _postService.SearchPostsAsync(searchTerm);
 
             if (result.IsFailure)
             {
-                TempData["Error"] = result.ErrorMessage;
+                Log.Warning("Помилка при пошуку постів за запитом '{SearchTerm}': {ErrorMessage}", searchTerm, result.ErrorMessage);
+                SetErrorMessage(result.ErrorMessage);
                 return View(new List<PostResponseDto>());
             }
 
@@ -66,16 +63,16 @@ namespace MadeByMe.Web.Controllers
             return View(postsList);
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var postResult = _postService.GetPostById(id);
+            var postResult = await _postService.GetPostByIdAsync(id);
             if (postResult.IsFailure)
             {
                 Log.Warning("Спроба перегляду деталей: пост з ID {PostId} не знайдено", id);
                 return NotFound(postResult.ErrorMessage);
             }
 
-            var commentsResult = _commentService.GetCommentsForPost(id);
+            var commentsResult = await _commentService.GetCommentsForPostAsync(id);
             var comments = commentsResult.IsSuccess ? commentsResult.Value : new List<Comment>();
 
             var viewModel = new PostDetailsViewModel
@@ -89,9 +86,9 @@ namespace MadeByMe.Web.Controllers
         }
 
         [Authorize(Roles = "Seller")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            LoadCategoriesToViewBag();
+            await LoadCategoriesToViewBagAsync();
             return View();
         }
 
@@ -103,18 +100,18 @@ namespace MadeByMe.Web.Controllers
             if (!ModelState.IsValid)
             {
                 Log.Warning("Помилка валідації при створенні нового поста");
-                LoadCategoriesToViewBag();
+                await LoadCategoriesToViewBagAsync();
                 return View(createPostDto);
             }
 
-            var userId = _userManager.GetUserId(User);
-            var postResult = _postService.CreatePost(createPostDto, userId!);
+            var userId = CurrentUserId;
+            var postResult = await _postService.CreatePostAsync(createPostDto, userId!);
 
             if (postResult.IsFailure)
             {
                 Log.Error("Не вдалося створити пост для користувача {UserId}. Причина: {ErrorMessage}", userId, postResult.ErrorMessage);
-                ModelState.AddModelError(string.Empty, postResult.ErrorMessage);
-                LoadCategoriesToViewBag();
+                AddErrorToModelState(postResult.ErrorMessage);
+                await LoadCategoriesToViewBagAsync();
                 return View(createPostDto);
             }
 
@@ -129,9 +126,9 @@ namespace MadeByMe.Web.Controllers
         }
 
         [Authorize(Roles = "Seller")]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var postResult = _postService.GetPostById(id);
+            var postResult = await _postService.GetPostByIdAsync(id);
             if (postResult.IsFailure)
             {
                 Log.Warning("Спроба редагування: пост з ID {PostId} не знайдено", id);
@@ -139,7 +136,7 @@ namespace MadeByMe.Web.Controllers
             }
 
             var post = postResult.Value;
-            var currentUserId = _userManager.GetUserId(User);
+            var currentUserId = CurrentUserId;
 
             if (post.SellerId != currentUserId)
             {
@@ -155,7 +152,7 @@ namespace MadeByMe.Web.Controllers
                 CategoryId = post.CategoryId,
             };
 
-            LoadCategoriesToViewBag();
+            await LoadCategoriesToViewBagAsync();
             ViewBag.CurrentPhoto = post.Photos?.FirstOrDefault()?.FilePath;
 
             return View(updateDto);
@@ -169,18 +166,18 @@ namespace MadeByMe.Web.Controllers
             if (!ModelState.IsValid)
             {
                 Log.Warning("Помилка валідації при оновленні поста {PostId}", id);
-                LoadCategoriesToViewBag();
+                await LoadCategoriesToViewBagAsync();
                 return View(updatePostDto);
             }
 
-            var postResult = _postService.GetPostById(id);
+            var postResult = await _postService.GetPostByIdAsync(id);
             if (postResult.IsFailure)
             {
                 return NotFound(postResult.ErrorMessage);
             }
 
             var post = postResult.Value;
-            var currentUserId = _userManager.GetUserId(User);
+            var currentUserId = CurrentUserId;
 
             if (post.SellerId != currentUserId)
             {
@@ -193,7 +190,7 @@ namespace MadeByMe.Web.Controllers
                 var oldPhoto = post.Photos?.FirstOrDefault();
                 if (oldPhoto != null)
                 {
-                    _photoService.DeletePhoto(oldPhoto);
+                    await _photoService.DeletePhotoAsync(oldPhoto);
                     Log.Information("Старе фото для поста {PostId} видалено", id);
                 }
 
@@ -201,12 +198,12 @@ namespace MadeByMe.Web.Controllers
                 Log.Information("Нове фото для поста {PostId} збережено", id);
             }
 
-            var updateResult = _postService.UpdatePost(id, updatePostDto);
+            var updateResult = await _postService.UpdatePostAsync(id, updatePostDto);
             if (updateResult.IsFailure)
             {
                 Log.Error("Не вдалося оновити пост {PostId}. Причина: {ErrorMessage}", id, updateResult.ErrorMessage);
-                ModelState.AddModelError(string.Empty, updateResult.ErrorMessage);
-                LoadCategoriesToViewBag();
+                AddErrorToModelState(updateResult.ErrorMessage);
+                await LoadCategoriesToViewBagAsync();
                 return View(updatePostDto);
             }
 
@@ -215,9 +212,9 @@ namespace MadeByMe.Web.Controllers
         }
 
         [Authorize(Roles = "Seller")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var postResult = _postService.GetPostById(id);
+            var postResult = await _postService.GetPostByIdAsync(id);
             if (postResult.IsFailure)
             {
                 Log.Warning("Спроба видалення: пост {PostId} не знайдено", id);
@@ -225,7 +222,7 @@ namespace MadeByMe.Web.Controllers
             }
 
             var post = postResult.Value;
-            var currentUserId = _userManager.GetUserId(User);
+            var currentUserId = CurrentUserId;
 
             if (post.SellerId != currentUserId)
             {
@@ -240,16 +237,16 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var postResult = _postService.GetPostById(id);
+            var postResult = await _postService.GetPostByIdAsync(id);
             if (postResult.IsFailure)
             {
                 return NotFound(postResult.ErrorMessage);
             }
 
             var post = postResult.Value;
-            var currentUserId = _userManager.GetUserId(User);
+            var currentUserId = CurrentUserId;
 
             if (post.SellerId != currentUserId)
             {
@@ -261,17 +258,17 @@ namespace MadeByMe.Web.Controllers
             {
                 foreach (var photo in post.Photos)
                 {
-                    _photoService.DeletePhoto(photo);
+                    await _photoService.DeletePhotoAsync(photo);
                 }
 
                 Log.Information("Усі фото, пов'язані з постом {PostId}, видалено", id);
             }
 
-            var deleteResult = _postService.DeletePost(id);
+            var deleteResult = await _postService.DeletePostAsync(id);
             if (deleteResult.IsFailure)
             {
                 Log.Error("Помилка при видаленні поста {PostId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
-                TempData["Error"] = deleteResult.ErrorMessage;
+                SetErrorMessage(deleteResult.ErrorMessage);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -279,9 +276,9 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private void LoadCategoriesToViewBag()
+        private async Task LoadCategoriesToViewBagAsync()
         {
-            var categoriesResult = _categoryService.GetAllCategories();
+            var categoriesResult = await _categoryService.GetAllCategoriesAsync();
 
             var categories = categoriesResult.IsSuccess
                 ? categoriesResult.Value.Select(c => new SelectListItem

@@ -7,7 +7,7 @@ using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
         private readonly IPostService _postService;
 
@@ -16,9 +16,9 @@ namespace MadeByMe.Web.Controllers
             _postService = postService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var result = _postService.GetAllPosts();
+            var result = await _postService.GetAllPostsAsync();
 
             if (result.IsFailure)
             {

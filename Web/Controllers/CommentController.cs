@@ -2,35 +2,32 @@
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class CommentController : Controller
+    public class CommentController : BaseController
     {
         private readonly ICommentService _commentService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CommentController(ICommentService commentService, UserManager<ApplicationUser> userManager)
+        public CommentController(ICommentService commentService)
         {
             _commentService = commentService;
-            _userManager = userManager;
         }
 
         /*
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-           var result = _commentService.GetAllComments();
+           var result = await _commentService.GetAllCommentsAsync();
            if (result.IsFailure) return View(new List<Comment>());
            return View(result.Value);
         }
         */
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var result = _commentService.GetCommentById(id);
+            var result = await _commentService.GetCommentByIdAsync(id);
 
             if (result.IsFailure)
             {
@@ -43,7 +40,8 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(CreateCommentDto dto)
+        [Authorize]
+        public async Task<IActionResult> Create(CreateCommentDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -51,14 +49,14 @@ namespace MadeByMe.Web.Controllers
                 return View(dto);
             }
 
-            var userId = _userManager.GetUserId(User);
+            var userId = CurrentUserId;
 
-            var result = _commentService.AddComment(dto, userId!);
+            var result = await _commentService.AddCommentAsync(dto, userId!);
 
             if (result.IsFailure)
             {
                 Log.Warning("Не вдалося додати коментар до поста {PostId} для користувача {UserId}. Причина: {ErrorMessage}", dto.PostId, userId, result.ErrorMessage);
-                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                AddErrorToModelState(result.ErrorMessage);
                 return View(dto);
             }
 
@@ -69,9 +67,9 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var result = _commentService.GetCommentById(id);
+            var result = await _commentService.GetCommentByIdAsync(id);
             if (result.IsFailure)
             {
                 Log.Warning("Спроба видалення: коментар з ID {CommentId} не знайдено", id);
@@ -79,16 +77,16 @@ namespace MadeByMe.Web.Controllers
             }
 
             var comment = result.Value;
-            var currentUserName = User.Identity?.Name;
+            var currentUserName = CurrentUserName;
 
             if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == currentUserName))
             {
-                var deleteResult = _commentService.DeleteComment(id);
+                var deleteResult = await _commentService.DeleteCommentAsync(id);
 
                 if (deleteResult.IsFailure)
                 {
                     Log.Error("Не вдалося видалити коментар {CommentId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
-                    TempData["Error"] = deleteResult.ErrorMessage;
+                    SetErrorMessage(deleteResult.ErrorMessage);
                 }
                 else
                 {

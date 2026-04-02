@@ -6,12 +6,12 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface ICommentService
     {
-        Result<List<Comment>> GetCommentsForPost(int postId);
+        Task<Result<List<Comment>>> GetCommentsForPostAsync(int postId);
 
-        Result<Comment> GetCommentById(int id);
+        Task<Result<Comment>> GetCommentByIdAsync(int id);
 
-        Result<Comment> AddComment(CreateCommentDto dto, string userId);
+        Task<Result<Comment>> AddCommentAsync(CreateCommentDto dto, string userId);
 
-        Result DeleteComment(int id);
+        Task<Result> DeleteCommentAsync(int id);
     }
 }

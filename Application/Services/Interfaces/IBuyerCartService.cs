@@ -5,9 +5,8 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface IBuyerCartService
     {
-        // Змінили bool на Result
-        Result AddToCart(string userId, AddToCartDto addToCartDto);
+        Task<Result> AddToCartAsync(string userId, AddToCartDto addToCartDto);
 
-        Result RemoveFromCart(string buyerId, int postId);
+        Task<Result> RemoveFromCartAsync(string buyerId, int postId);
     }
 }

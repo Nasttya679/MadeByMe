@@ -6,14 +6,14 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface ICategoryService
     {
-        Result<List<Category>> GetAllCategories();
+        Task<Result<List<Category>>> GetAllCategoriesAsync();
 
-        Result<Category> GetCategoryById(int id);
+        Task<Result<Category>> GetCategoryByIdAsync(int id);
 
-        Result<Category> CreateCategory(CreateCategoryDto dto);
+        Task<Result<Category>> CreateCategoryAsync(CreateCategoryDto dto);
 
-        Result<Category> UpdateCategory(int id, UpdateCategoryDto dto);
+        Task<Result<Category>> UpdateCategoryAsync(int id, UpdateCategoryDto dto);
 
-        Result DeleteCategory(int id);
+        Task<Result> DeleteCategoryAsync(int id);
     }
 }

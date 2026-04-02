@@ -1,11 +1,13 @@
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class BuyerCartController : Controller
+    [Authorize]
+    public class BuyerCartController : BaseController
     {
         private readonly IBuyerCartService _buyerCartService;
 
@@ -16,7 +18,7 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult AddToCart(AddToCartDto addToCartDto, string buyerId)
+        public async Task<IActionResult> AddToCart(AddToCartDto addToCartDto, string buyerId)
         {
             if (!ModelState.IsValid)
             {
@@ -24,7 +26,7 @@ namespace MadeByMe.Web.Controllers
                 return BadRequest("Недійсні дані форми.");
             }
 
-            var result = _buyerCartService.AddToCart(buyerId, addToCartDto);
+            var result = await _buyerCartService.AddToCartAsync(buyerId, addToCartDto);
 
             if (result.IsFailure)
             {

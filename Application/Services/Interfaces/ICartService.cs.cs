@@ -6,14 +6,14 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface ICartService
     {
-        Result<Cart> GetUserCartEntity(string buyerId);
+        Task<Result<Cart>> GetUserCartEntityAsync(string buyerId);
 
-        Result<CartViewModel> GetUserCart(string buyerId);
+        Task<Result<CartViewModel>> GetUserCartAsync(string buyerId);
 
-        Result<decimal> GetCartTotal(int cartId);
+        Task<Result<decimal>> GetCartTotalAsync(int cartId);
 
-        Result ClearCart(int cartId);
+        Task<Result> ClearCartAsync(int cartId);
 
-        Result UpdateCartItem(BuyerCart cartItem);
+        Task<Result> UpdateCartItemAsync(BuyerCart cartItem);
     }
 }

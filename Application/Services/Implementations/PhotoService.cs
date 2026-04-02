@@ -24,7 +24,8 @@ namespace MadeByMe.Application.Services.Implementations
             if (file == null || file.Length == 0)
             {
                 Log.Warning("Спроба завантаження порожнього файлу або файл відсутній (PostId: {PostId})", postId);
-                return Result<Photo>.Failure("Файл не завантажено або він порожній.");
+
+                return "Файл не завантажено або він порожній.";
             }
 
             EnsureDirectoryExists();
@@ -48,19 +49,20 @@ namespace MadeByMe.Application.Services.Implementations
                 PostId = postId,
             };
 
-            _photoRepository.Add(photo);
+            await _photoRepository.AddAsync(photo);
 
             Log.Information("Файл {FileName} успішно збережено на диск та додано в базу (Size: {FileSize} bytes)", fileName, file.Length);
 
-            return Result<Photo>.Success(photo);
+            return photo;
         }
 
-        public Result DeletePhoto(Photo photo)
+        public async Task<Result> DeletePhotoAsync(Photo photo)
         {
             if (photo == null || string.IsNullOrEmpty(photo.FileName))
             {
                 Log.Warning("Запит на видалення фото відхилено: об'єкт фото порожній");
-                return Result.Failure("Фото не передано для видалення або ім'я файлу порожнє.");
+
+                return "Фото не передано для видалення або ім'я файлу порожнє.";
             }
 
             var filePath = Path.Combine(_uploadPath, photo.FileName);
@@ -75,7 +77,7 @@ namespace MadeByMe.Application.Services.Implementations
                 Log.Warning("Файл {FileName} не знайдено на диску, видаляється лише запис із бази", photo.FileName);
             }
 
-            _photoRepository.Delete(photo);
+            await _photoRepository.DeleteAsync(photo);
             Log.Information("Запис про фото {FileName} успішно видалено з бази даних", photo.FileName);
 
             return Result.Success();

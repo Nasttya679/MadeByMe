@@ -13,21 +13,21 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context = context;
         }
 
-        public void Add(Photo photo)
+        public async Task AddAsync(Photo photo)
         {
             _context.Photos.Add(photo);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(Photo photo)
+        public async Task DeleteAsync(Photo photo)
         {
             _context.Photos.Remove(photo);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public Photo? GetById(int id)
+        public async Task<Photo?> GetByIdAsync(int id)
         {
-            return _context.Photos.Find(id);
+            return await _context.Photos.FindAsync(id);
         }
     }
 }
