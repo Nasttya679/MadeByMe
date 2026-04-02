@@ -23,41 +23,41 @@ namespace MadeByMe.Application.Services.Implementations
             _postRepo = postRepo;
         }
 
-        public Result<Cart> GetUserCartEntity(string buyerId)
+        public async Task<Result<Cart>> GetUserCartEntityAsync(string buyerId)
         {
-            var cart = _cartRepo.GetCartByBuyerId(buyerId);
+            var cart = await _cartRepo.GetCartByBuyerIdAsync(buyerId);
             if (cart == null)
             {
                 Log.Warning("Кошик для покупця {BuyerId} не знайдено в репозиторії", buyerId);
-                return Result<Cart>.Failure("Кошик користувача не знайдено.");
+                return "Кошик користувача не знайдено.";
             }
 
-            return Result<Cart>.Success(cart);
+            return cart;
         }
 
-        public Result<CartViewModel> GetUserCart(string buyerId)
+        public async Task<Result<CartViewModel>> GetUserCartAsync(string buyerId)
         {
             Log.Information("Отримання детального вмісту кошика для покупця {BuyerId}", buyerId);
-            var cart = _cartRepo.GetCartByBuyerId(buyerId);
+            var cart = await _cartRepo.GetCartByBuyerIdAsync(buyerId);
             if (cart == null || cart.BuyerCarts == null || !cart.BuyerCarts.Any())
             {
                 Log.Information("Кошик покупця {BuyerId} порожній", buyerId);
-                return Result<CartViewModel>.Success(new CartViewModel
+                return new CartViewModel
                 {
                     Items = new List<CartItem>(),
                     TotalPrice = 0,
-                });
+                };
             }
 
             var items = new List<CartItem>();
             foreach (var bc in cart.BuyerCarts)
             {
-                var post = _postRepo.GetById(bc.PostId);
+                var post = await _postRepo.GetByIdAsync(bc.PostId);
 
                 if (post == null)
                 {
                     Log.Error("Помилка цілісності даних: товар {PostId} присутній у кошику {CartId}, але відсутній у таблиці товарів", bc.PostId, cart.CartId);
-                    return Result<CartViewModel>.Failure($"Товар з ID {bc.PostId} більше не існує.");
+                    return $"Товар з ID {bc.PostId} більше не існує.";
                 }
 
                 items.Add(new CartItem
@@ -79,61 +79,61 @@ namespace MadeByMe.Application.Services.Implementations
             var total = items.Sum(i => i.Product!.Price * i.Quantity);
             Log.Information("Кошик для {BuyerId} успішно завантажений. Кількість позицій: {Count}, Загальна сума: {Total}", buyerId, items.Count, total);
 
-            return Result<CartViewModel>.Success(new CartViewModel
+            return new CartViewModel
             {
                 Items = items,
                 TotalPrice = total,
-            });
+            };
         }
 
-        public Result<decimal> GetCartTotal(int cartId)
+        public async Task<Result<decimal>> GetCartTotalAsync(int cartId)
         {
-            var items = _buyerCartRepo.GetItemsByCartId(cartId);
+            var items = await _buyerCartRepo.GetItemsByCartIdAsync(cartId);
             if (items == null || !items.Any())
             {
-                return Result<decimal>.Success(0);
+                return 0m;
             }
 
             decimal total = 0;
             foreach (var bc in items)
             {
-                var post = _postRepo.GetById(bc.PostId);
+                var post = await _postRepo.GetByIdAsync(bc.PostId);
                 if (post == null)
                 {
                     Log.Warning("Неможливо розрахувати суму кошика {CartId}: товар {PostId} не знайдено", cartId, bc.PostId);
-                    return Result<decimal>.Failure($"Помилка розрахунку: товар з ID {bc.PostId} не знайдено.");
+                    return $"Помилка розрахунку: товар з ID {bc.PostId} не знайдено.";
                 }
 
                 total += bc.Quantity * post.Price;
             }
 
-            return Result<decimal>.Success(total);
+            return total;
         }
 
-        public Result ClearCart(int cartId)
+        public async Task<Result> ClearCartAsync(int cartId)
         {
             Log.Information("Розпочато процес повного очищення кошика з ID {CartId}", cartId);
-            var items = _buyerCartRepo.GetItemsByCartId(cartId);
+            var items = await _buyerCartRepo.GetItemsByCartIdAsync(cartId);
             if (items != null && items.Any())
             {
-                _buyerCartRepo.RemoveRange(items);
+                await _buyerCartRepo.RemoveRangeAsync(items);
                 Log.Information("Кошик {CartId} успішно очищено. Видалено позицій: {Count}", cartId, items.Count());
             }
 
             return Result.Success();
         }
 
-        public Result UpdateCartItem(BuyerCart cartItem)
+        public async Task<Result> UpdateCartItemAsync(BuyerCart cartItem)
         {
             if (cartItem == null)
             {
                 Log.Warning("Спроба оновлення елемента кошика з порожніми даними (null)");
-                return Result.Failure("Недійсні дані для оновлення кошика.");
+                return "Недійсні дані для оновлення кошика.";
             }
 
             Log.Information("Оновлення параметрів товару {PostId} у кошику {CartId}. Нова кількість: {Quantity}", cartItem.PostId, cartItem.CartId, cartItem.Quantity);
 
-            _buyerCartRepo.UpdateItem(cartItem);
+            await _buyerCartRepo.UpdateItemAsync(cartItem);
             return Result.Success();
         }
     }

@@ -6,16 +6,16 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface IPostService
     {
-        Result<List<Post>> GetAllPosts();
+        Task<Result<List<Post>>> GetAllPostsAsync();
 
-        Result<Post> GetPostById(int id);
+        Task<Result<Post>> GetPostByIdAsync(int id);
 
-        Result<Post> CreatePost(CreatePostDto createPostDto, string sellerId);
+        Task<Result<Post>> CreatePostAsync(CreatePostDto createPostDto, string sellerId);
 
-        Result<Post> UpdatePost(int id, UpdatePostDto updatePostDto);
+        Task<Result<Post>> UpdatePostAsync(int id, UpdatePostDto updatePostDto);
 
-        Result DeletePost(int id);
+        Task<Result> DeletePostAsync(int id);
 
-        Result<List<Post>> SearchPosts(string searchTerm);
+        Task<Result<List<Post>>> SearchPostsAsync(string searchTerm);
     }
 }

@@ -17,6 +17,8 @@ namespace MadeByMe.Application.Common
 
         public string ErrorMessage { get; }
 
+        public static implicit operator Result(string errorMessage) => Failure(errorMessage);
+
         public static Result Success() => new Result(true, string.Empty);
 
         public static Result Failure(string errorMessage) => new Result(false, errorMessage);
@@ -41,6 +43,10 @@ namespace MadeByMe.Application.Common
         public string ErrorMessage { get; }
 
         public T Value => this.IsSuccess ? this.innerValue! : throw new InvalidOperationException("Неможливо отримати значення: операція завершилася помилкою.");
+
+        public static implicit operator Result<T>(T value) => Success(value);
+
+        public static implicit operator Result<T>(string errorMessage) => Failure(errorMessage);
 
         public static Result<T> Success(T value) => new Result<T>(true, string.Empty, value);
 

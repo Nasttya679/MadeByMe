@@ -13,15 +13,15 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context = context;
         }
 
-        public ApplicationUser? GetById(string userId)
+        public async Task<ApplicationUser?> GetByIdAsync(string userId)
         {
-            return _context.Users.Find(userId);
+            return await _context.Users.FindAsync(userId);
         }
 
-        public void Update(ApplicationUser user)
+        public async Task UpdateAsync(ApplicationUser user)
         {
             _context.Users.Update(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

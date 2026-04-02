@@ -4,8 +4,8 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface IUserRepository
     {
-        ApplicationUser? GetById(string userId);
+        Task<ApplicationUser?> GetByIdAsync(string userId);
 
-        void Update(ApplicationUser user);
+        Task UpdateAsync(ApplicationUser user);
     }
 }

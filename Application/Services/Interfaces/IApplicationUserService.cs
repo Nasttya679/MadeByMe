@@ -6,6 +6,6 @@ namespace MadeByMe.Application.Services.Interfaces
 {
     public interface IApplicationUserService
     {
-        Result<ApplicationUser> UpdateUser(string userId, UpdateProfileDto dto);
+        Task<Result<ApplicationUser>> UpdateUserAsync(string userId, UpdateProfileDto dto);
     }
 }

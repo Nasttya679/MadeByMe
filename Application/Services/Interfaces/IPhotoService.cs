@@ -8,7 +8,7 @@ namespace MadeByMe.Application.Services.Interfaces
     {
         Task<Result<Photo>> SavePhotoAsync(IFormFile file, int? postId = null);
 
-        Result DeletePhoto(Photo photo);
+        Task<Result> DeletePhotoAsync(Photo photo);
 
         string GetPhotoUrl(Photo photo);
     }

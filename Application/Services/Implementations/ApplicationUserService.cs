@@ -16,16 +16,17 @@ namespace MadeByMe.Application.Services.Implementations
             _userRepository = userRepository;
         }
 
-        public Result<ApplicationUser> UpdateUser(string userId, UpdateProfileDto dto)
+        public async Task<Result<ApplicationUser>> UpdateUserAsync(string userId, UpdateProfileDto dto)
         {
             Log.Information("Розпочато оновлення профілю користувача з ID {UserId}", userId);
 
-            var user = _userRepository.GetById(userId);
+            var user = await _userRepository.GetByIdAsync(userId);
 
             if (user == null)
             {
                 Log.Warning("Користувача з ID {UserId} не знайдено для оновлення", userId);
-                return Result<ApplicationUser>.Failure("Користувача з таким ідентифікатором не знайдено.");
+
+                return "Користувача з таким ідентифікатором не знайдено.";
             }
 
             user.UserName = dto.UserName ?? user.UserName;
@@ -34,11 +35,11 @@ namespace MadeByMe.Application.Services.Implementations
             user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
             user.Address = dto.Address ?? user.Address;
 
-            _userRepository.Update(user);
+            await _userRepository.UpdateAsync(user);
 
             Log.Information("Профіль користувача {UserId} успішно оновлено", userId);
 
-            return Result<ApplicationUser>.Success(user);
+            return user;
         }
     }
 }

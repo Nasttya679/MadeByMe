@@ -4,12 +4,12 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface ICartRepository
     {
-        Cart? GetCartByBuyerId(string buyerId);
+        Task<Cart?> GetCartByBuyerIdAsync(string buyerId);
 
-        void AddCart(Cart cart);
+        Task AddCartAsync(Cart cart);
 
-        void UpdateCart(Cart cart);
+        Task UpdateCartAsync(Cart cart);
 
-        void RemoveCart(Cart cart);
+        Task RemoveCartAsync(Cart cart);
     }
 }

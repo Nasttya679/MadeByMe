@@ -16,27 +16,27 @@ namespace MadeByMe.Application.Services.Implementations
             _commentRepository = commentRepository;
         }
 
-        public Result<List<Comment>> GetCommentsForPost(int postId)
+        public async Task<Result<List<Comment>>> GetCommentsForPostAsync(int postId)
         {
-            var comments = _commentRepository.GetByPostId(postId);
+            var comments = await _commentRepository.GetByPostIdAsync(postId);
             Log.Information("Отримано список коментарів для поста {PostId}. Кількість коментарів: {Count}", postId, comments.Count);
-            return Result<List<Comment>>.Success(comments);
+            return comments;
         }
 
-        public Result<Comment> GetCommentById(int id)
+        public async Task<Result<Comment>> GetCommentByIdAsync(int id)
         {
-            var comment = _commentRepository.GetById(id);
+            var comment = await _commentRepository.GetByIdAsync(id);
 
             if (comment == null)
             {
                 Log.Warning("Коментар з ID {CommentId} не знайдено", id);
-                return Result<Comment>.Failure($"Коментар з ID {id} не знайдено.");
+                return $"Коментар з ID {id} не знайдено.";
             }
 
-            return Result<Comment>.Success(comment);
+            return comment;
         }
 
-        public Result<Comment> AddComment(CreateCommentDto dto, string userId)
+        public async Task<Result<Comment>> AddCommentAsync(CreateCommentDto dto, string userId)
         {
             Log.Information("Початок додавання коментаря до поста {PostId} користувачем {UserId}", dto.PostId, userId);
 
@@ -47,24 +47,26 @@ namespace MadeByMe.Application.Services.Implementations
                 Content = dto.Content,
             };
 
-            _commentRepository.Add(comment);
+            await _commentRepository.AddAsync(comment);
 
             Log.Information("Коментар успішно додано до поста {PostId}. ID коментаря: {CommentId}", dto.PostId, comment.CommentId);
-            return Result<Comment>.Success(comment);
+
+            return comment;
         }
 
-        public Result DeleteComment(int id)
+        public async Task<Result> DeleteCommentAsync(int id)
         {
             Log.Information("Видалення коментаря з ID {CommentId}", id);
 
-            var comment = _commentRepository.GetById(id);
+            var comment = await _commentRepository.GetByIdAsync(id);
             if (comment == null)
             {
                 Log.Warning("Невдала спроба видалення: коментар з ID {CommentId} не знайдено", id);
-                return Result.Failure("Коментар для видалення не знайдено.");
+
+                return "Коментар для видалення не знайдено.";
             }
 
-            _commentRepository.Delete(comment);
+            await _commentRepository.DeleteAsync(comment);
 
             Log.Information("Коментар {CommentId} успішно видалено", id);
             return Result.Success();

@@ -4,14 +4,14 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface ICategoryRepository
     {
-        List<Category> GetAll();
+        Task<List<Category>> GetAllAsync();
 
-        Category? GetById(int id);
+        Task<Category?> GetByIdAsync(int id);
 
-        void Add(Category category);
+        Task AddAsync(Category category);
 
-        void Update(Category category);
+        Task UpdateAsync(Category category);
 
-        void Delete(Category category);
+        Task DeleteAsync(Category category);
     }
 }

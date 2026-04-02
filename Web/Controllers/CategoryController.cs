@@ -1,12 +1,13 @@
 ﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
         private readonly ICategoryService _categoryService;
 
@@ -15,23 +16,23 @@ namespace MadeByMe.Web.Controllers
             _categoryService = categoryService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var result = _categoryService.GetAllCategories();
+            var result = await _categoryService.GetAllCategoriesAsync();
 
             if (result.IsFailure)
             {
                 Log.Warning("Не вдалося отримати список категорій. Причина: {ErrorMessage}", result.ErrorMessage);
-                TempData["Error"] = result.ErrorMessage;
+                SetErrorMessage(result.ErrorMessage);
                 return View(new List<Category>());
             }
 
             return View(result.Value);
         }
 
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            var result = _categoryService.GetCategoryById(id);
+            var result = await _categoryService.GetCategoryByIdAsync(id);
 
             if (result.IsFailure)
             {
@@ -42,6 +43,7 @@ namespace MadeByMe.Web.Controllers
             return View(result.Value);
         }
 
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -49,7 +51,8 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(CreateCategoryDto createCategoryDto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(CreateCategoryDto createCategoryDto)
         {
             if (!ModelState.IsValid)
             {
@@ -57,12 +60,12 @@ namespace MadeByMe.Web.Controllers
                 return View(createCategoryDto);
             }
 
-            var result = _categoryService.CreateCategory(createCategoryDto);
+            var result = await _categoryService.CreateCategoryAsync(createCategoryDto);
 
             if (result.IsFailure)
             {
                 Log.Warning("Не вдалося створити категорію. Причина: {ErrorMessage}", result.ErrorMessage);
-                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                AddErrorToModelState(result.ErrorMessage);
                 return View(createCategoryDto);
             }
 
@@ -70,9 +73,10 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Edit(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id)
         {
-            var result = _categoryService.GetCategoryById(id);
+            var result = await _categoryService.GetCategoryByIdAsync(id);
 
             if (result.IsFailure)
             {
@@ -89,7 +93,8 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, UpdateCategoryDto updateCategoryDto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Edit(int id, UpdateCategoryDto updateCategoryDto)
         {
             if (!ModelState.IsValid)
             {
@@ -97,12 +102,12 @@ namespace MadeByMe.Web.Controllers
                 return View(updateCategoryDto);
             }
 
-            var result = _categoryService.UpdateCategory(id, updateCategoryDto);
+            var result = await _categoryService.UpdateCategoryAsync(id, updateCategoryDto);
 
             if (result.IsFailure)
             {
                 Log.Warning("Не вдалося оновити категорію {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
-                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                AddErrorToModelState(result.ErrorMessage);
                 return View(updateCategoryDto);
             }
 
@@ -110,9 +115,10 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var result = _categoryService.GetCategoryById(id);
+            var result = await _categoryService.GetCategoryByIdAsync(id);
 
             if (result.IsFailure)
             {
@@ -126,14 +132,15 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         [ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteConfirmed(int id)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var result = _categoryService.DeleteCategory(id);
+            var result = await _categoryService.DeleteCategoryAsync(id);
 
             if (result.IsFailure)
             {
                 Log.Warning("Не вдалося видалити категорію {CategoryId}. Причина: {ErrorMessage}", id, result.ErrorMessage);
-                TempData["Error"] = result.ErrorMessage;
+                SetErrorMessage(result.ErrorMessage);
                 return RedirectToAction(nameof(Index));
             }
 
