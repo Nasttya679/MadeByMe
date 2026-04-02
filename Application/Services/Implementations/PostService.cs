@@ -97,15 +97,32 @@ namespace MadeByMe.Application.Services.Implementations
 
         public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
         {
-            Log.Information("Пошук постів за запитом: '{SearchTerm}'", searchTerm ?? "усі");
+            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm, categoryId, sortBy);
+
+            var posts = _repo.GetAll().AsQueryable();
+
+            if (categoryId.HasValue && categoryId > 0)
+            {
+                posts = posts.Where(p => p.CategoryId == categoryId);
+            }
 
             var posts = await _repo.GetAllAsync();
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                posts = posts.Where(p => p.Title!.Contains(searchTerm) || p.Description!.Contains(searchTerm)).ToList();
+                var lowerSearch = searchTerm.ToLower();
+                posts = posts.Where(p => p.Title!.ToLower().Contains(lowerSearch) ||
+                                         p.Description!.ToLower().Contains(lowerSearch));
             }
 
             Log.Information("Пошук завершено. Знайдено результатів: {Count}", posts.Count);
+            posts = sortBy switch
+            {
+                "price_asc" => posts.OrderBy(p => p.Price),
+                "price_desc" => posts.OrderByDescending(p => p.Price),
+                "rating" => posts.OrderByDescending(p => p.Rating),
+                "newest" => posts.OrderByDescending(p => p.CreatedAt),
+                _ => posts.OrderByDescending(p => p.CreatedAt)
+            };
 
             return posts;
         }

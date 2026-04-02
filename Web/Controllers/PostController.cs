@@ -39,6 +39,12 @@ namespace MadeByMe.Web.Controllers
                 return View(new List<PostResponseDto>());
             }
 
+            LoadCategoriesToViewBag();
+
+            ViewBag.CurrentSearch = searchTerm;
+            ViewBag.CurrentCategory = categoryId;
+            ViewBag.CurrentSort = sortBy;
+
             var postsList = result.Value.Select(post => new PostResponseDto
             {
                 Id = post.Id,
@@ -53,7 +59,7 @@ namespace MadeByMe.Web.Controllers
                 CreatedAt = post.CreatedAt,
             }).ToList();
 
-            Log.Information("Відображено {Count} постів для запиту '{SearchTerm}'", postsList.Count, searchTerm ?? "усі");
+            Log.Information("Каталог відображено успішно. Знайдено товарів: {Count}", postsList.Count);
             return View(postsList);
         }
 

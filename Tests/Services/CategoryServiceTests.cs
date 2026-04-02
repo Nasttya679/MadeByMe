@@ -6,6 +6,7 @@ using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
 using Xunit;
+using Serilog;
 
 namespace MadeByMe.Tests.Services
 {
@@ -16,6 +17,7 @@ namespace MadeByMe.Tests.Services
 
         public CategoryServiceTests()
         {
+            Log.Logger = Serilog.Core.Logger.None;
             _categoryRepoMock = new Mock<ICategoryRepository>();
             _categoryService = new CategoryService(_categoryRepoMock.Object);
         }

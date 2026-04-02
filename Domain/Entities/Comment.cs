@@ -22,6 +22,9 @@ namespace MadeByMe.Domain.Entities
         [Required]
         public string? Content { get; set; }
 
+        [Range(1, 5)]
+        public int Stars { get; set; } = 5;
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

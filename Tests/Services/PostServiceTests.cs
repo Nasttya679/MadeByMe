@@ -6,6 +6,7 @@ using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
 using Xunit;
+using Serilog;
 
 namespace MadeByMe.Tests.Services
 {
@@ -16,6 +17,7 @@ namespace MadeByMe.Tests.Services
 
         public PostServiceTests()
         {
+            Log.Logger = Serilog.Core.Logger.None;
             _postRepoMock = new Mock<IPostRepository>();
             _postService = new PostService(_postRepoMock.Object);
         }
@@ -34,6 +36,23 @@ namespace MadeByMe.Tests.Services
 
         [Fact]
         public async Task GetPostByIdAsync_Existing_ShouldReturnPost()
+        public void GetAllPosts_WhenEmpty_ShouldReturnEmptyList()
+        {
+            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
+            var result = _postService.GetAllPosts();
+            Assert.Empty(result.Value);
+        }
+
+        [Fact]
+        public void GetAllPosts_ShouldCallRepoOnce()
+        {
+            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
+            _postService.GetAllPosts();
+            _postRepoMock.Verify(repo => repo.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public void GetPostById_Existing_ShouldReturnPost()
         {
             int id = 1;
             _postRepoMock.Setup(repo => repo.GetByIdAsync(id)).ReturnsAsync(new Post { Id = id, Title = "Handmade Vase" });
@@ -90,8 +109,8 @@ namespace MadeByMe.Tests.Services
         {
             var posts = new List<Post>
             {
-                new Post { Title = "Apple", Description = "Fresh fruit" },
-                new Post { Title = "Banana", Description = "Yellow fruit" },
+                new Post { Id = 1, Title = "A", Price = 100, CategoryId = 1, Rating = 5 },
+                new Post { Id = 2, Title = "B", Price = 50, CategoryId = 1, Rating = 3 },
             };
             _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
 
@@ -110,6 +129,7 @@ namespace MadeByMe.Tests.Services
             var result = await _postService.SearchPostsAsync(string.Empty);
 
             Assert.Equal(2, result.Value.Count);
+            Assert.Equal(50, result.Value[0].Price);
         }
 
         [Fact]

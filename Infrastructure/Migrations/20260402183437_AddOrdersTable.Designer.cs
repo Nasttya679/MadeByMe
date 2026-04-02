@@ -3,6 +3,7 @@ using System;
 using MadeByMe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MadeByMe.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402183437_AddOrdersTable")]
+    partial class AddOrdersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,7 +104,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5961697f-5534-412c-8ef5-3fdeae62dfc1",
+                            ConcurrencyStamp = "2cbe1a8f-11ac-49ab-a61e-f93c216ab2ce",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -109,7 +112,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEZ6hGJ4hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "90341869-f75a-410d-a40a-e0dd59c661af",
+                            SecurityStamp = "f7985b24-2b5f-4eb2-8393-98fb269c6a86",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -117,7 +120,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6adc414e-1f36-4723-9b87-ac9d099bdfa9",
+                            ConcurrencyStamp = "85e2ed53-d54b-4c73-94f2-2cb7f880ab75",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -125,7 +128,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "a3ceff90-e1f0-4779-a8f0-c37ad733067b",
+                            SecurityStamp = "1eaf60ca-25d5-4ca6-a13d-19b088443ae1",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -133,7 +136,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2d64985e-737a-4fb7-a597-4aa8bfae4b95",
+                            ConcurrencyStamp = "9bdcfebd-914f-4ab9-814a-b61a1d00434b",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -141,7 +144,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "2490ae3c-4844-4439-99b5-585e3f573a4f",
+                            SecurityStamp = "0c09abf6-e4a6-4457-b12a-ccd799eb7d68",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -280,9 +283,6 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Property<int>("PostId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Stars")
-                        .HasColumnType("integer");
-
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
@@ -301,7 +301,6 @@ namespace MadeByMe.Infrastructure.Migrations
                             Content = "Дуже гарна сережка! Якісне виконання.",
                             CreatedAt = new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 1,
-                            Stars = 5,
                             UserId = "33333333-3333-3333-3333-333333333333"
                         },
                         new
@@ -310,7 +309,6 @@ namespace MadeByMe.Infrastructure.Migrations
                             Content = "Чудова картина, автор - талановитий!",
                             CreatedAt = new DateTime(2024, 1, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 3,
-                            Stars = 5,
                             UserId = "11111111-1111-1111-1111-111111111111"
                         });
                 });
