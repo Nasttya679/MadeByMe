@@ -15,31 +15,34 @@ namespace MadeByMe.Web.Controllers
         private readonly ICommentService _commentService;
         private readonly IPhotoService _photoService;
         private readonly ICategoryService _categoryService;
+        private readonly IBuyerCartService _buyerCartService; // Додано для очищення кошиків
 
         public PostController(
             IPostService postService,
             ICommentService commentService,
             IPhotoService photoService,
-            ICategoryService categoryService)
+            ICategoryService categoryService,
+            IBuyerCartService buyerCartService)
         {
             _postService = postService;
             _commentService = commentService;
             _photoService = photoService;
             _categoryService = categoryService;
+            _buyerCartService = buyerCartService;
         }
 
-        public async Task<IActionResult> Index(string searchTerm)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? sortBy)
         {
-            var result = await _postService.SearchPostsAsync(searchTerm);
+            var result = await _postService.GetFilteredPostsAsync(searchTerm, categoryId, sortBy);
 
             if (result.IsFailure)
             {
-                Log.Warning("Помилка при пошуку постів за запитом '{SearchTerm}': {ErrorMessage}", searchTerm, result.ErrorMessage);
+                Log.Warning("Помилка при пошуку постів: {ErrorMessage}", result.ErrorMessage);
                 SetErrorMessage(result.ErrorMessage);
                 return View(new List<PostResponseDto>());
             }
 
-            LoadCategoriesToViewBag();
+            await LoadCategoriesToViewBagAsync();
 
             ViewBag.CurrentSearch = searchTerm;
             ViewBag.CurrentCategory = categoryId;
@@ -51,7 +54,7 @@ namespace MadeByMe.Web.Controllers
                 Title = post.Title,
                 Description = post.Description,
                 Price = post.Price,
-                PhotoUrl = post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
+                PhotoUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
                 Rating = post.Rating,
                 Status = post.Status,
                 CategoryName = post.Category,
@@ -153,7 +156,8 @@ namespace MadeByMe.Web.Controllers
             };
 
             await LoadCategoriesToViewBagAsync();
-            ViewBag.CurrentPhoto = post.Photos?.FirstOrDefault()?.FilePath;
+
+            ViewBag.CurrentPhoto = post.Photos.FirstOrDefault()?.FilePath;
 
             return View(updateDto);
         }
@@ -187,7 +191,7 @@ namespace MadeByMe.Web.Controllers
 
             if (updatePostDto.Photo != null)
             {
-                var oldPhoto = post.Photos?.FirstOrDefault();
+                var oldPhoto = post.Photos.FirstOrDefault();
                 if (oldPhoto != null)
                 {
                     await _photoService.DeletePhotoAsync(oldPhoto);
@@ -208,7 +212,7 @@ namespace MadeByMe.Web.Controllers
             }
 
             Log.Information("Користувач {UserId} успішно оновив пост {PostId}", currentUserId, id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Details), new { id = id });
         }
 
         [Authorize(Roles = "Seller")]
@@ -254,20 +258,33 @@ namespace MadeByMe.Web.Controllers
                 return Forbid();
             }
 
-            if (post.Photos != null)
+            if (post.Photos != null && post.Photos.Any())
             {
-                foreach (var photo in post.Photos)
+                var photosToDelete = post.Photos.ToList();
+                foreach (var photo in photosToDelete)
                 {
                     await _photoService.DeletePhotoAsync(photo);
                 }
 
-                Log.Information("Усі фото, пов'язані з постом {PostId}, видалено", id);
+                Log.Information("Усі фото для поста {PostId} видалено", id);
+            }
+
+            var commentsResult = await _commentService.GetCommentsForPostAsync(id);
+            if (commentsResult.IsSuccess)
+            {
+                var commentsToDelete = commentsResult.Value.ToList();
+                foreach (var comment in commentsToDelete)
+                {
+                    await _commentService.DeleteCommentAsync(comment.CommentId);
+                }
+
+                Log.Information("Усі коментарі для поста {PostId} видалено", id);
             }
 
             var deleteResult = await _postService.DeletePostAsync(id);
             if (deleteResult.IsFailure)
             {
-                Log.Error("Помилка при видаленні поста {PostId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
+                Log.Error("Помилка при видаленні поста {PostId}: {ErrorMessage}", id, deleteResult.ErrorMessage);
                 SetErrorMessage(deleteResult.ErrorMessage);
                 return RedirectToAction(nameof(Index));
             }

@@ -27,7 +27,6 @@ namespace MadeByMe.Application.Services.Implementations
             if (post == null)
             {
                 Log.Warning("Товар з ID {PostId} не знайдено", id);
-
                 return $"Товар з ID {id} не знайдено.";
             }
 
@@ -95,36 +94,40 @@ namespace MadeByMe.Application.Services.Implementations
             return Result.Success();
         }
 
-        public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
+        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy)
         {
-            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm, categoryId, sortBy);
+            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm ?? "немає", categoryId ?? 0, sortBy ?? "стандарт");
 
-            var posts = _repo.GetAll().AsQueryable();
+            var postsQuery = (await _repo.GetAllAsync()).AsQueryable();
 
             if (categoryId.HasValue && categoryId > 0)
             {
-                posts = posts.Where(p => p.CategoryId == categoryId);
+                postsQuery = postsQuery.Where(p => p.CategoryId == categoryId);
             }
 
-            var posts = await _repo.GetAllAsync();
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var lowerSearch = searchTerm.ToLower();
-                posts = posts.Where(p => p.Title!.ToLower().Contains(lowerSearch) ||
-                                         p.Description!.ToLower().Contains(lowerSearch));
+                var lowerSearch = searchTerm.ToLower().Trim();
+                postsQuery = postsQuery.Where(p => (p.Title != null && p.Title.ToLower().Contains(lowerSearch)) ||
+                                                   (p.Description != null && p.Description.ToLower().Contains(lowerSearch)));
             }
 
-            Log.Information("Пошук завершено. Знайдено результатів: {Count}", posts.Count);
-            posts = sortBy switch
+            postsQuery = sortBy switch
             {
-                "price_asc" => posts.OrderBy(p => p.Price),
-                "price_desc" => posts.OrderByDescending(p => p.Price),
-                "rating" => posts.OrderByDescending(p => p.Rating),
-                "newest" => posts.OrderByDescending(p => p.CreatedAt),
-                _ => posts.OrderByDescending(p => p.CreatedAt)
+                "price_asc" => postsQuery.OrderBy(p => p.Price),
+                "price_desc" => postsQuery.OrderByDescending(p => p.Price),
+                "rating" => postsQuery.OrderByDescending(p => p.Rating),
+                "newest" => postsQuery.OrderByDescending(p => p.CreatedAt),
+                _ => postsQuery.OrderByDescending(p => p.CreatedAt)
             };
 
-            return posts;
+            var resultList = postsQuery.ToList();
+            Log.Information("Фільтрація завершена. Знайдено: {Count}", resultList.Count);
+
+            return resultList;
         }
+
+        public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
+            => await GetFilteredPostsAsync(searchTerm, null, null);
     }
 }

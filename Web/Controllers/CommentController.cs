@@ -1,6 +1,5 @@
 ﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
-using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -15,15 +14,6 @@ namespace MadeByMe.Web.Controllers
         {
             _commentService = commentService;
         }
-
-        /*
-        public async Task<IActionResult> Index()
-        {
-           var result = await _commentService.GetAllCommentsAsync();
-           if (result.IsFailure) return View(new List<Comment>());
-           return View(result.Value);
-        }
-        */
 
         public async Task<IActionResult> Details(int id)
         {
@@ -40,7 +30,6 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize]
         public async Task<IActionResult> Create(CreateCommentDto dto)
         {
             if (!ModelState.IsValid)
@@ -49,18 +38,16 @@ namespace MadeByMe.Web.Controllers
                 return View(dto);
             }
 
-            var userId = CurrentUserId;
-
-            var result = await _commentService.AddCommentAsync(dto, userId!);
+            var result = await _commentService.AddCommentAsync(dto, CurrentUserId!);
 
             if (result.IsFailure)
             {
-                Log.Warning("Не вдалося додати коментар до поста {PostId} для користувача {UserId}. Причина: {ErrorMessage}", dto.PostId, userId, result.ErrorMessage);
+                Log.Warning("Не вдалося додати коментар до поста {PostId}. Причина: {ErrorMessage}", dto.PostId, result.ErrorMessage);
                 AddErrorToModelState(result.ErrorMessage);
                 return View(dto);
             }
 
-            Log.Information("Користувач {UserId} успішно додав коментар до поста {PostId}", userId, dto.PostId);
+            Log.Information("Користувач {UserId} успішно додав коментар до поста {PostId}", CurrentUserId, dto.PostId);
             return RedirectToAction("Details", "Post", new { id = result.Value.PostId });
         }
 
@@ -77,9 +64,8 @@ namespace MadeByMe.Web.Controllers
             }
 
             var comment = result.Value;
-            var currentUserName = CurrentUserName;
 
-            if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == currentUserName))
+            if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == CurrentUserName))
             {
                 var deleteResult = await _commentService.DeleteCommentAsync(id);
 
@@ -90,13 +76,13 @@ namespace MadeByMe.Web.Controllers
                 }
                 else
                 {
-                    Log.Information("Коментар {CommentId} успішно видалено користувачем {UserName}", id, currentUserName);
+                    Log.Information("Коментар {CommentId} успішно видалено користувачем {UserName}", id, CurrentUserName);
                 }
 
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }
 
-            Log.Warning("Користувач {UserName} намагався видалити коментар {CommentId} без відповідних прав доступу", currentUserName, id);
+            Log.Warning("Користувач {UserName} намагався видалити коментар {CommentId} без відповідних прав доступу", CurrentUserName, id);
             return Forbid();
         }
     }

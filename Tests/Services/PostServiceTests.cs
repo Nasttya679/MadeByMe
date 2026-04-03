@@ -5,8 +5,8 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
-using Xunit;
 using Serilog;
+using Xunit;
 
 namespace MadeByMe.Tests.Services
 {
@@ -35,24 +35,23 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public async Task GetPostByIdAsync_Existing_ShouldReturnPost()
-        public void GetAllPosts_WhenEmpty_ShouldReturnEmptyList()
+        public async Task GetAllPostsAsync_WhenEmpty_ShouldReturnEmptyList()
         {
-            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
-            var result = _postService.GetAllPosts();
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Post>());
+            var result = await _postService.GetAllPostsAsync();
             Assert.Empty(result.Value);
         }
 
         [Fact]
-        public void GetAllPosts_ShouldCallRepoOnce()
+        public async Task GetAllPostsAsync_ShouldCallRepoOnce()
         {
-            _postRepoMock.Setup(repo => repo.GetAll()).Returns(new List<Post>());
-            _postService.GetAllPosts();
-            _postRepoMock.Verify(repo => repo.GetAll(), Times.Once);
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(new List<Post>());
+            await _postService.GetAllPostsAsync();
+            _postRepoMock.Verify(repo => repo.GetAllAsync(), Times.Once);
         }
 
         [Fact]
-        public void GetPostById_Existing_ShouldReturnPost()
+        public async Task GetPostByIdAsync_Existing_ShouldReturnPost()
         {
             int id = 1;
             _postRepoMock.Setup(repo => repo.GetByIdAsync(id)).ReturnsAsync(new Post { Id = id, Title = "Handmade Vase" });
@@ -109,38 +108,33 @@ namespace MadeByMe.Tests.Services
         {
             var posts = new List<Post>
             {
-                new Post { Id = 1, Title = "A", Price = 100, CategoryId = 1, Rating = 5 },
-                new Post { Id = 2, Title = "B", Price = 50, CategoryId = 1, Rating = 3 },
+                new Post { Id = 1, Title = "Apple Vase", Description = "Red fruit", Price = 100, CategoryId = 1 },
+                new Post { Id = 2, Title = "Banana Cup", Description = "Yellow", Price = 50, CategoryId = 1 },
             };
             _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
 
             var result = await _postService.SearchPostsAsync("Apple");
 
+            Assert.True(result.IsSuccess);
             Assert.Single(result.Value);
-            Assert.Equal("Apple", result.Value[0].Title);
+            Assert.Equal("Apple Vase", result.Value[0].Title);
         }
 
         [Fact]
-        public async Task SearchPostsAsync_WhenEmptyTerm_ShouldReturnAllPosts()
+        public async Task GetFilteredPostsAsync_WhenTermMatchesTitle_ShouldReturnResults()
         {
-            var posts = new List<Post> { new Post { Title = "A" }, new Post { Title = "B" } };
+            var posts = new List<Post>
+            {
+                new Post { Id = 1, Title = "Apple Vase", Description = "Decor", Price = 100, CategoryId = 1 },
+                new Post { Id = 2, Title = "Banana Cup", Description = "Kitchen", Price = 50, CategoryId = 1 },
+            };
             _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
 
-            var result = await _postService.SearchPostsAsync(string.Empty);
+            var result = await _postService.GetFilteredPostsAsync("Apple", null, null);
 
-            Assert.Equal(2, result.Value.Count);
-            Assert.Equal(50, result.Value[0].Price);
-        }
-
-        [Fact]
-        public async Task SearchPostsAsync_WhenNoMatches_ShouldReturnEmptyList()
-        {
-            var posts = new List<Post> { new Post { Title = "A", Description = "Desc" } };
-            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
-
-            var result = await _postService.SearchPostsAsync("NonExistent");
-
-            Assert.Empty(result.Value);
+            Assert.True(result.IsSuccess);
+            Assert.Single(result.Value);
+            Assert.Equal("Apple Vase", result.Value[0].Title);
         }
     }
 }

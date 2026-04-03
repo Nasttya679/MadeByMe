@@ -5,8 +5,8 @@ using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
-using Xunit;
 using Serilog;
+using Xunit;
 
 namespace MadeByMe.Tests.Services
 {
@@ -165,7 +165,7 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public void AddComment_ShouldUpdatePostRatingAutomatically()
+        public async Task AddCommentAsync_ShouldUpdatePostRatingAutomatically()
         {
             var post = new Post { Id = 1, Rating = 0 };
             var dto = new CreateCommentDto { PostId = 1, Stars = 4, Content = "Good" };
@@ -176,13 +176,15 @@ namespace MadeByMe.Tests.Services
                 new Comment { Stars = 4 },
             };
 
-            _postRepoMock.Setup(repo => repo.GetById(1)).Returns(post);
-            _commentRepoMock.Setup(repo => repo.GetByPostId(1)).Returns(commentsAfterAdding);
+            _postRepoMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(post);
+            _commentRepoMock.Setup(repo => repo.GetByPostIdAsync(1)).ReturnsAsync(commentsAfterAdding);
+            _commentRepoMock.Setup(repo => repo.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
+            _postRepoMock.Setup(repo => repo.UpdateAsync(It.IsAny<Post>())).Returns(Task.CompletedTask);
 
-            _commentService.AddComment(dto, "user-1");
+            await _commentService.AddCommentAsync(dto, "user-1");
 
             Assert.Equal(4.5m, post.Rating);
-            _postRepoMock.Verify(repo => repo.Update(post), Times.Once);
+            _postRepoMock.Verify(repo => repo.UpdateAsync(post), Times.Once);
         }
     }
 }

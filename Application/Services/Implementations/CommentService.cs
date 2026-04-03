@@ -52,18 +52,20 @@ namespace MadeByMe.Application.Services.Implementations
 
             await _commentRepository.AddAsync(comment);
 
-            Log.Information("Коментар успішно додано до поста {PostId}. ID коментаря: {CommentId}", dto.PostId, comment.CommentId)
-            var post = _postRepository.GetById(dto.PostId);
+            Log.Information("Коментар успішно додано до поста {PostId}. ID коментаря: {CommentId}", dto.PostId, comment.CommentId);
+
+            var post = await _postRepository.GetByIdAsync(dto.PostId);
             if (post != null)
             {
-                var allComments = _commentRepository.GetByPostId(dto.PostId);
+                var allComments = await _commentRepository.GetByPostIdAsync(dto.PostId);
                 if (allComments.Any())
                 {
                     double average = allComments.Average(c => c.Stars);
                     post.Rating = (decimal)average;
-                    _postRepository.Update(post);
+                    await _postRepository.UpdateAsync(post);
                 }
             }
+
             return comment;
         }
 
@@ -75,21 +77,21 @@ namespace MadeByMe.Application.Services.Implementations
             if (comment == null)
             {
                 Log.Warning("Невдала спроба видалення: коментар з ID {CommentId} не знайдено", id);
-
                 return "Коментар для видалення не знайдено.";
             }
 
+            int postId = comment.PostId;
             await _commentRepository.DeleteAsync(comment);
 
-            var post = _postRepository.GetById(postId);
+            var post = await _postRepository.GetByIdAsync(postId);
             if (post != null)
             {
-                var remainingComments = _commentRepository.GetByPostId(postId);
+                var remainingComments = await _commentRepository.GetByPostIdAsync(postId);
                 post.Rating = remainingComments.Any()
                     ? (decimal)remainingComments.Average(c => c.Stars)
                     : 0;
 
-                _postRepository.Update(post);
+                await _postRepository.UpdateAsync(post);
             }
 
             return Result.Success();

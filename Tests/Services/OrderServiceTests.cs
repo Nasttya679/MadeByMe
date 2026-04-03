@@ -37,7 +37,8 @@ namespace MadeByMe.Tests.Services
                 },
             };
 
-            _cartServiceMock.Setup(s => s.GetUserCartEntity(buyerId)).Returns(MadeByMe.Application.Common.Result<Cart>.Success(cart));
+            // Використовуємо асинхронний метод для моку
+            _cartServiceMock.Setup(s => s.GetUserCartEntityAsync(buyerId)).ReturnsAsync(cart);
 
             var result = await _orderService.CreateOrderAsync(buyerId, dto);
 
@@ -49,8 +50,8 @@ namespace MadeByMe.Tests.Services
         [Fact]
         public async Task CreateOrder_EmptyCart_ShouldReturnFailure()
         {
-            _cartServiceMock.Setup(s => s.GetUserCartEntity(It.IsAny<string>()))
-                .Returns(MadeByMe.Application.Common.Result<Cart>.Failure("Empty"));
+            _cartServiceMock.Setup(s => s.GetUserCartEntityAsync(It.IsAny<string>()))
+                .ReturnsAsync("Ваш кошик порожній.");
 
             var result = await _orderService.CreateOrderAsync("u1", new OrderDto());
 
@@ -62,11 +63,12 @@ namespace MadeByMe.Tests.Services
         public async Task CreateOrder_ShouldClearCartAfterSuccess()
         {
             var cart = new Cart { CartId = 99, BuyerCarts = new List<BuyerCart> { new BuyerCart { Post = new Post() } } };
-            _cartServiceMock.Setup(s => s.GetUserCartEntity(It.IsAny<string>())).Returns(MadeByMe.Application.Common.Result<Cart>.Success(cart));
+            _cartServiceMock.Setup(s => s.GetUserCartEntityAsync(It.IsAny<string>())).ReturnsAsync(cart);
 
             await _orderService.CreateOrderAsync("u1", new OrderDto());
 
-            _cartServiceMock.Verify(s => s.ClearCart(99), Times.Once);
+            // Використовуємо асинхронний метод для Verify
+            _cartServiceMock.Verify(s => s.ClearCartAsync(99), Times.Once);
         }
 
         [Fact]
