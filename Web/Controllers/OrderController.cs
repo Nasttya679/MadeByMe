@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
@@ -60,5 +61,21 @@ namespace MadeByMe.Web.Controllers
         }
 
         public IActionResult Success() => View();
+
+        [Authorize]
+        public async Task<IActionResult> History()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var result = await _orderService.GetUserOrderHistoryAsync(userId!);
+
+            if (result.IsFailure)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(result.Value);
+        }
     }
 }

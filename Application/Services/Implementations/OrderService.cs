@@ -102,5 +102,17 @@ namespace MadeByMe.Application.Services.Implementations
             await _orderRepo.UpdateOrderStatusAsync(orderId, status);
             return Result.Success();
         }
+
+        public async Task<Result<List<Order>>> GetUserOrderHistoryAsync(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Result<List<Order>>.Failure("Ідентифікатор користувача не знайдено.");
+            }
+
+            var orders = await _orderRepo.GetOrdersByUserIdAsync(userId);
+
+            return Result<List<Order>>.Success(orders.ToList());
+        }
     }
 }

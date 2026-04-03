@@ -24,6 +24,7 @@
                 @if (User.Identity.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
+                    <a href="/Order/History" class="text-gray-600 hover:text-orange-600">Історія покупок</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
                     @if (!User.IsInRole("Seller"))
                     {

@@ -1,0 +1,151 @@
+@using System.Globalization
+
+@model List<MadeByMe.Domain.Entities.Order>
+
+@{
+    ViewData["Title"] = "Історія покупок";
+}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Історія покупок - MadeByMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
+            <nav class="flex items-center gap-x-6">
+                <a href="/" class="text-gray-600 hover:text-orange-600 font-medium transition-colors">Головна</a>
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600 font-medium transition-colors">Профіль</a>
+                    <a href="/Cart" class="text-gray-600 hover:text-orange-600 font-medium transition-colors">Кошик</a>
+                    <form action="/Account/Logout" method="post" class="inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="text-red-600 hover:text-red-700 font-bold transition-colors">Вийти</button>
+                    </form>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <h2 class="text-4xl font-black text-gray-900 mb-10 tracking-tight">Історія покупок</h2>
+
+        @if (!Model.Any())
+        {
+            <div class="bg-white rounded-3xl shadow-xl p-20 text-center border border-gray-100">
+                <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-shopping-bag text-3xl text-orange-500"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900">Ви ще нічого не купували</h3>
+                <p class="mt-3 text-gray-500">Ваші майбутні замовлення з'являться на цій сторінці.</p>
+                <a href="/" class="mt-8 inline-block px-10 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition shadow-lg hover:shadow-orange-200">
+                    На головну
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-10">
+                @foreach (var order in Model)
+                {
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
+                        <div class="px-8 py-5 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                            <div class="flex items-center gap-4">
+                                <span class="bg-white px-4 py-1.5 rounded-lg border border-gray-200 text-sm font-black text-gray-700 shadow-sm">
+                                    ЗАМОВЛЕННЯ #@order.Id
+                                </span>
+                                <span class="text-gray-400 font-light">|</span>
+                                <span class="text-gray-600 font-semibold uppercase text-xs tracking-widest">
+                                    @order.CreatedAt.ToString("dd MMMM yyyy", new CultureInfo("uk-UA"))
+                                </span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-tighter
+                                    @(order.Status == "Delivered" ? "bg-green-100 text-green-700 border border-green-200" : 
+                                      order.Status == "Cancelled" ? "bg-red-100 text-red-700 border border-red-200" : 
+                                      "bg-blue-100 text-blue-700 border border-blue-200")">
+                                    @order.Status
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50/30 border-b border-gray-100 text-[10px] uppercase text-gray-400 font-black tracking-widest">
+                                    <tr>
+                                        <th class="px-8 py-4">Назва товару</th>
+                                        <th class="px-4 py-4 text-center">Кількість</th>
+                                        <th class="px-4 py-4">Продавець</th>
+                                        <th class="px-4 py-4">Ціна</th>
+                                        <th class="px-8 py-4 text-right">Дія</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    @foreach (var item in order.OrderItems)
+                                    {
+                                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                                            <td class="px-8 py-6">
+                                                <div class="font-black text-gray-900 text-lg group-hover:text-orange-700 transition-colors">
+                                                    @(item.Post?.Title ?? "Товар видалено")
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-6 text-center font-bold text-gray-500">
+                                                @item.Quantity шт.
+                                            </td>
+                                            <td class="px-4 py-6">
+                                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-xl text-xs text-gray-700 font-bold">
+                                                    <i class="fas fa-store text-gray-400"></i>
+                                                    @item.Post?.Seller?.UserName
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-6 font-black text-gray-900 text-lg">
+                                                @item.PriceAtPurchase ₴
+                                            </td>
+                                            <td class="px-8 py-6 text-right">
+                                                @if (order.Status == "Delivered")
+                                                {
+                                                    <button class="px-6 py-2 bg-green-600 text-white text-xs font-black rounded-xl hover:bg-green-700 shadow-lg shadow-green-100 transition transform hover:scale-105">
+                                                        ВІДГУК
+                                                    </button>
+                                                }
+                                                else if (order.Status == "Cancelled")
+                                                {
+                                                    <span class="text-xs font-bold text-red-400 italic">Замовлення скасовано</span>
+                                                }
+                                                else
+                                                {
+                                                    <button class="px-6 py-2 bg-orange-600 text-white text-xs font-black rounded-xl hover:bg-orange-700 shadow-lg shadow-orange-100 transition transform hover:scale-105">
+                                                        ДЕТАЛІ
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="px-8 py-6 bg-orange-50/30 flex justify-end items-center gap-8">
+                            <span class="text-gray-400 font-black uppercase tracking-[0.2em] text-[10px]">Всього до сплати</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-3xl font-black text-orange-600">@order.TotalAmount</span>
+                                <span class="text-lg font-bold text-orange-600">₴</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+</body>
+</html>

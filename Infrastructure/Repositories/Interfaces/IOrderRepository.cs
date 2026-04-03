@@ -13,5 +13,7 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
         Task<List<Order>> GetOrdersBySellerIdAsync(string sellerId);
 
         Task UpdateOrderStatusAsync(int orderId, string status);
+
+        Task<IEnumerable<Order>> GetOrdersByUserIdAsync(string userId);
     }
 }

@@ -58,5 +58,16 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<IEnumerable<Order>> GetOrdersByUserIdAsync(string userId)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Post)
+                        .ThenInclude(p => p!.Seller)
+                .Where(o => o.BuyerId == userId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
     }
 }
