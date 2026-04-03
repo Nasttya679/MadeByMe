@@ -9,9 +9,14 @@ namespace MadeByMe.Infrastructure.Data
         {
             // 1. Категорії (2 приклади)
             modelBuilder.Entity<Category>().HasData(
-                new Category { CategoryId = 1, Name = "Handmade Jewelry" },
-                new Category { CategoryId = 2, Name = "Home Decor" },
-                new Category { CategoryId = 3, Name = "Art" });
+                new Category { CategoryId = 1, Name = "Прикраси та аксесуари" },
+                new Category { CategoryId = 2, Name = "Дім та інтер'єр" },
+                new Category { CategoryId = 3, Name = "Мистецтво та картини" },
+                new Category { CategoryId = 4, Name = "Одяг та взуття" },
+                new Category { CategoryId = 5, Name = "Косметика ручної роботи" },
+                new Category { CategoryId = 6, Name = "Подарунки та листівки" },
+                new Category { CategoryId = 7, Name = "Іграшки та дитячі товари" },
+                new Category { CategoryId = 8, Name = "Товари для тварин" });
 
             // 2. Користувачі (3 приклади)
             var userId1 = "11111111-1111-1111-1111-111111111111";
