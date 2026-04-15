@@ -23,7 +23,7 @@
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
-                    @if (!User.IsInRole("Seller"))
+                    @if (!User.IsInRole("Seller") && !User.IsInRole("Admin"))
                     {
                         <form action="/Account/BecomeSeller" method="post" class="inline">
                             @Html.AntiForgeryToken()

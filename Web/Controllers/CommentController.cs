@@ -57,32 +57,23 @@ namespace MadeByMe.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _commentService.GetCommentByIdAsync(id);
+
             if (result.IsFailure)
-            {
-                Log.Warning("Спроба видалення: коментар з ID {CommentId} не знайдено", id);
                 return NotFound(result.ErrorMessage);
-            }
 
             var comment = result.Value;
+            var currentUserId = CurrentUserId;
 
-            if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == CurrentUserName))
+            if (User.IsInRole("Admin") || comment.UserId == currentUserId)
             {
                 var deleteResult = await _commentService.DeleteCommentAsync(id);
 
                 if (deleteResult.IsFailure)
-                {
-                    Log.Error("Не вдалося видалити коментар {CommentId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
-                    SetErrorMessage(deleteResult.ErrorMessage);
-                }
-                else
-                {
-                    Log.Information("Коментар {CommentId} успішно видалено користувачем {UserName}", id, CurrentUserName);
-                }
+                    return NotFound(deleteResult.ErrorMessage);
 
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }
 
-            Log.Warning("Користувач {UserName} намагався видалити коментар {CommentId} без відповідних прав доступу", CurrentUserName, id);
             return Forbid();
         }
     }

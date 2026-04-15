@@ -88,14 +88,14 @@ namespace MadeByMe.Web.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         public async Task<IActionResult> Create()
         {
             await LoadCategoriesToViewBagAsync();
             return View();
         }
 
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreatePostDto createPostDto)
@@ -128,7 +128,7 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             var postResult = await _postService.GetPostByIdAsync(id);
@@ -162,7 +162,7 @@ namespace MadeByMe.Web.Controllers
             return View(updateDto);
         }
 
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, UpdatePostDto updatePostDto)
@@ -215,81 +215,56 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction(nameof(Details), new { id = id });
         }
 
-        [Authorize(Roles = "Seller")]
+        [Authorize(Roles = "Seller, Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var postResult = await _postService.GetPostByIdAsync(id);
-            if (postResult.IsFailure)
-            {
-                Log.Warning("Спроба видалення: пост {PostId} не знайдено", id);
-                return NotFound(postResult.ErrorMessage);
-            }
+            var result = await _postService.GetPostByIdAsync(id);
 
-            var post = postResult.Value;
+            if (result.IsFailure)
+                return NotFound(result.ErrorMessage);
+
+            var post = result.Value;
             var currentUserId = CurrentUserId;
 
-            if (post.SellerId != currentUserId)
-            {
-                Log.Warning("Спроба видалення: користувач {UserId} не має прав на видалення поста {PostId}", currentUserId, id);
+            var isAdmin = User.IsInRole("Admin");
+            var isOwner = post.SellerId == currentUserId;
+
+            if (!isAdmin && !isOwner)
                 return Forbid();
-            }
 
             return View(post);
         }
 
-        [Authorize(Roles = "Seller")]
-        [HttpPost]
-        [ActionName("Delete")]
+        [Authorize(Roles = "Seller, Admin")]
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var postResult = await _postService.GetPostByIdAsync(id);
-            if (postResult.IsFailure)
-            {
-                return NotFound(postResult.ErrorMessage);
-            }
+            var result = await _postService.GetPostByIdAsync(id);
 
-            var post = postResult.Value;
+            if (result.IsFailure)
+                return NotFound(result.ErrorMessage);
+
+            var post = result.Value;
             var currentUserId = CurrentUserId;
 
-            if (post.SellerId != currentUserId)
-            {
-                Log.Warning("Незаконна спроба підтвердження видалення: користувач {UserId}, пост {PostId}", currentUserId, id);
+            var isAdmin = User.IsInRole("Admin");
+            var isOwner = post.SellerId == currentUserId;
+
+            if (!isAdmin && !isOwner)
                 return Forbid();
-            }
 
-            if (post.Photos != null && post.Photos.Any())
+            // 🔥 видалення фото через сервіс
+            foreach (var photo in post.Photos)
             {
-                var photosToDelete = post.Photos.ToList();
-                foreach (var photo in photosToDelete)
-                {
-                    await _photoService.DeletePhotoAsync(photo);
-                }
-
-                Log.Information("Усі фото для поста {PostId} видалено", id);
-            }
-
-            var commentsResult = await _commentService.GetCommentsForPostAsync(id);
-            if (commentsResult.IsSuccess)
-            {
-                var commentsToDelete = commentsResult.Value.ToList();
-                foreach (var comment in commentsToDelete)
-                {
-                    await _commentService.DeleteCommentAsync(comment.CommentId);
-                }
-
-                Log.Information("Усі коментарі для поста {PostId} видалено", id);
+                await _photoService.DeletePhotoAsync(photo);
             }
 
             var deleteResult = await _postService.DeletePostAsync(id);
-            if (deleteResult.IsFailure)
-            {
-                Log.Error("Помилка при видаленні поста {PostId}: {ErrorMessage}", id, deleteResult.ErrorMessage);
-                SetErrorMessage(deleteResult.ErrorMessage);
-                return RedirectToAction(nameof(Index));
-            }
 
-            Log.Information("Пост {PostId} успішно видалено користувачем {UserId}", id, currentUserId);
+            if (deleteResult.IsFailure)
+                return NotFound(deleteResult.ErrorMessage);
+
             return RedirectToAction(nameof(Index));
         }
 

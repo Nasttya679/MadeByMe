@@ -35,11 +35,11 @@ variable "app_listener_port" {
 }
 
 
-data "aws_acm_certificate" "main_certificate" {
-  tags = {
-    Name = "Main-domain-certificate"
-  }
+# data "aws_acm_certificate" "main_certificate" {
+#   tags = {
+#     Name = "Main-domain-certificate"
+#   }
 
-  statuses    = ["ISSUED"]
-  most_recent = true
-}
+#   statuses    = ["ISSUED"]
+#   most_recent = true
+# }

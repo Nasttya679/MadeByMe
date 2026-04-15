@@ -101,15 +101,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5961697f-5534-412c-8ef5-3fdeae62dfc1",
+                            ConcurrencyStamp = "5b789acf-bf10-4ac0-8f86-8e224603270f",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEEZ6hGJ4hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "90341869-f75a-410d-a40a-e0dd59c661af",
+                            SecurityStamp = "a4010a6f-f79c-4e7e-987e-bdc84a99c426",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -117,15 +118,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6adc414e-1f36-4723-9b87-ac9d099bdfa9",
+                            ConcurrencyStamp = "42ec3ea0-16c9-4b80-bc83-75fa361f6b6d",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "ARTIST@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "a3ceff90-e1f0-4779-a8f0-c37ad733067b",
+                            SecurityStamp = "74a7537f-d363-4790-b892-347fb7431b7c",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -133,15 +135,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2d64985e-737a-4fb7-a597-4aa8bfae4b95",
+                            ConcurrencyStamp = "ac358a75-0a6d-434f-9357-04973ea873b4",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "CUSTOMER@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "2490ae3c-4844-4439-99b5-585e3f573a4f",
+                            SecurityStamp = "f484ffc2-b67f-4346-89bd-516803f9b7e5",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -590,6 +593,26 @@ namespace MadeByMe.Infrastructure.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "role-admin",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "role-seller",
+                            Name = "Seller",
+                            NormalizedName = "SELLER"
+                        },
+                        new
+                        {
+                            Id = "role-user",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -677,6 +700,23 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "11111111-1111-1111-1111-111111111111",
+                            RoleId = "role-admin"
+                        },
+                        new
+                        {
+                            UserId = "22222222-2222-2222-2222-222222222222",
+                            RoleId = "role-seller"
+                        },
+                        new
+                        {
+                            UserId = "33333333-3333-3333-3333-333333333333",
+                            RoleId = "role-user"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
