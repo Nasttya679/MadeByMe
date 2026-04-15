@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MadeByMe.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260322110452_Init")]
+    [Migration("20260415205925_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -104,15 +104,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6efd1e13-19bc-4bbf-8759-c4a90d241850",
+                            ConcurrencyStamp = "5b789acf-bf10-4ac0-8f86-8e224603270f",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEEZ6hGJ4hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "be1b59a3-2661-44e0-a83c-b1f807c12fd5",
+                            SecurityStamp = "a4010a6f-f79c-4e7e-987e-bdc84a99c426",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -120,15 +121,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "185174d0-5daf-48c3-8a67-c2a5bc30ac81",
+                            ConcurrencyStamp = "42ec3ea0-16c9-4b80-bc83-75fa361f6b6d",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "ARTIST@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "50253c7b-de40-4e3c-8aca-2c7ed88e56de",
+                            SecurityStamp = "74a7537f-d363-4790-b892-347fb7431b7c",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -136,15 +138,16 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e295c2bc-1644-455a-97bd-43e62ba790e7",
+                            ConcurrencyStamp = "ac358a75-0a6d-434f-9357-04973ea873b4",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
                             LockoutEnabled = false,
-                            PasswordHash = "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==",
+                            NormalizedEmail = "CUSTOMER@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "93ef602e-9ea2-4497-970b-e1e86f36b9d0",
+                            SecurityStamp = "f484ffc2-b67f-4346-89bd-516803f9b7e5",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -283,8 +286,10 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Property<int>("PostId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Stars")
+                        .HasColumnType("integer");
+
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("CommentId");
@@ -302,6 +307,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             Content = "Дуже гарна сережка! Якісне виконання.",
                             CreatedAt = new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 1,
+                            Stars = 5,
                             UserId = "33333333-3333-3333-3333-333333333333"
                         },
                         new
@@ -310,8 +316,96 @@ namespace MadeByMe.Infrastructure.Migrations
                             Content = "Чудова картина, автор - талановитий!",
                             CreatedAt = new DateTime(2024, 1, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 3,
+                            Stars = 5,
                             UserId = "11111111-1111-1111-1111-111111111111"
                         });
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostOffice")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PriceAtPurchase")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("MadeByMe.Domain.Entities.Photo", b =>
@@ -366,7 +460,6 @@ namespace MadeByMe.Infrastructure.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
@@ -376,7 +469,6 @@ namespace MadeByMe.Infrastructure.Migrations
                         .HasColumnType("numeric(3,2)");
 
                     b.Property<string>("SellerId")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -504,6 +596,26 @@ namespace MadeByMe.Infrastructure.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "role-admin",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "role-seller",
+                            Name = "Seller",
+                            NormalizedName = "SELLER"
+                        },
+                        new
+                        {
+                            Id = "role-user",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -591,6 +703,23 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "11111111-1111-1111-1111-111111111111",
+                            RoleId = "role-admin"
+                        },
+                        new
+                        {
+                            UserId = "22222222-2222-2222-2222-222222222222",
+                            RoleId = "role-seller"
+                        },
+                        new
+                        {
+                            UserId = "33333333-3333-3333-3333-333333333333",
+                            RoleId = "role-user"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -651,13 +780,41 @@ namespace MadeByMe.Infrastructure.Migrations
 
                     b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Buyer");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.OrderItem", b =>
+                {
+                    b.HasOne("MadeByMe.Domain.Entities.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadeByMe.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("MadeByMe.Domain.Entities.Photo", b =>
@@ -681,8 +838,7 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Seller")
                         .WithMany()
                         .HasForeignKey("SellerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Category");
 
@@ -767,6 +923,11 @@ namespace MadeByMe.Infrastructure.Migrations
             modelBuilder.Entity("MadeByMe.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("OrderItems");
                 });
 
             modelBuilder.Entity("MadeByMe.Domain.Entities.Post", b =>

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -194,16 +195,44 @@ namespace MadeByMe.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    BuyerId = table.Column<string>(type: "text", nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: false),
+                    City = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    PostOffice = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_AspNetUsers_BuyerId",
+                        column: x => x.BuyerId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Posts",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
                     Price = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
                     CategoryId = table.Column<int>(type: "integer", nullable: false),
-                    SellerId = table.Column<string>(type: "text", nullable: false),
+                    SellerId = table.Column<string>(type: "text", nullable: true),
                     Rating = table.Column<decimal>(type: "numeric(3,2)", nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
@@ -258,9 +287,10 @@ namespace MadeByMe.Infrastructure.Migrations
                 {
                     CommentId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: true),
                     PostId = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
+                    Stars = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
@@ -270,10 +300,37 @@ namespace MadeByMe.Infrastructure.Migrations
                         name: "FK_Comments_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Comments_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    OrderId = table.Column<int>(type: "integer", nullable: false),
+                    PostId = table.Column<int>(type: "integer", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    PriceAtPurchase = table.Column<decimal>(type: "numeric(10,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Comments_Posts_PostId",
+                        name: "FK_OrderItems_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id",
@@ -331,13 +388,23 @@ namespace MadeByMe.Infrastructure.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "role-admin", null, "Admin", "ADMIN" },
+                    { "role-seller", null, "Seller", "SELLER" },
+                    { "role-user", null, "User", "USER" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "Address", "ConcurrencyStamp", "Email", "EmailConfirmed", "IsBlocked", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "ProfilePicture", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "11111111-1111-1111-1111-111111111111", 0, null, "6efd1e13-19bc-4bbf-8759-c4a90d241850", "admin@example.com", false, false, false, null, null, null, "AQAAAAIAAYagAAAAEEZ6hGJ4hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==", null, false, "/images/admin.jpg", "be1b59a3-2661-44e0-a83c-b1f807c12fd5", false, "admin" },
-                    { "22222222-2222-2222-2222-222222222222", 0, null, "185174d0-5daf-48c3-8a67-c2a5bc30ac81", "artist@example.com", false, false, false, null, null, null, "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==", null, false, "/images/artist.jpg", "50253c7b-de40-4e3c-8aca-2c7ed88e56de", false, "artist123" },
-                    { "33333333-3333-3333-3333-333333333333", 0, null, "e295c2bc-1644-455a-97bd-43e62ba790e7", "customer@example.com", false, false, false, null, null, null, "AQAAAAIAAYagAAAAEFz7Oj7hQz2b6J6B2VZqk1vRkXlY7TJi+W7Xq3X9kKJ9pL3h8pZ1Xy9jW8w1g==", null, false, "/images/customer.jpg", "93ef602e-9ea2-4497-970b-e1e86f36b9d0", false, "customer1" }
+                    { "11111111-1111-1111-1111-111111111111", 0, null, "5b789acf-bf10-4ac0-8f86-8e224603270f", "admin@example.com", false, false, false, null, "ADMIN@EXAMPLE.COM", null, "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==", null, false, "/images/admin.jpg", "a4010a6f-f79c-4e7e-987e-bdc84a99c426", false, "admin" },
+                    { "22222222-2222-2222-2222-222222222222", 0, null, "42ec3ea0-16c9-4b80-bc83-75fa361f6b6d", "artist@example.com", false, false, false, null, "ARTIST@EXAMPLE.COM", null, "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==", null, false, "/images/artist.jpg", "74a7537f-d363-4790-b892-347fb7431b7c", false, "artist123" },
+                    { "33333333-3333-3333-3333-333333333333", 0, null, "ac358a75-0a6d-434f-9357-04973ea873b4", "customer@example.com", false, false, false, null, "CUSTOMER@EXAMPLE.COM", null, "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==", null, false, "/images/customer.jpg", "f484ffc2-b67f-4346-89bd-516803f9b7e5", false, "customer1" }
                 });
 
             migrationBuilder.InsertData(
@@ -348,6 +415,16 @@ namespace MadeByMe.Infrastructure.Migrations
                     { 1, "Handmade Jewelry" },
                     { 2, "Home Decor" },
                     { 3, "Art" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[,]
+                {
+                    { "role-admin", "11111111-1111-1111-1111-111111111111" },
+                    { "role-seller", "22222222-2222-2222-2222-222222222222" },
+                    { "role-user", "33333333-3333-3333-3333-333333333333" }
                 });
 
             migrationBuilder.InsertData(
@@ -381,11 +458,11 @@ namespace MadeByMe.Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 table: "Comments",
-                columns: new[] { "CommentId", "Content", "created_at", "PostId", "UserId" },
+                columns: new[] { "CommentId", "Content", "created_at", "PostId", "Stars", "UserId" },
                 values: new object[,]
                 {
-                    { 1, "Дуже гарна сережка! Якісне виконання.", new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Unspecified), 1, "33333333-3333-3333-3333-333333333333" },
-                    { 2, "Чудова картина, автор - талановитий!", new DateTime(2024, 1, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), 3, "11111111-1111-1111-1111-111111111111" }
+                    { 1, "Дуже гарна сережка! Якісне виконання.", new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Unspecified), 1, 5, "33333333-3333-3333-3333-333333333333" },
+                    { 2, "Чудова картина, автор - талановитий!", new DateTime(2024, 1, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), 3, 5, "11111111-1111-1111-1111-111111111111" }
                 });
 
             migrationBuilder.InsertData(
@@ -461,6 +538,21 @@ namespace MadeByMe.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderItems_OrderId",
+                table: "OrderItems",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItems_PostId",
+                table: "OrderItems",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_BuyerId",
+                table: "Orders",
+                column: "BuyerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Photos_PostId",
                 table: "Photos",
                 column: "PostId");
@@ -511,6 +603,9 @@ namespace MadeByMe.Infrastructure.Migrations
                 name: "Comments");
 
             migrationBuilder.DropTable(
+                name: "OrderItems");
+
+            migrationBuilder.DropTable(
                 name: "Photos");
 
             migrationBuilder.DropTable(
@@ -521,6 +616,9 @@ namespace MadeByMe.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Carts");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Posts");

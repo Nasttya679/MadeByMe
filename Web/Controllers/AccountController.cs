@@ -95,6 +95,12 @@ namespace MadeByMe.Web.Controllers
                 return View(dto);
             }
 
+            if (user.IsBlocked)
+            {
+                ModelState.AddModelError("", "Account is blocked");
+                return View(dto);
+            }
+
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password!, false);
 
             Console.WriteLine("SignIn success: " + result.Succeeded);

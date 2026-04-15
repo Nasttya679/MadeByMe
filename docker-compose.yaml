@@ -29,7 +29,7 @@ services:
       context: .
       dockerfile: Dockerfile
 
-    image: madebyme:1.0 
+    image: madebyme:2.0 
     container_name: madebyme_app
 
     ports:

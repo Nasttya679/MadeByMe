@@ -70,6 +70,7 @@ namespace MadeByMe.Application.DTOs
         public Category? CategoryName { get; set; }
 
         public ApplicationUser? SellerName { get; set; }
+        public string SellerId { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

@@ -70,6 +70,7 @@ builder.Services.AddScoped<IBuyerCartService, BuyerCartService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
