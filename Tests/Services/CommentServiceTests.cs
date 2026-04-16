@@ -1,9 +1,12 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Moq;
 using Serilog;
+using Xunit;
 
 namespace MadeByMe.Tests.Services
 {
@@ -23,75 +26,80 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public void GetCommentsForPost_WhenCommentsExist_ShouldReturnList()
+        public async Task GetCommentsForPostAsync_WhenCommentsExist_ShouldReturnList()
         {
             int postId = 1;
             var comments = new List<Comment> { new Comment { CommentId = 1, PostId = postId }, new Comment { CommentId = 2, PostId = postId } };
-            _commentRepoMock.Setup(repo => repo.GetByPostId(postId)).Returns(comments);
+            _commentRepoMock.Setup(repo => repo.GetByPostIdAsync(postId)).ReturnsAsync(comments);
 
-            var result = _commentService.GetCommentsForPost(postId);
+            var result = await _commentService.GetCommentsForPostAsync(postId);
 
             Assert.True(result.IsSuccess);
             Assert.Equal(2, result.Value.Count);
         }
 
         [Fact]
-        public void GetCommentsForPost_WhenNoComments_ShouldReturnEmptyList()
+        public async Task GetCommentsForPostAsync_WhenNoComments_ShouldReturnEmptyList()
         {
-            _commentRepoMock.Setup(repo => repo.GetByPostId(It.IsAny<int>())).Returns(new List<Comment>());
+            _commentRepoMock.Setup(repo => repo.GetByPostIdAsync(It.IsAny<int>())).ReturnsAsync(new List<Comment>());
 
-            var result = _commentService.GetCommentsForPost(99);
+            var result = await _commentService.GetCommentsForPostAsync(99);
 
             Assert.True(result.IsSuccess);
             Assert.Empty(result.Value);
         }
 
         [Fact]
-        public void GetCommentsForPost_ShouldCallRepositoryWithCorrectPostId()
+        public async Task GetCommentsForPostAsync_ShouldCallRepositoryWithCorrectPostId()
         {
             int postId = 10;
-            _commentRepoMock.Setup(repo => repo.GetByPostId(postId)).Returns(new List<Comment>());
-            _commentService.GetCommentsForPost(postId);
-            _commentRepoMock.Verify(repo => repo.GetByPostId(postId), Times.Once);
+            _commentRepoMock.Setup(repo => repo.GetByPostIdAsync(postId)).ReturnsAsync(new List<Comment>());
+
+            await _commentService.GetCommentsForPostAsync(postId);
+            _commentRepoMock.Verify(repo => repo.GetByPostIdAsync(postId), Times.Once);
         }
 
         [Fact]
-        public void GetCommentById_WhenExists_ShouldReturnComment()
+        public async Task GetCommentByIdAsync_WhenExists_ShouldReturnComment()
         {
             int commentId = 1;
-            _commentRepoMock.Setup(repo => repo.GetById(commentId)).Returns(new Comment { CommentId = commentId, Content = "Nice!" });
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId)).ReturnsAsync(new Comment { CommentId = commentId, Content = "Nice!" });
 
-            var result = _commentService.GetCommentById(commentId);
+            var result = await _commentService.GetCommentByIdAsync(commentId);
 
             Assert.True(result.IsSuccess);
             Assert.Equal("Nice!", result.Value.Content);
         }
 
         [Fact]
-        public void GetCommentById_WhenNotExists_ShouldReturnFailure()
+        public async Task GetCommentByIdAsync_WhenNotExists_ShouldReturnFailure()
         {
-            _commentRepoMock.Setup(repo => repo.GetById(It.IsAny<int>())).Returns((Comment)null!);
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Comment)null!);
 
-            var result = _commentService.GetCommentById(404);
+            var result = await _commentService.GetCommentByIdAsync(404);
 
             Assert.True(result.IsFailure);
             Assert.Contains("не знайдено", result.ErrorMessage);
         }
 
         [Fact]
-        public void GetCommentById_ShouldCallGetByIdOnce()
+        public async Task GetCommentByIdAsync_ShouldCallGetByIdOnce()
         {
-            _commentService.GetCommentById(1);
-            _commentRepoMock.Verify(repo => repo.GetById(1), Times.Once);
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(new Comment());
+
+            await _commentService.GetCommentByIdAsync(1);
+            _commentRepoMock.Verify(repo => repo.GetByIdAsync(1), Times.Once);
         }
 
         [Fact]
-        public void AddComment_WithValidData_ShouldReturnSuccess()
+        public async Task AddCommentAsync_WithValidData_ShouldReturnSuccess()
         {
             var dto = new CreateCommentDto { PostId = 1, Content = "Great post!" };
             string userId = "user-123";
 
-            var result = _commentService.AddComment(dto, userId);
+            _commentRepoMock.Setup(repo => repo.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
+
+            var result = await _commentService.AddCommentAsync(dto, userId);
 
             Assert.True(result.IsSuccess);
             Assert.Equal("Great post!", result.Value.Content);
@@ -99,58 +107,65 @@ namespace MadeByMe.Tests.Services
         }
 
         [Fact]
-        public void AddComment_ShouldCallAddInRepository()
+        public async Task AddCommentAsync_ShouldCallAddInRepository()
         {
             var dto = new CreateCommentDto { PostId = 5, Content = "Hello" };
+            _commentRepoMock.Setup(repo => repo.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
 
-            _commentService.AddComment(dto, "u1");
+            await _commentService.AddCommentAsync(dto, "u1");
 
-            _commentRepoMock.Verify(repo => repo.Add(It.Is<Comment>(c => c.Content == "Hello" && c.PostId == 5)), Times.Once);
+            _commentRepoMock.Verify(repo => repo.AddAsync(It.Is<Comment>(c => c.Content == "Hello" && c.PostId == 5)), Times.Once);
         }
 
         [Fact]
-        public void AddComment_ShouldReturnEntityWithCorrectPostId()
+        public async Task AddCommentAsync_ShouldReturnEntityWithCorrectPostId()
         {
             var dto = new CreateCommentDto { PostId = 100 };
-            var result = _commentService.AddComment(dto, "user1");
+            _commentRepoMock.Setup(repo => repo.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
+
+            var result = await _commentService.AddCommentAsync(dto, "user1");
 
             Assert.Equal(100, result.Value.PostId);
         }
 
         [Fact]
-        public void DeleteComment_Existing_ShouldReturnSuccess()
+        public async Task DeleteCommentAsync_Existing_ShouldReturnSuccess()
         {
             int commentId = 1;
             var comment = new Comment { CommentId = commentId };
-            _commentRepoMock.Setup(repo => repo.GetById(commentId)).Returns(comment);
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId)).ReturnsAsync(comment);
+            _commentRepoMock.Setup(repo => repo.DeleteAsync(comment)).Returns(Task.CompletedTask);
 
-            var result = _commentService.DeleteComment(commentId);
+            var result = await _commentService.DeleteCommentAsync(commentId);
 
             Assert.True(result.IsSuccess);
-            _commentRepoMock.Verify(repo => repo.Delete(comment), Times.Once);
+            _commentRepoMock.Verify(repo => repo.DeleteAsync(comment), Times.Once);
         }
 
         [Fact]
-        public void DeleteComment_NonExisting_ShouldReturnFailure()
+        public async Task DeleteCommentAsync_NonExisting_ShouldReturnFailure()
         {
-            _commentRepoMock.Setup(repo => repo.GetById(It.IsAny<int>())).Returns((Comment)null!);
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Comment)null!);
 
-            var result = _commentService.DeleteComment(99);
+            var result = await _commentService.DeleteCommentAsync(99);
 
             Assert.True(result.IsFailure);
-            _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
+            _commentRepoMock.Verify(repo => repo.DeleteAsync(It.IsAny<Comment>()), Times.Never);
         }
 
         [Fact]
-        public void DeleteComment_ShouldVerifyExistenceBeforeDelete()
+        public async Task DeleteCommentAsync_ShouldVerifyExistenceBeforeDelete()
         {
             int id = 10;
-            _commentService.DeleteComment(id);
-            _commentRepoMock.Verify(repo => repo.GetById(id), Times.Once);
+            _commentRepoMock.Setup(repo => repo.GetByIdAsync(id)).ReturnsAsync(new Comment { CommentId = id });
+            _commentRepoMock.Setup(repo => repo.DeleteAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
+
+            await _commentService.DeleteCommentAsync(id);
+            _commentRepoMock.Verify(repo => repo.GetByIdAsync(id), Times.Once);
         }
 
         [Fact]
-        public void AddComment_ShouldUpdatePostRatingAutomatically()
+        public async Task AddCommentAsync_ShouldUpdatePostRatingAutomatically()
         {
             var post = new Post { Id = 1, Rating = 0 };
             var dto = new CreateCommentDto { PostId = 1, Stars = 4, Content = "Good" };
@@ -161,13 +176,15 @@ namespace MadeByMe.Tests.Services
                 new Comment { Stars = 4 },
             };
 
-            _postRepoMock.Setup(repo => repo.GetById(1)).Returns(post);
-            _commentRepoMock.Setup(repo => repo.GetByPostId(1)).Returns(commentsAfterAdding);
+            _postRepoMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(post);
+            _commentRepoMock.Setup(repo => repo.GetByPostIdAsync(1)).ReturnsAsync(commentsAfterAdding);
+            _commentRepoMock.Setup(repo => repo.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
+            _postRepoMock.Setup(repo => repo.UpdateAsync(It.IsAny<Post>())).Returns(Task.CompletedTask);
 
-            _commentService.AddComment(dto, "user-1");
+            await _commentService.AddCommentAsync(dto, "user-1");
 
             Assert.Equal(4.5m, post.Rating);
-            _postRepoMock.Verify(repo => repo.Update(post), Times.Once);
+            _postRepoMock.Verify(repo => repo.UpdateAsync(post), Times.Once);
         }
     }
 }

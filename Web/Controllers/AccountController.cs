@@ -8,7 +8,7 @@ using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -57,7 +57,7 @@ namespace MadeByMe.Web.Controllers
             Log.Warning("Невдала спроба реєстрації для {Email}. Помилки: {@Errors}", dto.Email, result.Errors.Select(e => e.Description));
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                AddErrorToModelState(error.Description);
             }
 
             return View(dto);
@@ -91,7 +91,13 @@ namespace MadeByMe.Web.Controllers
             if (user == null)
             {
                 Log.Warning("Невдала спроба входу: користувача з email {Email} не знайдено", dto.Email);
-                ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
+                AddErrorToModelState("Невірна електронна пошта або пароль");
+                return View(dto);
+            }
+
+            if (user.IsBlocked)
+            {
+                ModelState.AddModelError("", "Account is blocked");
                 return View(dto);
             }
 
@@ -106,14 +112,14 @@ namespace MadeByMe.Web.Controllers
             }
 
             Log.Warning("Невдала спроба входу для {Email}: невірний пароль", dto.Email);
-            ModelState.AddModelError(string.Empty, "Невірна електронна пошта або пароль");
+            AddErrorToModelState("Невірна електронна пошта або пароль");
             return View(dto);
         }
 
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            Log.Information("Користувач {UserName} вийшов із системи", User.Identity?.Name ?? "Невідомий");
+            Log.Information("Користувач {UserName} вийшов із системи", CurrentUserName ?? "Невідомий");
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
@@ -121,8 +127,7 @@ namespace MadeByMe.Web.Controllers
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var userId = _userManager.GetUserId(User);
-            var user = await _userManager.FindByIdAsync(userId!);
+            var user = await _userManager.FindByIdAsync(CurrentUserId!);
 
             if (user == null)
             {
@@ -172,12 +177,12 @@ namespace MadeByMe.Web.Controllers
 
             dto.UserId = currentUser.Id;
 
-            var result = _ApplicationUserService.UpdateUser(currentUser.Id, dto);
+            var result = await _ApplicationUserService.UpdateUserAsync(currentUser.Id, dto);
 
             if (result.IsFailure)
             {
                 Log.Warning("Користувачу {Email} не вдалося оновити профіль. Причина: {ErrorMessage}", currentUser.Email, result.ErrorMessage);
-                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                AddErrorToModelState(result.ErrorMessage);
                 return View("EditProfile", dto);
             }
 
@@ -187,7 +192,7 @@ namespace MadeByMe.Web.Controllers
 
         public IActionResult AccessDenied()
         {
-            Log.Warning("Відмовлено в доступі для користувача {UserName} до захищеного ресурсу", User.Identity?.Name ?? "Неавторизований");
+            Log.Warning("Відмовлено в доступі для користувача {UserName} до захищеного ресурсу", CurrentUserName ?? "Неавторизований");
             return View();
         }
 

@@ -1,9 +1,12 @@
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Moq;
+using Xunit;
 
 namespace MadeByMe.Tests.Services
 {
@@ -59,36 +62,36 @@ namespace MadeByMe.Tests.Services
             Assert.Equal(10, result.Value.PostId);
             Assert.Contains("/images/", result.Value.FilePath);
 
-            _photoRepoMock.Verify(repo => repo.Add(It.IsAny<Photo>()), Times.Once);
+            _photoRepoMock.Verify(repo => repo.AddAsync(It.IsAny<Photo>()), Times.Once);
         }
 
         [Fact]
-        public void DeletePhoto_WhenPhotoIsNull_ShouldReturnFailure()
+        public async Task DeletePhotoAsync_WhenPhotoIsNull_ShouldReturnFailure()
         {
-            var result = _photoService.DeletePhoto(null!);
+            var result = await _photoService.DeletePhotoAsync(null!);
 
             Assert.True(result.IsFailure);
             Assert.Equal("Фото не передано для видалення або ім'я файлу порожнє.", result.ErrorMessage);
         }
 
         [Fact]
-        public void DeletePhoto_WhenPhotoExists_ShouldReturnSuccess()
+        public async Task DeletePhotoAsync_WhenPhotoExists_ShouldReturnSuccess()
         {
             var photo = new Photo { FileName = "non-existent-file.jpg" };
 
-            var result = _photoService.DeletePhoto(photo);
+            var result = await _photoService.DeletePhotoAsync(photo);
 
             Assert.True(result.IsSuccess);
 
-            _photoRepoMock.Verify(repo => repo.Delete(photo), Times.Once);
+            _photoRepoMock.Verify(repo => repo.DeleteAsync(photo), Times.Once);
         }
 
         [Fact]
-        public void DeletePhoto_ShouldHandleNullFileNameGracefully()
+        public async Task DeletePhotoAsync_ShouldHandleNullFileNameGracefully()
         {
             var photo = new Photo { FileName = null };
 
-            var result = _photoService.DeletePhoto(photo);
+            var result = await _photoService.DeletePhotoAsync(photo);
 
             Assert.True(result.IsFailure);
             Assert.Contains("порожнє", result.ErrorMessage);

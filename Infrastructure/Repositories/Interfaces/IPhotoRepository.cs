@@ -4,10 +4,10 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface IPhotoRepository
     {
-        void Add(Photo photo);
+        Task AddAsync(Photo photo);
 
-        void Delete(Photo photo);
+        Task DeleteAsync(Photo photo);
 
-        Photo? GetById(int id);
+        Task<Photo?> GetByIdAsync(int id);
     }
 }

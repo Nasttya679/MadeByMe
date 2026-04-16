@@ -4,14 +4,14 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface IPostRepository
     {
-        List<Post> GetAll();
+        Task<List<Post>> GetAllAsync();
 
-        Post? GetById(int id);
+        Task<Post?> GetByIdAsync(int id);
 
-        void Add(Post post);
+        Task AddAsync(Post post);
 
-        void Update(Post post);
+        Task UpdateAsync(Post post);
 
-        void Delete(Post post);
+        Task DeleteAsync(Post post);
     }
 }

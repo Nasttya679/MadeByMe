@@ -4,12 +4,12 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface ICommentRepository
     {
-        Comment? GetById(int id);
+        Task<Comment?> GetByIdAsync(int id);
 
-        List<Comment> GetByPostId(int postId);
+        Task<List<Comment>> GetByPostIdAsync(int postId);
 
-        void Add(Comment comment);
+        Task AddAsync(Comment comment);
 
-        void Delete(Comment comment);
+        Task DeleteAsync(Comment comment);
     }
 }

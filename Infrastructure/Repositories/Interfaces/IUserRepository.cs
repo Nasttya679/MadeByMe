@@ -1,11 +1,16 @@
 using MadeByMe.Domain.Entities;
 
+
 namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface IUserRepository
     {
-        ApplicationUser? GetById(string userId);
+        Task<ApplicationUser?> GetByIdAsync(string userId);
 
-        void Update(ApplicationUser user);
+        Task<List<ApplicationUser>> GetAllExceptAdminsAsync();
+        
+        Task UpdateAsync(ApplicationUser user);
+
+        Task DeleteAsync(ApplicationUser user);
     }
 }

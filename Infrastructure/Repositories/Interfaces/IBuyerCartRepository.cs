@@ -4,16 +4,16 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
 {
     public interface IBuyerCartRepository
     {
-        BuyerCart? GetItem(int cartId, int postId);
+        Task<BuyerCart?> GetItemAsync(int cartId, int postId);
 
-        void AddItem(BuyerCart item);
+        Task AddItemAsync(BuyerCart item);
 
-        void RemoveItem(BuyerCart item);
+        Task RemoveItemAsync(BuyerCart item);
 
-        void UpdateItem(BuyerCart item);
+        Task UpdateItemAsync(BuyerCart item);
 
-        void RemoveRange(IEnumerable<BuyerCart> items);
+        Task RemoveRangeAsync(IEnumerable<BuyerCart> items);
 
-        IEnumerable<BuyerCart> GetItemsByCartId(int cartId);
+        Task<IEnumerable<BuyerCart>> GetItemsByCartIdAsync(int cartId);
     }
 }

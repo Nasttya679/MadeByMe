@@ -13,26 +13,27 @@ namespace MadeByMe.Application.Services.Implementations
 
         public PostService(IPostRepository repo) => _repo = repo;
 
-        public Result<List<Post>> GetAllPosts()
+        public async Task<Result<List<Post>>> GetAllPostsAsync()
         {
-            var posts = _repo.GetAll();
+            var posts = await _repo.GetAllAsync();
             Log.Information("Отримано список усіх постів. Кількість: {Count}", posts.Count);
-            return Result<List<Post>>.Success(posts);
+
+            return posts;
         }
 
-        public Result<Post> GetPostById(int id)
+        public async Task<Result<Post>> GetPostByIdAsync(int id)
         {
-            var post = _repo.GetById(id);
+            var post = await _repo.GetByIdAsync(id);
             if (post == null)
             {
                 Log.Warning("Товар з ID {PostId} не знайдено", id);
-                return Result<Post>.Failure($"Товар з ID {id} не знайдено.");
+                return $"Товар з ID {id} не знайдено.";
             }
 
-            return Result<Post>.Success(post);
+            return post;
         }
 
-        public Result<Post> CreatePost(CreatePostDto dto, string sellerId)
+        public async Task<Result<Post>> CreatePostAsync(CreatePostDto dto, string sellerId)
         {
             Log.Information("Початок створення поста '{Title}' для продавця {SellerId}", dto.Title, sellerId);
 
@@ -45,21 +46,22 @@ namespace MadeByMe.Application.Services.Implementations
                 SellerId = sellerId,
             };
 
-            _repo.Add(post);
+            await _repo.AddAsync(post);
 
             Log.Information("Пост успішно створено. ID поста: {PostId}", post.Id);
-            return Result<Post>.Success(post);
+
+            return post;
         }
 
-        public Result<Post> UpdatePost(int id, UpdatePostDto dto)
+        public async Task<Result<Post>> UpdatePostAsync(int id, UpdatePostDto dto)
         {
             Log.Information("Запит на оновлення поста {PostId}", id);
 
-            var post = _repo.GetById(id);
+            var post = await _repo.GetByIdAsync(id);
             if (post == null)
             {
                 Log.Warning("Невдала спроба оновлення: пост {PostId} не знайдено", id);
-                return Result<Post>.Failure("Товар для оновлення не знайдено.");
+                return "Товар для оновлення не знайдено.";
             }
 
             post.Title = dto.Title ?? post.Title;
@@ -67,60 +69,65 @@ namespace MadeByMe.Application.Services.Implementations
             post.Price = dto.Price ?? post.Price;
             post.CategoryId = dto.CategoryId ?? post.CategoryId;
 
-            _repo.Update(post);
+            await _repo.UpdateAsync(post);
 
             Log.Information("Пост {PostId} успішно оновлено", id);
-            return Result<Post>.Success(post);
+
+            return post;
         }
 
-        public Result DeletePost(int id)
+        public async Task<Result> DeletePostAsync(int id)
         {
             Log.Information("Запит на видалення поста {PostId}", id);
 
-            var post = _repo.GetById(id);
+            var post = await _repo.GetByIdAsync(id);
             if (post == null)
             {
                 Log.Warning("Невдала спроба видалення: пост {PostId} не знайдено", id);
-                return Result.Failure("Товар для видалення не знайдено.");
+                return "Товар для видалення не знайдено.";
             }
 
-            _repo.Delete(post);
+            await _repo.DeleteAsync(post);
 
             Log.Information("Пост {PostId} успішно видалено з бази даних", id);
+
             return Result.Success();
         }
 
-        public Result<List<Post>> GetFilteredPosts(string? searchTerm, int? categoryId, string? sortBy)
+        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy)
         {
-            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm, categoryId, sortBy);
+            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm ?? "немає", categoryId ?? 0, sortBy ?? "стандарт");
 
-            var posts = _repo.GetAll().AsQueryable();
+            var postsQuery = (await _repo.GetAllAsync()).AsQueryable();
 
             if (categoryId.HasValue && categoryId > 0)
             {
-                posts = posts.Where(p => p.CategoryId == categoryId);
+                postsQuery = postsQuery.Where(p => p.CategoryId == categoryId);
             }
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                var lowerSearch = searchTerm.ToLower();
-                posts = posts.Where(p => p.Title!.ToLower().Contains(lowerSearch) ||
-                                         p.Description!.ToLower().Contains(lowerSearch));
+                var lowerSearch = searchTerm.ToLower().Trim();
+                postsQuery = postsQuery.Where(p => (p.Title != null && p.Title.ToLower().Contains(lowerSearch)) ||
+                                                   (p.Description != null && p.Description.ToLower().Contains(lowerSearch)));
             }
 
-            posts = sortBy switch
+            postsQuery = sortBy switch
             {
-                "price_asc" => posts.OrderBy(p => p.Price),
-                "price_desc" => posts.OrderByDescending(p => p.Price),
-                "rating" => posts.OrderByDescending(p => p.Rating),
-                "newest" => posts.OrderByDescending(p => p.CreatedAt),
-                _ => posts.OrderByDescending(p => p.CreatedAt)
+                "price_asc" => postsQuery.OrderBy(p => p.Price),
+                "price_desc" => postsQuery.OrderByDescending(p => p.Price),
+                "rating" => postsQuery.OrderByDescending(p => p.Rating),
+                "newest" => postsQuery.OrderByDescending(p => p.CreatedAt),
+                _ => postsQuery.OrderByDescending(p => p.CreatedAt)
             };
 
-            var resultList = posts.ToList();
+            var resultList = postsQuery.ToList();
             Log.Information("Фільтрація завершена. Знайдено: {Count}", resultList.Count);
 
-            return Result<List<Post>>.Success(resultList);
+            return resultList;
         }
+
+        public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
+            => await GetFilteredPostsAsync(searchTerm, null, null);
     }
 }

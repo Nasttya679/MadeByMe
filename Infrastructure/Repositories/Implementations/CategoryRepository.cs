@@ -14,36 +14,36 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context = context;
         }
 
-        public List<Category> GetAll()
+        public async Task<List<Category>> GetAllAsync()
         {
-            return _context.Categories
+            return await _context.Categories
                 .Include(c => c.Posts)
-                .ToList();
+                .ToListAsync();
         }
 
-        public Category? GetById(int id)
+        public async Task<Category?> GetByIdAsync(int id)
         {
-            return _context.Categories
+            return await _context.Categories
                 .Include(c => c.Posts)
-                .FirstOrDefault(c => c.CategoryId == id);
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
-        public void Add(Category category)
+        public async Task AddAsync(Category category)
         {
             _context.Categories.Add(category);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(Category category)
+        public async Task UpdateAsync(Category category)
         {
             _context.Categories.Update(category);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(Category category)
+        public async Task DeleteAsync(Category category)
         {
             _context.Categories.Remove(category);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
     }
 }

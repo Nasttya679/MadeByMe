@@ -14,37 +14,37 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context = context;
         }
 
-        public Cart? GetCartByBuyerId(string buyerId)
+        public async Task<Cart?> GetCartByBuyerIdAsync(string buyerId)
         {
-            return _context.Carts
+            return await _context.Carts
                 .Include(c => c.BuyerCarts)
                 .ThenInclude(bc => bc.Post)
-                .FirstOrDefault(c => c.BuyerId == buyerId);
+                .FirstOrDefaultAsync(c => c.BuyerId == buyerId);
         }
 
-        public void AddCart(Cart cart)
+        public async Task AddCartAsync(Cart cart)
         {
             _context.Carts.Add(cart);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateCart(Cart cart)
+        public async Task UpdateCartAsync(Cart cart)
         {
             _context.Carts.Update(cart);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveCart(Cart cart)
+        public async Task RemoveCartAsync(Cart cart)
         {
             _context.Carts.Remove(cart);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public IEnumerable<BuyerCart> GetItemsByCartId(int cartId)
+        public async Task<IEnumerable<BuyerCart>> GetItemsByCartIdAsync(int cartId)
         {
-            return _context.BuyerCarts
+            return await _context.BuyerCarts
                 .Where(bc => bc.CartId == cartId)
-                .ToList();
+                .ToListAsync();
         }
     }
 }

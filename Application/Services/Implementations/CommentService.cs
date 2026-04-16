@@ -18,25 +18,27 @@ namespace MadeByMe.Application.Services.Implementations
             _postRepository = postRepository;
         }
 
-        public Result<List<Comment>> GetCommentsForPost(int postId)
+        public async Task<Result<List<Comment>>> GetCommentsForPostAsync(int postId)
         {
-            var comments = _commentRepository.GetByPostId(postId);
-            Log.Information("Отримано список коментарів для поста {PostId}. Кількість: {Count}", postId, comments.Count);
-            return Result<List<Comment>>.Success(comments);
+            var comments = await _commentRepository.GetByPostIdAsync(postId);
+            Log.Information("Отримано список коментарів для поста {PostId}. Кількість коментарів: {Count}", postId, comments.Count);
+            return comments;
         }
 
-        public Result<Comment> GetCommentById(int id)
+        public async Task<Result<Comment>> GetCommentByIdAsync(int id)
         {
-            var comment = _commentRepository.GetById(id);
+            var comment = await _commentRepository.GetByIdAsync(id);
+
             if (comment == null)
             {
-                return Result<Comment>.Failure($"Коментар з ID {id} не знайдено.");
+                Log.Warning("Коментар з ID {CommentId} не знайдено", id);
+                return $"Коментар з ID {id} не знайдено.";
             }
 
-            return Result<Comment>.Success(comment);
+            return comment;
         }
 
-        public Result<Comment> AddComment(CreateCommentDto dto, string userId)
+        public async Task<Result<Comment>> AddCommentAsync(CreateCommentDto dto, string userId)
         {
             Log.Information("Початок додавання коментаря до поста {PostId}", dto.PostId);
 
@@ -48,44 +50,48 @@ namespace MadeByMe.Application.Services.Implementations
                 Stars = dto.Stars,
             };
 
-            _commentRepository.Add(comment);
+            await _commentRepository.AddAsync(comment);
 
-            var post = _postRepository.GetById(dto.PostId);
+            Log.Information("Коментар успішно додано до поста {PostId}. ID коментаря: {CommentId}", dto.PostId, comment.CommentId);
+
+            var post = await _postRepository.GetByIdAsync(dto.PostId);
             if (post != null)
             {
-                var allComments = _commentRepository.GetByPostId(dto.PostId);
+                var allComments = await _commentRepository.GetByPostIdAsync(dto.PostId);
                 if (allComments.Any())
                 {
                     double average = allComments.Average(c => c.Stars);
                     post.Rating = (decimal)average;
-                    _postRepository.Update(post);
+                    await _postRepository.UpdateAsync(post);
                 }
             }
 
-            Log.Information("Коментар успішно додано. Оновлено рейтинг поста.");
-            return Result<Comment>.Success(comment);
+            return comment;
         }
 
-        public Result DeleteComment(int id)
+        public async Task<Result> DeleteCommentAsync(int id)
         {
-            var comment = _commentRepository.GetById(id);
+            Log.Information("Видалення коментаря з ID {CommentId}", id);
+
+            var comment = await _commentRepository.GetByIdAsync(id);
             if (comment == null)
             {
-                return Result.Failure("Коментар не знайдено.");
+                Log.Warning("Невдала спроба видалення: коментар з ID {CommentId} не знайдено", id);
+                return "Коментар для видалення не знайдено.";
             }
 
             int postId = comment.PostId;
-            _commentRepository.Delete(comment);
+            await _commentRepository.DeleteAsync(comment);
 
-            var post = _postRepository.GetById(postId);
+            var post = await _postRepository.GetByIdAsync(postId);
             if (post != null)
             {
-                var remainingComments = _commentRepository.GetByPostId(postId);
+                var remainingComments = await _commentRepository.GetByPostIdAsync(postId);
                 post.Rating = remainingComments.Any()
                     ? (decimal)remainingComments.Average(c => c.Stars)
                     : 0;
 
-                _postRepository.Update(post);
+                await _postRepository.UpdateAsync(post);
             }
 
             return Result.Success();

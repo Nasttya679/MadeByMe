@@ -32,7 +32,7 @@ namespace MadeByMe.Application.DTOs
     {
         public int CartId { get; set; }
 
-        public List<CartItemResponseDto> Items { get; set; } = new ();
+        public List<CartItemResponseDto> Items { get; set; } = new();
 
         public decimal TotalPrice => Items.Sum(i => i.TotalPrice);
     }

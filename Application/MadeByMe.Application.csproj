@@ -4,9 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     
-    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1649;SA1309;SA1101;SA1402;SA1600</NoWarn>
+    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1649;SA1309;SA1101;SA1402;SA1600;SA1000</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

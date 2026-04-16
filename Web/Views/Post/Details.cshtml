@@ -1,7 +1,7 @@
-﻿@model  MadeByMe.Application.ViewModels.PostDetailsViewModel
+﻿@model MadeByMe.Application.ViewModels.PostDetailsViewModel
 
 @{
-    ViewData["Title"] = Model.Post!.Title;
+    ViewData["Title"] = Model.Post.Title;
 }
 
 @using Microsoft.AspNetCore.Identity
@@ -23,11 +23,11 @@
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="space-x-4">
                 <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity!.IsAuthenticated)
+                @if (User.Identity.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
-                    @if (!User.IsInRole("Seller"))
+                    @if (!User.IsInRole("Seller") && !User.IsInRole("Admin"))
                     {
                         <form action="/Account/BecomeSeller" method="post" class="inline">
                             @Html.AntiForgeryToken()
@@ -62,17 +62,12 @@
                     <div>
                         <h1 class="text-3xl font-bold text-gray-900">@Model.Post.Title</h1>
                         <div class="mt-2 flex items-center">
-                            <div class="flex items-center">
+                            <div class="flex items-center text-yellow-400">
                                 @for (int i = 0; i < 5; i++)
                                 {
-                                    if (i < Math.Round(Model.Post.Rating))
-                                    {
-                                        <i class="fas fa-star text-yellow-400"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="fas fa-star text-gray-300"></i>
-                                    }
+                                    <svg class="h-5 w-5 @(i < Math.Floor(Model.Post.Rating) ? "text-yellow-400" : "text-gray-300")" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
                                 }
                             </div>
                             <span class="ml-2 text-sm text-gray-500">(@Model.Post.Rating.ToString("F1"))</span>
@@ -89,7 +84,7 @@
                         <div class="mt-2 flex items-center">
                             <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                                 <span class="text-lg font-medium text-gray-600">
-                                    @Model.Post.Seller!.UserName!.Substring(0, 1).ToUpper()
+                                    @Model.Post.Seller.UserName.Substring(0, 1).ToUpper()
                                 </span>
                             </div>
                             <div class="ml-3">
@@ -99,27 +94,28 @@
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-200 pt-6">
-                        @* Delete Button Section *@
-                        @if (User.Identity.IsAuthenticated && User.IsInRole("Seller") && UserManager.GetUserId(User) == Model.Post.SellerId)
+                    <div class="border-t border-gray-200 pt-6 space-y-4">
+                        @* --- СЕКЦІЯ КЕРУВАННЯ (ВИДАЛЕННЯ) --- *@
+                        @{
+                            var currentUserId = UserManager.GetUserId(User);
+                            var isAdmin = User.IsInRole("Admin");
+                            var isOwner = currentUserId == Model.Post.SellerId;
+                        }
+
+                        @if (User.Identity.IsAuthenticated && (isAdmin || isOwner))
                         {
-                            <a asp-action="Edit" asp-controller="Post" asp-route-id="@Model.Post.Id" 
-                               class="w-full block text-center bg-gray-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition duration-150 ease-in-out">
-                                Редагувати Пост
-                            </a>
-                            
-                            <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post" class="mt-4">
+                            <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" 
-                                        class="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition duration-150 ease-in-out"
+                                        class="w-full bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition duration-150 shadow-md mb-2"
                                         onclick="return confirm('Ви впевнені, що хочете видалити цей пост?');">
                                     Видалити Пост
                                 </button>
                             </form>
                         }
-                        
-                        @* Add to Cart Button Section *@
-                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="space-y-4 mt-4">
+
+                        @* --- СЕКЦІЯ КОШИКА --- *@
+                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="space-y-4">
                             <input type="hidden" name="PostId" value="@Model.Post.Id" />
                             <div class="flex items-center space-x-4">
                                 <label for="quantity" class="text-sm font-medium text-gray-700">Кількість:</label>
@@ -140,32 +136,33 @@
             </div>
 
             <div class="border-t border-gray-200 p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Відгуки (@Model.CommentsList!.Count)</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Відгуки (@Model.CommentsList.Count)</h2>
                 
                 @if (User.Identity.IsAuthenticated)
                 {
                     <form asp-controller="Comment" asp-action="Create" method="post" class="mb-8">
                         <input type="hidden" name="PostId" value="@Model.Post.Id" />
-                        
+
                         <input type="hidden" id="ratingInput" name="Stars" value="5" />
+
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Ваша оцінка:</label>
                             <div class="flex space-x-1" id="starRating">
-                                <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="1"></i>
-                                <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="2"></i>
-                                <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="3"></i>
-                                <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="4"></i>
-                                <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="5"></i>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="@i"></i>
+                                }
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <textarea name="Content" rows="3" required
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-3"
+                            <textarea name="Content" rows="3"
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
                                     placeholder="Залиште свій відгук..."></textarea>
                         </div>
+
                         <button type="submit" 
-                                class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition font-medium">
+                                class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition">
                             Надіслати відгук
                         </button>
                     </form>
@@ -174,33 +171,52 @@
                 <div class="space-y-6">
                     @foreach (var comment in Model.CommentsList)
                     {
-                        <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                            <div class="flex justify-between items-start mb-3">
+                        <div class="bg-gray-50 rounded-lg p-4 relative group">
+                            <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
-                                        @(comment.User?.UserName?.Substring(0, 1).ToUpper() ?? "U")
+                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <span class="text-sm font-medium text-gray-600">
+                                            @comment.User.UserName.Substring(0, 1).ToUpper()
+                                        </span>
                                     </div>
                                     <div class="ml-3">
-                                        <p class="text-sm font-bold text-gray-900">@(comment.User?.UserName ?? "Користувач")</p>
+                                        <p class="text-sm font-medium text-gray-900">@comment.User.UserName</p>
                                         <p class="text-xs text-gray-500">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
                                     </div>
                                 </div>
-                                
-                                <div class="flex items-center space-x-1">
-                                    @for (int i = 0; i < 5; i++)
-                                    {
-                                        if (i < comment.Stars)
-                                        {
-                                            <i class="fas fa-star text-sm text-yellow-400"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-star text-sm text-gray-300"></i>
-                                        }
-                                    }
-                                </div>
+
+                                @* --- КНОПКА ВИДАЛЕННЯ ДЛЯ АДМІНА АБО АВТОРА --- *@
+                                @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || UserManager.GetUserId(User) == comment.UserId))
+                                {
+                                    <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.CommentId" method="post" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" 
+                                                class="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                                onclick="return confirm('Ви впевнені, що хочете видалити цей коментар?');"
+                                                title="Видалити коментар">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                }
                             </div>
-                            <p class="text-gray-700 pl-13">@comment.Content</p>
+                            <div class="flex items-center space-x-1 mt-1">
+                                @for (int i = 0; i < 5; i++)
+                                {
+                                    if (i < comment.Stars)
+                                    {
+                                        <i class="fas fa-star text-sm text-yellow-400"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-star text-sm text-gray-300"></i>
+                                    }
+                                }
+                            </div>
+
+                            <p class="text-gray-700 leading-relaxed">@comment.Content</p>
+
                         </div>
                     }
                 </div>
@@ -246,5 +262,6 @@
             }
         });
     </script>
+    
 </body>
 </html>

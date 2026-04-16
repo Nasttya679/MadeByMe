@@ -12,7 +12,7 @@
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
             <nav class="flex items-center flex-wrap justify-end gap-x-3 gap-y-2">
-                @if (User.Identity!.IsAuthenticated && User.IsInRole("Seller"))
+                @if (User.Identity!.IsAuthenticated && (User.IsInRole("Seller") || User.IsInRole("Admin")))
                 {
                     <a href="/Post/Create" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200" title="Додати товар">
                         <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,19 +20,28 @@
                         </svg>
                     </a>
                 }
+
+                @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                {
+                    <a href="/Admin/Index"
+                    class="text-red-600 font-semibold hover:text-red-700">
+                        Панель керування
+                    </a>
+                }
+                
                 <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
                 @if (User.Identity.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
-                    @if (!User.IsInRole("Seller"))
+                    @if (!User.IsInRole("Seller") && !User.IsInRole("Admin"))
                     {
                         <form action="/Account/BecomeSeller" method="post" class="inline">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="text-yellow-600 hover:text-yellow-700">Стати продавцем</button>
                         </form>
                     }
-                    <form action="/Account/Logout" method="post" class="inline">
+                    <form action="/Account/Logout" method="post" class="inline-flex items-center m-0">
                         <button type="submit" class="text-red-600 hover:text-red-700">Вийти</button>
                     </form>
                 }

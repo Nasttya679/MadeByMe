@@ -1,36 +1,23 @@
 ﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
-using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 namespace MadeByMe.Web.Controllers
 {
-    public class CommentController : Controller
+    public class CommentController : BaseController
     {
         private readonly ICommentService _commentService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CommentController(ICommentService commentService, UserManager<ApplicationUser> userManager)
+        public CommentController(ICommentService commentService)
         {
             _commentService = commentService;
-            _userManager = userManager;
         }
 
-        /*
-        public IActionResult Index()
+        public async Task<IActionResult> Details(int id)
         {
-           var result = _commentService.GetAllComments();
-           if (result.IsFailure) return View(new List<Comment>());
-           return View(result.Value);
-        }
-        */
-
-        public IActionResult Details(int id)
-        {
-            var result = _commentService.GetCommentById(id);
+            var result = await _commentService.GetCommentByIdAsync(id);
 
             if (result.IsFailure)
             {
@@ -43,7 +30,7 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(CreateCommentDto dto)
+        public async Task<IActionResult> Create(CreateCommentDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -51,54 +38,42 @@ namespace MadeByMe.Web.Controllers
                 return View(dto);
             }
 
-            var userId = _userManager.GetUserId(User);
-
-            var result = _commentService.AddComment(dto, userId!);
+            var result = await _commentService.AddCommentAsync(dto, CurrentUserId!);
 
             if (result.IsFailure)
             {
-                Log.Warning("Не вдалося додати коментар до поста {PostId} для користувача {UserId}. Причина: {ErrorMessage}", dto.PostId, userId, result.ErrorMessage);
-                ModelState.AddModelError(string.Empty, result.ErrorMessage);
+                Log.Warning("Не вдалося додати коментар до поста {PostId}. Причина: {ErrorMessage}", dto.PostId, result.ErrorMessage);
+                AddErrorToModelState(result.ErrorMessage);
                 return View(dto);
             }
 
-            Log.Information("Користувач {UserId} успішно додав коментар до поста {PostId}", userId, dto.PostId);
+            Log.Information("Користувач {UserId} успішно додав коментар до поста {PostId}", CurrentUserId, dto.PostId);
             return RedirectToAction("Details", "Post", new { id = result.Value.PostId });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var result = _commentService.GetCommentById(id);
+            var result = await _commentService.GetCommentByIdAsync(id);
+
             if (result.IsFailure)
-            {
-                Log.Warning("Спроба видалення: коментар з ID {CommentId} не знайдено", id);
                 return NotFound(result.ErrorMessage);
-            }
 
             var comment = result.Value;
-            var currentUserName = User.Identity?.Name;
+            var currentUserId = CurrentUserId;
 
-            if (User.IsInRole("Admin") || (comment.User != null && comment.User.UserName == currentUserName))
+            if (User.IsInRole("Admin") || comment.UserId == currentUserId)
             {
-                var deleteResult = _commentService.DeleteComment(id);
+                var deleteResult = await _commentService.DeleteCommentAsync(id);
 
                 if (deleteResult.IsFailure)
-                {
-                    Log.Error("Не вдалося видалити коментар {CommentId}. Причина: {ErrorMessage}", id, deleteResult.ErrorMessage);
-                    TempData["Error"] = deleteResult.ErrorMessage;
-                }
-                else
-                {
-                    Log.Information("Коментар {CommentId} успішно видалено користувачем {UserName}", id, currentUserName);
-                }
+                    return NotFound(deleteResult.ErrorMessage);
 
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }
 
-            Log.Warning("Користувач {UserName} намагався видалити коментар {CommentId} без відповідних прав доступу", currentUserName, id);
             return Forbid();
         }
     }

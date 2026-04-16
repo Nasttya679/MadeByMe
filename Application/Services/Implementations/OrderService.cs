@@ -22,10 +22,10 @@ namespace MadeByMe.Application.Services.Implementations
         {
             Log.Information("Початок оформлення замовлення для покупця {BuyerId}", buyerId);
 
-            var cartResult = _cartService.GetUserCartEntity(buyerId);
+            var cartResult = await _cartService.GetUserCartEntityAsync(buyerId);
             if (cartResult.IsFailure || cartResult.Value == null || !cartResult.Value.BuyerCarts.Any())
             {
-                return Result<Order>.Failure("Ваш кошик порожній.");
+                return "Ваш кошик порожній.";
             }
 
             var cart = cartResult.Value;
@@ -41,16 +41,22 @@ namespace MadeByMe.Application.Services.Implementations
                 PostOffice = dto.PostOffice,
                 Status = "Paid",
                 TotalAmount = 0,
+                OrderItems = new List<OrderItem>(),
             };
 
             decimal total = 0;
             foreach (var cartItem in cart.BuyerCarts)
             {
+                if (cartItem.Post == null)
+                {
+                    continue;
+                }
+
                 var orderItem = new OrderItem
                 {
                     PostId = cartItem.PostId,
                     Quantity = cartItem.Quantity,
-                    PriceAtPurchase = cartItem.Post!.Price,
+                    PriceAtPurchase = cartItem.Post.Price,
                 };
 
                 order.OrderItems.Add(orderItem);
@@ -61,22 +67,22 @@ namespace MadeByMe.Application.Services.Implementations
 
             await _orderRepo.CreateOrderAsync(order);
 
-            _cartService.ClearCart(cart.CartId);
+            await _cartService.ClearCartAsync(cart.CartId);
 
             Log.Information("Замовлення {OrderId} успішно створено", order.Id);
-            return Result<Order>.Success(order);
+            return order;
         }
 
         public async Task<Result<List<Order>>> GetBuyerHistoryAsync(string buyerId)
         {
             var orders = await _orderRepo.GetOrdersByBuyerIdAsync(buyerId);
-            return Result<List<Order>>.Success(orders);
+            return orders;
         }
 
         public async Task<Result<List<Order>>> GetSellerJournalAsync(string sellerId)
         {
             var orders = await _orderRepo.GetOrdersBySellerIdAsync(sellerId);
-            return Result<List<Order>>.Success(orders);
+            return orders;
         }
 
         public async Task<Result> UpdateOrderStatusAsync(int orderId, string status, string currentUserId)
@@ -84,13 +90,13 @@ namespace MadeByMe.Application.Services.Implementations
             var order = await _orderRepo.GetOrderByIdAsync(orderId);
             if (order == null)
             {
-                return Result.Failure("Замовлення не знайдено.");
+                return "Замовлення не знайдено.";
             }
 
-            bool isSeller = order.OrderItems.Any(oi => oi.Post!.SellerId == currentUserId);
+            bool isSeller = order.OrderItems.Any(oi => oi.Post != null && oi.Post.SellerId == currentUserId);
             if (!isSeller)
             {
-                return Result.Failure("У вас немає прав змінювати статус цього замовлення.");
+                return "У вас немає прав змінювати статус цього замовлення.";
             }
 
             await _orderRepo.UpdateOrderStatusAsync(orderId, status);
