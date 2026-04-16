@@ -102,6 +102,7 @@ module "ecs" {
   source                          = "./modules/ecs"
   aws_region                      = var.aws_region
   ecs_task_execution_role_arn     = module.iam.ecs_main_exec_role_arn
+  ecs_task_role_arn               = module.iam.ecs_task_role_arn
 
   public_subnet_ids               = module.vpc.public_subnet_ids
   app_sg_ids                      = [module.sg.security_group_ids["app_sg"]]
@@ -117,4 +118,11 @@ module "ecs" {
   database_id                     = module.rds.database_id
 
   app_default_connection_string   = "Host=${module.rds.database_dns};Port=5432;Database=${var.db_name};Username=${var.db_username};Password=${var.db_password};"
+}
+
+
+module "asp" {
+  source                  = "./modules/asp"
+  ecs_cluster_name        = module.ecs.ecs_cluster_name
+  ecs_app_service_name    = module.ecs.ecs_app_service_name
 }

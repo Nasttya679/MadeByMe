@@ -11,6 +11,12 @@ variable "ecs_task_execution_role_arn" {
 }
 
 
+variable "ecs_task_role_arn" {
+  description = "ECS task role ARN"
+  type        = string
+}
+
+
 variable "public_subnet_ids" {
   description = "List of public subnet ids for ECS services"
   type        = list(string)

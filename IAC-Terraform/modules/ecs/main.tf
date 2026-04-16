@@ -11,6 +11,7 @@ resource "aws_ecs_task_definition" "app_task" {
   cpu                      = var.task_resource_sizes[var.app_task_resources].cpu
   memory                   = var.task_resource_sizes[var.app_task_resources].memory
   execution_role_arn       = var.ecs_task_execution_role_arn
+  task_role_arn            = var.ecs_task_role_arn
 
   container_definitions = jsonencode([
     {
@@ -52,11 +53,12 @@ resource "aws_ecs_task_definition" "app_task" {
 
 
 resource "aws_ecs_service" "app_service" {
-  name               = "app-service"
-  cluster            = aws_ecs_cluster.main_cluster.id
-  task_definition    = aws_ecs_task_definition.app_task.arn
-  launch_type        = "FARGATE"
-  desired_count      = 1
+  name                    = "app-service"
+  cluster                 = aws_ecs_cluster.main_cluster.id
+  task_definition         = aws_ecs_task_definition.app_task.arn
+  launch_type             = "FARGATE"
+  enable_execute_command  = true
+  desired_count           = 1
 
   network_configuration {
     subnets          = var.public_subnet_ids
