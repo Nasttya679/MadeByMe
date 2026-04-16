@@ -67,8 +67,7 @@ namespace MadeByMe.Web.Controllers
             }
 
             TempData["Success"] = "Замовлення успішно оформлено та оплачено!";
-
-            // TODO: Пізніше змінимо це на перенаправлення на сторінку "Історія замовлень"
+            
             return RedirectToAction("Success");
         }
 
@@ -76,5 +75,23 @@ namespace MadeByMe.Web.Controllers
         {
             return View();
         }
+        
+        [HttpGet]
+        public async Task<IActionResult> History()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return Challenge();
+
+            var result = await _orderService.GetBuyerHistoryAsync(userId);
+
+            if (result.IsFailure)
+            {
+                TempData["Error"] = result.ErrorMessage; 
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(result.Value);
+        }
+        
     }
 }

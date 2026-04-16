@@ -13,12 +13,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-            <nav class="space-x-4">
-                <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
+            <nav class="space-x-4 flex items-center">
+                <a href="/" class="text-gray-600 hover:text-orange-600 font-medium">Головна</a>
                 @if (User.Identity!.IsAuthenticated)
                 {
                     <a href="/Account/Profile" class="text-orange-600 font-medium">Профіль</a>
@@ -43,16 +42,15 @@
     </header>
 
     <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <!-- Profile Header -->
-            <div class="relative h-48 bg-gradient-to-br from-orange-400 via-orange-500 to-rose-500 before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),rgba(255,255,255,0))] before:opacity-60">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+            <div class="relative h-48 bg-gradient-to-br from-orange-400 via-orange-500 to-rose-500">
                 <div class="absolute -bottom-16 left-8">
-                    <div class="relative">
+                    <div class="relative group">
                         <img src="@(Model.ProfilePicture ?? "/images/default-avatar.png")" 
-                             class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover" 
+                             class="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-white" 
                              alt="Профільне фото" />
                         <a href="/Account/EditProfile" 
-                           class="absolute bottom-0 right-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-full shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300">
+                           class="absolute bottom-0 right-0 bg-orange-600 text-white p-2 rounded-full shadow-lg hover:bg-orange-700 transition-all duration-300">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
@@ -61,81 +59,85 @@
                 </div>
             </div>
 
-            <!-- Profile Content -->
             <div class="pt-20 pb-8 px-8">
                 <div class="flex justify-between items-start mb-8">
                     <div>
-                        <h2 class="text-3xl font-bold text-gray-800">@Model.UserName</h2>
-                        <p class="text-gray-600">@Model.Email</p>
+                        <h2 class="text-3xl font-black text-gray-900">@Model.UserName</h2>
+                        <p class="text-gray-500 font-medium">@Model.Email</p>
                     </div>
                     @if (User.IsInRole("Seller"))
                     {
-                        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <span class="bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border border-orange-200">
                             Продавець
                         </span>
                     }
                 </div>
 
-                <!-- Profile Details -->
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-6">
+                <div class="grid md:grid-cols-2 gap-12">
+                    <div class="space-y-8">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Контактна інформація</h3>
+                            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Контактна інформація</h3>
                             <div class="space-y-4">
-                                <div class="flex items-center text-gray-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                <div class="flex items-center text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                                     </svg>
-                                    <span>@Model.Email</span>
+                                    <span class="font-medium text-sm">@Model.Email</span>
                                 </div>
-                                <div class="flex items-center text-gray-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                <div class="flex items-center text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                                     </svg>
-                                    <span>@Model.PhoneNumber</span>
+                                    <span class="font-medium text-sm">@(string.IsNullOrEmpty(Model.PhoneNumber) ? "Не вказано" : Model.PhoneNumber)</span>
                                 </div>
-                                <div class="flex items-center text-gray-600">
-                                    <span>@Model.Address</span>
+                                <div class="flex items-center text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-orange-500" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="font-medium text-sm">@(string.IsNullOrEmpty(Model.Address) ? "Адреса не вказана" : Model.Address)</span>
                                 </div>
                             </div>
                         </div>
 
-                        @if (!User.IsInRole("Seller"))
-                        {
-                            <div class="pt-4">
-                                <form action="/Account/BecomeSeller" method="post" class="inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" 
-                                            class="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition duration-200 flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
-                                        </svg>
-                                        Стати продавцем
-                                    </button>
-                                </form>
-                            </div>
-                        }
+                        <div class="pt-2">
+                            <a href="/Order/History" class="w-full flex items-center justify-center bg-orange-600 text-white px-6 py-3 rounded-xl hover:bg-orange-700 transition font-black uppercase text-xs tracking-widest shadow-md active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                                Історія покупок
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Activity Section -->
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Активність</h3>
-                        <div class="bg-gray-50 rounded-lg p-6">
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Замовлень</span>
-                                    <span class="font-semibold">0</span>
+                        <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Активність</h3>
+                        <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                            <div class="space-y-5">
+                                <div class="flex items-center justify-between px-2">
+                                    <span class="text-gray-500 font-bold text-xs uppercase tracking-tighter">Відгуків залишено</span>
+                                    <span class="font-black text-orange-600 bg-white px-3 py-1 rounded-lg border border-orange-50 text-sm shadow-sm">0</span>
                                 </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Відгуків</span>
-                                    <span class="font-semibold">0</span>
-                                </div>
-                                @if (User.IsInRole("Seller"))
+                                
+                                @if (!User.IsInRole("Seller"))
                                 {
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-gray-600">Продажів</span>
-                                        <span class="font-semibold">0</span>
+                                    <div class="pt-4">
+                                        <form action="/Account/BecomeSeller" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" 
+                                                    class="w-full bg-white text-yellow-600 border border-yellow-100 px-6 py-3 rounded-xl hover:bg-yellow-50 transition font-bold shadow-sm flex items-center justify-center text-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                                </svg>
+                                                Стати продавцем
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-4 bg-orange-50 rounded-xl border border-orange-100 text-center text-xs font-bold text-orange-700 uppercase tracking-tight">
+                                        Панель продавця активна
                                     </div>
                                 }
                             </div>
@@ -145,26 +147,5 @@
             </div>
         </div>
     </div>
-
 </body>
 </html>
-
-
-@* <div class="container">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <img src="@(Model.ProfilePicture ?? "/images/default-avatar.png")" class="card-img-top" alt="Аватар">
-                <div class="card-body text-center">
-                    <h5 class="card-title">@Model.UserName</h5>
-                    <p class="text-muted">@Model.Email</p>
-                    <a asp-action="UpdateProfile" class="btn btn-outline-primary">Редагувати профіль</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <h3>Ваші замовлення</h3>
-            <!-- Тут можна додати історію замовлень -->
-        </div>
-    </div>
-</div> *@
