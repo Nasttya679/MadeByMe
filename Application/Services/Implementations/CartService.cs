@@ -3,6 +3,7 @@ using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace MadeByMe.Application.Services.Implementations
@@ -12,15 +13,18 @@ namespace MadeByMe.Application.Services.Implementations
         private readonly ICartRepository _cartRepo;
         private readonly IBuyerCartRepository _buyerCartRepo;
         private readonly IPostRepository _postRepo;
+        private readonly ProjectSettings _settings;
 
         public CartService(
             ICartRepository cartRepo,
             IBuyerCartRepository buyerCartRepo,
-            IPostRepository postRepo)
+            IPostRepository postRepo,
+            IOptions<ProjectSettings> options)
         {
             _cartRepo = cartRepo;
             _buyerCartRepo = buyerCartRepo;
             _postRepo = postRepo;
+            _settings = options.Value;
         }
 
         public async Task<Result<Cart>> GetUserCartEntityAsync(string buyerId)
@@ -70,7 +74,7 @@ namespace MadeByMe.Application.Services.Implementations
                         Id = post.Id,
                         Name = post.Title,
                         Price = post.Price,
-                        ImageUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
+                        ImageUrl = post.Photos.FirstOrDefault()?.FilePath ?? _settings.FileStorage.DefaultImagePath,
                         Seller = post.Seller,
                     },
                 });

@@ -1,3 +1,4 @@
+using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
@@ -13,13 +14,18 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddUserSecrets<Program>();
+
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.Configure<ProjectSettings>(
+    builder.Configuration.GetSection("ProjectSettings"));
 
 // ---------------------------
 // 1. Підключення до БД
 // ---------------------------
-string? connectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+// Просто беремо з конфігу (секрети + appsettings)
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (string.IsNullOrEmpty(connectionString))
 {
@@ -158,8 +164,8 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.MigrateAsync();
 
+        // await dbContext.Database.MigrateAsync();
         // Виклик Seed ролей
         await SeedRoles(services);
     }

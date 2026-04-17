@@ -41,5 +41,15 @@ namespace MadeByMe.Infrastructure.Repositories.Implementations
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<int> GetCountBySellerIdAsync(string sellerId)
+        {
+            return await _context.Comments.CountAsync(c => c.Post!.SellerId == sellerId);
+        }
+
+        public async Task<int> GetCountByUserIdAsync(string userId)
+        {
+            return await _context.Comments.CountAsync(c => c.UserId == userId);
+        }
     }
 }

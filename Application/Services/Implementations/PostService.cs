@@ -3,6 +3,7 @@ using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace MadeByMe.Application.Services.Implementations
@@ -10,8 +11,13 @@ namespace MadeByMe.Application.Services.Implementations
     public class PostService : IPostService
     {
         private readonly IPostRepository _repo;
+        private readonly ProjectSettings _settings;
 
-        public PostService(IPostRepository repo) => _repo = repo;
+        public PostService(IPostRepository repo, IOptions<ProjectSettings> options)
+        {
+            _repo = repo;
+            _settings = options.Value;
+        }
 
         public async Task<Result<List<Post>>> GetAllPostsAsync()
         {
@@ -94,10 +100,8 @@ namespace MadeByMe.Application.Services.Implementations
             return Result.Success();
         }
 
-        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy)
+        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1)
         {
-            Log.Information("Фільтрація постів: Пошук='{SearchTerm}', Категорія={CategoryId}, Сортування={SortBy}", searchTerm ?? "немає", categoryId ?? 0, sortBy ?? "стандарт");
-
             var postsQuery = (await _repo.GetAllAsync()).AsQueryable();
 
             if (categoryId.HasValue && categoryId > 0)
@@ -105,7 +109,7 @@ namespace MadeByMe.Application.Services.Implementations
                 postsQuery = postsQuery.Where(p => p.CategoryId == categoryId);
             }
 
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            if (!string.IsNullOrWhiteSpace(searchTerm) && searchTerm.Length >= _settings.Pagination.MinSearchLength)
             {
                 var lowerSearch = searchTerm.ToLower().Trim();
                 postsQuery = postsQuery.Where(p => (p.Title != null && p.Title.ToLower().Contains(lowerSearch)) ||
@@ -121,13 +125,18 @@ namespace MadeByMe.Application.Services.Implementations
                 _ => postsQuery.OrderByDescending(p => p.CreatedAt)
             };
 
-            var resultList = postsQuery.ToList();
-            Log.Information("Фільтрація завершена. Знайдено: {Count}", resultList.Count);
+            int pageSize = _settings.Pagination.DefaultPageSize;
+            var resultList = postsQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            Log.Information("Фільтрація завершена. Знайдено: {Count} для сторінки {Page}", resultList.Count, page);
 
             return resultList;
         }
 
         public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
-            => await GetFilteredPostsAsync(searchTerm, null, null);
+            => await GetFilteredPostsAsync(searchTerm, null, null, 1);
     }
 }

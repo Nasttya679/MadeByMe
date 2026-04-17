@@ -3,6 +3,7 @@ using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace MadeByMe.Application.Services.Implementations
@@ -11,11 +12,14 @@ namespace MadeByMe.Application.Services.Implementations
     {
         private readonly string _uploadPath;
         private readonly IPhotoRepository _photoRepository;
+        private readonly ProjectSettings _settings;
 
-        public PhotoService(IPhotoRepository photoRepository)
+        public PhotoService(IPhotoRepository photoRepository, IOptions<ProjectSettings> options)
         {
             _photoRepository = photoRepository;
-            _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+            _settings = options.Value;
+
+            _uploadPath = Path.Combine(Directory.GetCurrentDirectory(), _settings.FileStorage.UploadFolder);
             EnsureDirectoryExists();
         }
 
@@ -26,6 +30,17 @@ namespace MadeByMe.Application.Services.Implementations
                 Log.Warning("Спроба завантаження порожнього файлу або файл відсутній (PostId: {PostId})", postId);
 
                 return "Файл не завантажено або він порожній.";
+            }
+
+            if (file.Length > _settings.FileStorage.MaxImageSizeMB * 1024 * 1024)
+            {
+                return $"Файл завеликий. Максимум: {_settings.FileStorage.MaxImageSizeMB}MB";
+            }
+
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (!_settings.FileStorage.AllowedExtensions.Contains(ext))
+            {
+                return "Недопустимий формат файлу.";
             }
 
             EnsureDirectoryExists();
@@ -85,7 +100,7 @@ namespace MadeByMe.Application.Services.Implementations
 
         public string GetPhotoUrl(Photo photo)
         {
-            return photo?.FilePath ?? "/images/default.jpg";
+            return photo?.FilePath ?? _settings.FileStorage.DefaultImagePath;
         }
 
         private void EnsureDirectoryExists()

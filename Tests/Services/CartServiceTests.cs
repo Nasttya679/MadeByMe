@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -13,6 +16,7 @@ namespace MadeByMe.Tests.Services
         private readonly Mock<ICartRepository> _cartRepoMock;
         private readonly Mock<IBuyerCartRepository> _buyerCartRepoMock;
         private readonly Mock<IPostRepository> _postRepoMock;
+        private readonly Mock<IOptions<ProjectSettings>> _optionsMock;
         private readonly CartService _cartService;
 
         public CartServiceTests()
@@ -21,10 +25,73 @@ namespace MadeByMe.Tests.Services
             _buyerCartRepoMock = new Mock<IBuyerCartRepository>();
             _postRepoMock = new Mock<IPostRepository>();
 
+            _optionsMock = new Mock<IOptions<ProjectSettings>>();
+            var settings = new ProjectSettings();
+            settings.FileStorage.DefaultImagePath = "/images/default.jpg";
+            _optionsMock.Setup(o => o.Value).Returns(settings);
+
             _cartService = new CartService(
                 _cartRepoMock.Object,
                 _buyerCartRepoMock.Object,
-                _postRepoMock.Object);
+                _postRepoMock.Object,
+                _optionsMock.Object);
+        }
+
+        [Fact]
+        public async Task GetUserCartAsync_WhenCartIsEmpty_ShouldReturnEmptyViewModel()
+        {
+            string buyerId = "buyer1";
+            var emptyCart = new Cart { CartId = 1, BuyerId = buyerId, BuyerCarts = new List<BuyerCart>() };
+            _cartRepoMock.Setup(repo => repo.GetCartByBuyerIdAsync(buyerId)).ReturnsAsync(emptyCart);
+
+            var result = await _cartService.GetUserCartAsync(buyerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Empty(result.Value.Items);
+            Assert.Equal(0, result.Value.TotalPrice);
+        }
+
+        [Fact]
+        public async Task GetUserCartAsync_WhenPostIsMissing_ShouldReturnFailure()
+        {
+            string buyerId = "buyer1";
+            var cart = new Cart
+            {
+                CartId = 1,
+                BuyerId = buyerId,
+                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 99, Quantity = 1 } }
+            };
+
+            _cartRepoMock.Setup(repo => repo.GetCartByBuyerIdAsync(buyerId)).ReturnsAsync(cart);
+            _postRepoMock.Setup(repo => repo.GetByIdAsync(99)).ReturnsAsync((Post)null!);
+
+            var result = await _cartService.GetUserCartAsync(buyerId);
+
+            Assert.True(result.IsFailure);
+            Assert.Contains("більше не існує", result.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task GetUserCartAsync_WhenCartHasItems_ShouldReturnViewModelWithCorrectTotal()
+        {
+            string buyerId = "buyer1";
+            var cart = new Cart
+            {
+                CartId = 1,
+                BuyerId = buyerId,
+                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 1, Quantity = 2 } }
+            };
+            var post = new Post { Id = 1, Title = "Handmade Item", Price = 150, Photos = new List<Photo>() };
+
+            _cartRepoMock.Setup(repo => repo.GetCartByBuyerIdAsync(buyerId)).ReturnsAsync(cart);
+            _postRepoMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(post);
+
+            var result = await _cartService.GetUserCartAsync(buyerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Single(result.Value.Items);
+            Assert.Equal(300, result.Value.TotalPrice); // 150 * 2
+            Assert.Equal("/images/default.jpg", result.Value.Items.First().Product.ImageUrl);
         }
 
         [Fact]

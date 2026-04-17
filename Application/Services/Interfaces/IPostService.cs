@@ -16,6 +16,6 @@ namespace MadeByMe.Application.Services.Interfaces
 
         Task<Result> DeletePostAsync(int id);
 
-        Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy);
+        Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1);
     }
 }

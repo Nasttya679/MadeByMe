@@ -13,5 +13,7 @@ namespace MadeByMe.Application.Services.Interfaces
         Task<Result<List<Order>>> GetSellerJournalAsync(string sellerId);
 
         Task<Result> UpdateOrderStatusAsync(int orderId, string status, string currentUserId);
+
+        Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId);
     }
 }

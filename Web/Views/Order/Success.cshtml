@@ -1,3 +1,4 @@
+@* Success.cshtml *@
 @{
     ViewData["Title"] = "Дякуємо за покупку";
 }
@@ -9,20 +10,24 @@
         <div class="success-icon">
             <i class="fas fa-check-circle"></i>
         </div>
+
         <h1 class="success-title">Дякуємо за покупку!</h1>
+
         <div class="success-message">
             <p>Ваше замовлення успішно оформлено та прийнято до обробки.</p>
             <p>Ми надіслали підтвердження на вашу електронну пошту.</p>
             <p>Наш менеджер зв'яжеться з вами найближчим часом.</p>
         </div>
+
         <div class="success-buttons">
             <a href="/" class="btn-home">
                 <i class="fas fa-home"></i>
                 <span>На головну</span>
             </a>
-            <a href="/Cart" class="btn-orders">
-                <i class="fas fa-shopping-bag"></i>
-                <span>Мої замовлення</span>
+
+            <a href="/Order/History" class="btn-orders">
+                <i class="fas fa-history"></i>
+                <span>Історія покупок</span>
             </a>
         </div>
     </div>
@@ -36,70 +41,78 @@
         justify-content: center;
         background: #f9fafb;
         padding: 20px;
+        font-family: 'Inter', sans-serif;
     }
 
     .success-content {
         background: white;
-        padding: 4rem 3rem;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(255, 140, 0, 0.1);
+        padding: 3.5rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(234, 88, 12, 0.1);
         text-align: center;
-        max-width: 600px;
+        max-width: 550px;
         width: 100%;
-        animation: slideUp 0.8s ease-out;
-    }
-
-    .success-icon {
-        margin-bottom: 2rem;
+        animation: slideUp 0.6s ease-out;
     }
 
     .success-icon i {
-        font-size: 6rem;
-        color: #ea580c; /* Tailwind orange-600 */
-        animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        font-size: 5.5rem;
+        color: #ea580c; /* Помаранчевий колір MadeByMe */
+        margin-bottom: 1.5rem;
+        animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
 
     .success-title {
-        color: #ea580c;
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
-        font-weight: 700;
-        animation: fadeIn 0.8s ease-out 0.3s both;
+        color: #111827;
+        font-size: 2.25rem;
+        margin-bottom: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
     }
 
     .success-message {
+        color: #4b5563;
+        font-size: 1.1rem;
+        line-height: 1.6;
         margin-bottom: 2.5rem;
-        animation: fadeIn 0.8s ease-out 0.6s both;
     }
 
     .success-message p {
-        color: #4b5563;
-        font-size: 1.1rem;
-        margin: 0.5rem 0;
-        line-height: 1.6;
+        margin-bottom: 0.5rem;
     }
 
     .success-buttons {
         display: flex;
-        gap: 1rem;
+        gap: 1.25rem;
         justify-content: center;
-        animation: fadeIn 0.8s ease-out 0.9s both;
+        flex-wrap: wrap;
     }
 
     .success-buttons a {
-        padding: 1rem 2rem;
-        border-radius: 50px;
+        padding: 0.875rem 1.75rem;
+        border-radius: 12px;
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 0.95rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .btn-home {
         background: #ea580c;
         color: white;
+        border: 2px solid #ea580c;
+    }
+
+    .btn-home:hover {
+        background: #c2410c;
+        border-color: #c2410c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
     }
 
     .btn-orders {
@@ -108,15 +121,21 @@
         border: 2px solid #ea580c;
     }
 
-    .success-buttons a:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(255, 140, 0, 0.2);
+    .btn-orders:hover {
+        background: #fff7ed;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
     }
 
+    .success-buttons a:active {
+        transform: scale(0.98);
+    }
+
+    /* Анімації */
     @@keyframes slideUp {
         from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
         }
         to {
             opacity: 1;
@@ -125,32 +144,19 @@
     }
 
     @@keyframes bounceIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.3);
-        }
-        50% {
-            opacity: 0.9;
-            transform: scale(1.1);
-        }
-        80% {
-            opacity: 1;
-            transform: scale(0.89);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1);
-        }
+        0% { transform: scale(0.3); opacity: 0; }
+        50% { transform: scale(1.05); opacity: 1; }
+        70% { transform: scale(0.9); }
+        100% { transform: scale(1); }
     }
 
-    @@keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    @@media (max-width: 576px) {
-        .success-content { padding: 2rem; }
-        .success-buttons { flex-direction: column; }
-        .success-title { font-size: 2rem; }
+    @@media (max-width: 480px) {
+        .success-buttons {
+            flex-direction: column;
+        }
+        .success-buttons a {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>

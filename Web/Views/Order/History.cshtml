@@ -14,104 +14,126 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-            <nav class="flex items-center flex-wrap justify-end gap-x-3 gap-y-2">
-       
-                @if (User.Identity!.IsAuthenticated && User.IsInRole("Seller"))
-                {
-                    <a href="/Post/Create" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 hover:bg-orange-200 transition-colors duration-200" title="Додати товар">
-                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                    </a>
-                }
-             
-                <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
-                    <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
-               
-                    @if (!User.IsInRole("Seller"))
-                    {
-                        <form action="/Account/BecomeSeller" method="post" class="inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="text-yellow-600 hover:text-yellow-700">Стати продавцем</button>
-                        </form>
-                    }
-                    <form action="/Account/Logout" method="post" class="inline">
-                        <button type="submit" class="text-red-600 hover:text-red-700 ps-2">Вийти</button>
-                    </form>
-                }
-                else
-                {
-                    <a href="/Account/Login" class="text-orange-600 font-medium hover:underline">Увійти</a>
-                    <a href="/Account/Register" class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition">Реєстрація</a>
-                }
-            </nav>
-        </div>
-    </header>
+<header class="bg-white shadow-sm sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
+        <nav class="flex items-center flex-wrap justify-end gap-x-3 gap-y-2">
+            <a href="/" class="text-gray-600 hover:text-orange-600 font-medium px-2">Головна</a>
+            <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600 font-medium px-2">Профіль</a>
+            <a href="/Cart" class="text-gray-600 hover:text-orange-600 font-medium px-2">Кошик</a>
+            <form action="/Account/Logout" method="post" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="text-red-600 hover:text-red-700 font-medium px-2">Вийти</button>
+            </form>
+        </nav>
+    </div>
+</header>
 
-    <main class="max-w-4xl mx-auto px-6 py-12">
-        <h2 class="text-3xl font-bold text-gray-900 mb-10">Історія покупок</h2>
+<main class="max-w-5xl mx-auto px-6 py-12">
+    <div class="mb-10">
+        <h1 class="text-4xl font-black text-gray-900 uppercase tracking-tighter">Історія покупок</h1>
+        <p class="text-gray-500 mt-2 font-medium">Стежте за статусом та деталями ваших замовлень</p>
+    </div>
 
-        @if (Model == null || !Model.Any())
-        {
-            <div class="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
-                <p class="text-gray-500">Ваша історія порожня.</p>
-                <a href="/" class="text-orange-600 font-bold mt-4 inline-block">Перейти до покупок</a>
+    @if (Model == null || !Model.Any())
+    {
+        <div class="bg-white rounded-[2.5rem] p-20 text-center border border-gray-100 shadow-xl shadow-orange-100/20">
+            <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-10 h-10 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
             </div>
-        }
-        else
+            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Ви ще нічого не замовили</h2>
+            <a href="/" class="mt-6 inline-block bg-orange-600 text-white text-[10px] font-black px-8 py-4 rounded-2xl uppercase tracking-widest hover:bg-orange-700 transition shadow-lg shadow-orange-200">Перейти до шопінгу</a>
+        </div>
+    }
+    else
+    {
+        @foreach (var order in Model)
         {
-            @foreach (var order in Model)
-            {
-                <div class="bg-white rounded-[20px] shadow-sm border border-gray-100 mb-10 overflow-hidden">
-                    <div class="px-6 py-4 flex justify-between items-center border-b border-gray-50">
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Замовлення #@order.Id</span>
-                            <span class="text-gray-300">|</span>
-                            <span class="text-xs font-bold text-gray-500 uppercase">@order.CreatedAt.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("uk-UA"))</span>
+            <div class="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 overflow-hidden mb-10 transition-all hover:border-orange-100">
+                <div class="bg-gray-50/80 px-8 py-5 flex flex-wrap justify-between items-center border-b border-gray-100 gap-4">
+                    <div class="flex items-center gap-6">
+                        <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">№ @order.Id</span>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <span class="text-xs font-black text-gray-600">@order.CreatedAt.ToString("dd.MM.yyyy")</span>
                         </div>
-                        <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg">PAID</span>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="text-[9px] uppercase text-gray-400 font-extrabold border-b border-gray-50">
-                                    <th class="px-6 py-3">Назва товару</th>
-                                    <th class="px-6 py-3 text-center">Кількість</th>
-                                    <th class="px-6 py-3 text-center">Ціна</th>
-                                    <th class="px-6 py-3 text-right">Дія</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50">
-                                @foreach (var item in order.OrderItems)
-                                {
-                                    <tr>
-                                        <td class="px-6 py-6 font-bold text-gray-900 text-sm">@(item.Post?.Title ?? "Товар")</td>
-                                        <td class="px-6 py-6 text-center text-sm font-medium text-gray-600">@item.Quantity шт.</td>
-                                        <td class="px-6 py-6 text-center font-bold text-gray-900 text-sm">@item.PriceAtPurchase.ToString("N2") ₴</td>
-                                        <td class="px-6 py-6 text-right">
-                                            <a href="/Post/Details/@item.PostId" class="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black px-4 py-2 rounded-xl uppercase transition-transform active:scale-95">Деталі</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    @* ЛОГІКА СТАТУСІВ *@
+                    @{
+                        var statusColor = order.Status switch {
+                            "Processing" => "bg-blue-100 text-blue-700 border-blue-200",
+                            "Shipped" => "bg-purple-100 text-purple-700 border-purple-200",
+                            "Delivered" => "bg-green-100 text-green-700 border-green-200",
+                            "Cancelled" => "bg-red-100 text-red-700 border-red-200",
+                            _ => "bg-gray-100 text-gray-700 border-gray-200"
+                        };
+                        var statusUa = order.Status switch {
+                            "Processing" => "В обробці",
+                            "Shipped" => "Відправлено",
+                            "Delivered" => "Доставлено",
+                            "Cancelled" => "Скасовано",
+                            _ => order.Status
+                        };
+                    }
+                    <span class="px-5 py-2 @statusColor text-[10px] font-black uppercase rounded-xl tracking-tighter border shadow-sm">
+                            @statusUa
+                        </span>
+                </div>
 
-                    <div class="bg-orange-50/20 px-6 py-4 flex justify-end items-center gap-4 border-t border-orange-100/50">
-                        <span class="text-[10px] font-bold text-orange-800 uppercase tracking-wider">Всього до сплати</span>
-                        <span class="text-2xl font-black text-orange-600">@order.TotalAmount.ToString("N2") ₴</span>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                        <tr class="bg-gray-50/30">
+                            <th class="px-8 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Товар</th>
+                            <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Кількість</th>
+                            <th class="px-8 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Ціна</th>
+                            <th class="px-8 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Дія</th>
+                        </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr class="group hover:bg-orange-50/10 transition-colors">
+                                <td class="px-8 py-6">
+                                    <p class="font-black text-gray-900 text-sm group-hover:text-orange-600 transition-colors">@(item.Post?.Title ?? "Товар")</p>
+                                </td>
+                                <td class="px-8 py-6 text-center">
+                                    <span class="text-xs font-black text-gray-500 bg-gray-100 px-3 py-1 rounded-lg">@item.Quantity шт.</span>
+                                </td>
+                                <td class="px-8 py-6 text-center font-black text-gray-900 text-sm">
+                                    @item.PriceAtPurchase.ToString("N2") ₴
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <a href="/Post/Details/@item.PostId" class="inline-block bg-white border border-gray-200 text-[9px] font-black px-4 py-2 rounded-xl uppercase tracking-widest hover:border-orange-500 hover:text-orange-600 transition shadow-sm">
+                                        Переглянути
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-orange-50/30 px-8 py-6 flex justify-between items-center border-t border-orange-100/50">
+                    <div>
+                        <p class="text-[10px] font-black text-orange-800 uppercase tracking-[0.2em]">Разом до сплати</p>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black text-orange-600 tracking-tighter">@order.TotalAmount.ToString("N2")</span>
+                        <span class="text-sm font-black text-orange-600 uppercase">₴</span>
                     </div>
                 </div>
-            }
+            </div>
         }
-    </main>
+    }
+</main>
+
+<footer class="py-12 text-center">
+    <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">&copy; 2026 MadeByMe. Твій простір для творчості.</p>
+</footer>
 
 </body>
 </html>

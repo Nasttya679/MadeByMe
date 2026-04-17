@@ -96,5 +96,17 @@ namespace MadeByMe.Application.Services.Implementations
 
             return Result.Success();
         }
+
+        public async Task<Result<int>> GetSellerReviewsCountAsync(string sellerId)
+        {
+            var count = await _commentRepository.GetCountBySellerIdAsync(sellerId);
+            return count;
+        }
+
+        public async Task<Result<int>> GetUserReviewsCountAsync(string userId)
+        {
+            var count = await _commentRepository.GetCountByUserIdAsync(userId);
+            return count;
+        }
     }
 }
