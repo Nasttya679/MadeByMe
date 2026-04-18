@@ -1,3 +1,18 @@
-﻿<h2>Помилка оформлення</h2>
-<p>Ваш кошик порожній. Додайте товари перед оформленням замовлення.</p>
-<a asp-controller="Post" asp-action="Index" class="btn btn-primary">До каталогу</a>
+﻿@{
+    ViewData["Title"] = "Кошик порожній";
+}
+
+<div class="min-h-[50vh] flex flex-col items-center justify-center text-center px-4 py-12">
+    <div class="w-24 h-24 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm">
+        <i class="fa-solid fa-cart-arrow-down"></i>
+    </div>
+
+    <h2 class="text-3xl font-extrabold text-gray-900 mb-3">Ваш кошик порожній</h2>
+    <p class="text-gray-500 max-w-md mx-auto mb-8 text-lg">
+        Ви намагаєтесь оформити замовлення, але ще не додали жодного товару. У нас є багато цікавого ручної роботи!
+    </p>
+
+    <a asp-controller="Post" asp-action="Index" class="bg-orange-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5 flex items-center">
+        <i class="fa-solid fa-store mr-2"></i> Перейти до каталогу
+    </a>
+</div>

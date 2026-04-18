@@ -1,55 +1,61 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <div class="flex items-center justify-center flex-grow">
-        <div class="bg-white shadow-lg rounded-2xl w-full max-w-sm p-8 animate-fade-in mx-auto">
-            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
-            <form method="post" action="/Account/Login">
-                @Html.AntiForgeryToken()
-                <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input id="email" name="email" type="email" required
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <div class="mb-4">
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required
-                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <button type="submit"
-                        class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 transition duration-200">
-                    Login
-                </button>
-            </form>
-            <p class="mt-4 text-sm text-center text-gray-600">
-                Don't have an account?
-                <a href="/Account/Register" class="text-orange-600 hover:underline">Register</a>
-            </p>
+﻿@model MadeByMe.Application.DTOs.LoginDto
+@{
+    ViewData["Title"] = "Вхід";
+}
+
+<div class="flex items-center justify-center py-12">
+    <div class="bg-white shadow-xl rounded-2xl w-full max-w-sm p-8 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-user-check"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900">З поверненням!</h2>
+            <p class="text-gray-500 mt-2">Увійдіть до свого акаунту</p>
         </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm">
+                @Html.ValidationSummary(false, "", new { @class = "list-disc pl-4" })
+            </div>
+        }
+
+        <form method="post" action="/Account/Login" class="space-y-5">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <input id="email" name="email" type="email" required
+                           class="pl-10 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                           placeholder="your@email.com" />
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Пароль</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <input id="password" name="password" type="password" required
+                           class="pl-10 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition"
+                           placeholder="••••••••" />
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 px-4 rounded-xl hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 shadow-md transform hover:-translate-y-0.5 transition">
+                Увійти
+            </button>
+        </form>
+
+        <p class="mt-6 text-sm text-center text-gray-600">
+            Ще не маєте акаунту?
+            <a href="/Account/Register" class="text-orange-600 font-bold hover:text-orange-700 hover:underline transition">Зареєструватися</a>
+        </p>
     </div>
-    <style>
-        @@keyframes fade-in {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fade-in 0.5s ease-out;
-        }
-    </style>
-
-</body>
-</html>
+</div>

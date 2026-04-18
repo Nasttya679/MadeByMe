@@ -1,109 +1,73 @@
 ﻿@model MadeByMe.Application.ViewModels.PostDetailsViewModel
+@using Microsoft.AspNetCore.Identity
+@using MadeByMe.Domain.Entities
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = Model.Post?.Title ?? "Деталі товару";
 }
 
-@using Microsoft.AspNetCore.Identity
-@using MadeByMe.Domain.Entities
-@inject UserManager<ApplicationUser> UserManager
-
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] - MadeByMe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-</head>
-<body class="bg-gray-50">
-<header class="bg-white shadow-sm sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-        <nav class="space-x-4">
-            <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
-                <a href="/Cart" class="text-gray-600 hover:text-orange-600">Кошик</a>
-                @if (!User.IsInRole("Seller") && !User.IsInRole("Admin"))
-                {
-                    <form action="/Account/BecomeSeller" method="post" class="inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="text-yellow-600 hover:text-yellow-700">Стати продавцем</button>
-                    </form>
-                }
-                <form action="/Account/Logout" method="post" class="inline">
-                    <button type="submit" class="text-red-600 hover:text-red-700">Вийти</button>
-                </form>
-            }
-            else
-            {
-                <a href="/Account/Login" class="text-orange-600 font-medium hover:underline">Увійти</a>
-                <a href="/Account/Register" class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition">Реєстрація</a>
-            }
-        </nav>
-    </div>
-</header>
-
-<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto py-8">
     @if (Model?.Post == null)
     {
-        <div class="text-center py-12">
-            <h2 class="text-2xl font-bold text-gray-700">Товар не знайдено</h2>
-            <a href="/" class="text-orange-600 hover:underline mt-4 inline-block">Повернутися на головну</a>
+        <div class="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <i class="fa-solid fa-box-open text-6xl text-gray-200 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-700">Товар не знайдено або видалено</h2>
+            <a href="/Post" class="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold mt-6 inline-block hover:bg-orange-700 transition">В каталог</a>
         </div>
     }
     else
     {
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-                <div class="relative">
-                    <img src="@(Model.Post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg")" alt="@Model.Post.Title"
-                         class="w-full h-[500px] object-cover rounded-lg shadow-md">
-                    <div class="absolute top-4 right-4 bg-white px-3 py-1 rounded-full shadow-md">
-                        <span class="text-lg font-semibold text-orange-600">@Model.Post.Price ₴</span>
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+                <div class="relative bg-gray-50 border-r border-gray-100">
+                    <img src="@(Model.Post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg")" alt="@Model.Post.Title" class="w-full h-full min-h-[400px] md:max-h-[600px] object-cover">
+                    <div class="absolute top-6 left-6">
+                        <span class="px-4 py-1.5 rounded-full text-xs font-black bg-white text-orange-600 uppercase tracking-widest shadow-md">
+                            @Model.Post.Category?.Name
+                        </span>
                     </div>
                 </div>
 
-                <div class="space-y-6">
+                <div class="p-8 md:p-10 flex flex-col justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">@Model.Post.Title</h1>
-                        <div class="mt-2 flex items-center">
-                            <div class="flex items-center text-yellow-400">
+                        <div class="flex justify-between items-start mb-4">
+                            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight pr-4">@Model.Post.Title</h1>
+                            <div class="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl border border-orange-100 shadow-sm text-center">
+                                <span class="block text-xs font-bold uppercase tracking-widest text-orange-400 mb-0.5">Ціна</span>
+                                <span class="text-2xl font-black whitespace-nowrap">@Model.Post.Price ₴</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center mb-8 bg-gray-50 inline-flex px-4 py-2 rounded-xl">
+                            <div class="flex items-center">
                                 @for (int i = 0; i < 5; i++)
                                 {
-                                    <svg class="h-5 w-5 @(i < Math.Floor(Model.Post.Rating) ? "text-yellow-400" : "text-gray-300")" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                    </svg>
+                                    <i class="fa-solid fa-star text-sm @(i < Math.Floor(Model.Post.Rating) ? "text-yellow-400" : "text-gray-300") mr-1"></i>
                                 }
                             </div>
-                            <span class="ml-2 text-sm text-gray-500">(@Model.Post.Rating.ToString("F1"))</span>
+                            <span class="ml-2 font-bold text-gray-700">@Model.Post.Rating.ToString("F1")</span>
+                            <span class="mx-3 text-gray-300">|</span>
+                            <span class="text-sm font-medium text-gray-500">Відгуків: @(Model.CommentsList?.Count ?? 0)</span>
+                        </div>
+
+                        <div class="flex items-center mb-8 p-4 border border-gray-100 rounded-2xl">
+                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-black text-xl">
+                                @(string.IsNullOrEmpty(Model.Post.Seller?.UserName) ? "?" : Model.Post.Seller!.UserName.Substring(0, 1).ToUpper())
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Продавець</p>
+                                <p class="text-lg font-bold text-gray-900">@(Model.Post.Seller?.UserName ?? "Невідомий майстер")</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Опис товару</h3>
+                            <p class="text-gray-700 leading-relaxed font-medium">@Model.Post.Description</p>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-200 pt-6">
-                        <h3 class="text-lg font-medium text-gray-900">Опис</h3>
-                        <p class="mt-2 text-gray-600">@Model.Post.Description</p>
-                    </div>
-
-                    <div class="border-t border-gray-200 pt-6">
-                        <h3 class="text-lg font-medium text-gray-900">Інформація про продавця</h3>
-                        <div class="mt-2 flex items-center">
-                            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <span class="text-lg font-medium text-gray-600">
-                                        @(string.IsNullOrEmpty(Model.Post.Seller?.UserName) ? "?" : Model.Post.Seller!.UserName.Substring(0, 1).ToUpper())
-                                    </span>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">@(Model.Post.Seller?.UserName ?? "Невідомий продавець")</p>
-                                <p class="text-sm text-gray-500">Продавець</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-gray-200 pt-6 space-y-4">
+                    <div class="space-y-4 pt-6 border-t border-gray-100">
                         @{
                             var currentUserId = UserManager.GetUserId(User);
                             var isAdmin = User.IsInRole("Admin");
@@ -112,142 +76,123 @@
 
                         @if (User.Identity?.IsAuthenticated == true && (isAdmin || isOwner))
                         {
-                            <div class="flex flex-col space-y-3 mb-4">
-                                <a href="/Post/Edit/@Model.Post.Id"
-                                   class="flex justify-center items-center w-full bg-white text-orange-600 border-2 border-orange-200 px-6 py-3 rounded-lg font-bold hover:border-orange-500 hover:bg-orange-50 transition duration-150 shadow-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Редагувати Пост
-                                </a>
-
-                                <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post" class="w-full">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                @if (isOwner)
+                                {
+                                    <a href="/Post/Edit/@Model.Post.Id" class="flex-1 text-center bg-white text-gray-700 border-2 border-gray-200 px-6 py-3 rounded-xl font-bold hover:border-gray-300 transition">
+                                        <i class="fa-solid fa-pen mr-2"></i> Редагувати
+                                    </a>
+                                }
+                                <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post" class="flex-1">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit"
-                                            class="flex justify-center items-center w-full bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition duration-150 shadow-md"
-                                            onclick="return confirm('Ви впевнені, що хочете видалити цей пост?');">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                        Видалити Пост
+                                    <button type="submit" class="w-full bg-red-50 text-red-600 border-2 border-red-100 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition" onclick="return confirm('Ви дійсно хочете видалити цей товар назавжди?');">
+                                        <i class="fa-solid fa-trash-can mr-2"></i> Видалити
                                     </button>
                                 </form>
                             </div>
                         }
 
-                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="space-y-4">
+                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="flex flex-col sm:flex-row gap-4 mt-4">
                             <input type="hidden" name="PostId" value="@Model.Post.Id" />
-                            <div class="flex items-center space-x-4">
-                                <label for="quantity" class="text-sm font-medium text-gray-700">Кількість:</label>
-                                <select name="Quantity" id="quantity" class="rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                            <div class="bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 flex items-center justify-between sm:w-1/3">
+                                <label for="quantity" class="text-xs font-bold text-gray-500 uppercase tracking-widest">Кількість</label>
+                                <select name="Quantity" id="quantity" class="bg-transparent font-bold text-gray-900 focus:outline-none cursor-pointer">
                                     @for (int i = 1; i <= 10; i++)
                                     {
                                         <option value="@i">@i</option>
                                     }
                                 </select>
                             </div>
-                            <button type="submit"
-                                    class="w-full bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition duration-150 ease-in-out">
-                                Додати до кошика
+                            <button type="submit" class="sm:w-2/3 bg-orange-600 text-white px-6 py-4 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5 flex justify-center items-center">
+                                <i class="fa-solid fa-cart-plus mr-2"></i> В кошик
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="border-t border-gray-200 p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Відгуки (@(Model.CommentsList?.Count ?? 0))</h2>
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10">
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-8 flex items-center">
+                <i class="fa-regular fa-comments text-orange-500 mr-3"></i> Відгуки покупців (@(Model.CommentsList?.Count ?? 0))
+            </h2>
 
-                @if (User.Identity?.IsAuthenticated == true)
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-controller="Comment" asp-action="Create" method="post" class="bg-gray-50 p-6 rounded-2xl mb-10 border border-gray-100">
+                    <input type="hidden" name="PostId" value="@Model.Post.Id" />
+                    <input type="hidden" id="ratingInput" name="Stars" value="5" />
+
+                    <div class="mb-4 flex items-center">
+                        <label class="text-sm font-bold text-gray-700 uppercase tracking-widest mr-4">Оцінка:</label>
+                        <div class="flex space-x-1" id="starRating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="fa-solid fa-star text-2xl cursor-pointer text-yellow-400 hover:scale-110 transition" data-value="@i"></i>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <textarea name="Content" rows="3" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none font-medium" placeholder="Поділіться своїми враженнями від виробу..."></textarea>
+                    </div>
+
+                    <button type="submit" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-sm">
+                        Надіслати відгук
+                    </button>
+                </form>
+            }
+
+            <div class="space-y-6">
+                @if (Model.CommentsList != null && Model.CommentsList.Any())
                 {
-                    <form asp-controller="Comment" asp-action="Create" method="post" class="mb-8">
-                        <input type="hidden" name="PostId" value="@Model.Post.Id" />
-                        <input type="hidden" id="ratingInput" name="Stars" value="5" />
-
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ваша оцінка:</label>
-                            <div class="flex space-x-1" id="starRating">
-                                @for (int i = 1; i <= 5; i++)
-                                {
-                                    <i class="fas fa-star text-2xl cursor-pointer text-yellow-400" data-value="@i"></i>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                                <textarea name="Content" rows="3" required
-                                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
-                                          placeholder="Залиште свій відгук..."></textarea>
-                        </div>
-
-                        <button type="submit"
-                                class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition">
-                            Надіслати відгук
-                        </button>
-                    </form>
-                }
-
-                <div class="space-y-6">
-                    @if (Model.CommentsList != null && Model.CommentsList.Any())
+                    foreach (var comment in Model.CommentsList)
                     {
-                        foreach (var comment in Model.CommentsList)
-                        {
-                            <div class="bg-gray-50 rounded-lg p-4 relative group">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center">
-                                        <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                                                <span class="text-sm font-medium text-gray-600">
-                                                    @(string.IsNullOrEmpty(comment.User?.UserName) ? "?" : comment.User!.UserName.Substring(0, 1).ToUpper())
-                                                </span>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium text-gray-900">@(comment.User?.UserName ?? "Анонім")</p>
-                                            <p class="text-xs text-gray-500">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                        <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm relative group hover:border-orange-100 transition">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center font-bold text-gray-600">
+                                        @(string.IsNullOrEmpty(comment.User?.UserName) ? "?" : comment.User!.UserName.Substring(0, 1).ToUpper())
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="font-bold text-gray-900">@(comment.User?.UserName ?? "Анонім")</p>
+                                        <div class="flex items-center mt-1">
+                                            <div class="flex mr-2">
+                                                @for (int i = 0; i < 5; i++)
+                                                {
+                                                    <i class="fa-solid fa-star text-xs @(i < comment.Stars ? "text-yellow-400" : "text-gray-200")"></i>
+                                                }
+                                            </div>
+                                            <span class="text-xs font-bold text-gray-400">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
                                         </div>
                                     </div>
-
-                                    @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || UserManager.GetUserId(User) == comment.UserId))
-                                    {
-                                        <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.CommentId" method="post" class="inline">
-                                            @Html.AntiForgeryToken()
-                                            <button type="submit"
-                                                    class="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                                    onclick="return confirm('Ви впевнені, що хочете видалити цей коментар?');"
-                                                    title="Видалити коментар">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    }
-                                </div>
-                                <div class="flex items-center space-x-1 mt-1">
-                                    @for (int i = 0; i < 5; i++)
-                                    {
-                                        if (i < comment.Stars)
-                                        {
-                                            <i class="fas fa-star text-sm text-yellow-400"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-star text-sm text-gray-300"></i>
-                                        }
-                                    }
                                 </div>
 
-                                <p class="text-gray-700 leading-relaxed mt-2">@comment.Content</p>
+                                @if (User.Identity?.IsAuthenticated == true && (User.IsInRole("Admin") || UserManager.GetUserId(User) == comment.UserId))
+                                {
+                                    <form asp-controller="Comment" asp-action="Delete" asp-route-id="@comment.CommentId" method="post" class="opacity-0 group-hover:opacity-100 transition">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition" onclick="return confirm('Видалити цей відгук?');" title="Видалити">
+                                            <i class="fa-solid fa-trash-can text-sm"></i>
+                                        </button>
+                                    </form>
+                                }
                             </div>
-                        }
+                            <p class="text-gray-700 font-medium pl-14">@comment.Content</p>
+                        </div>
                     }
-                    else
-                    {
-                        <p class="text-gray-500 italic">Поки немає відгуків. Будьте першим!</p>
-                    }
-                </div>
+                }
+                else
+                {
+                    <div class="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <i class="fa-regular fa-comment-dots text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500 font-medium">Поки немає відгуків. Будьте першим!</p>
+                    </div>
+                }
             </div>
         </div>
     }
-</main>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -257,18 +202,14 @@
         if(stars.length > 0) {
             stars.forEach(star => {
                 star.addEventListener('mouseover', function() {
-                    const value = this.getAttribute('data-value');
-                    highlightStars(value);
+                    highlightStars(this.getAttribute('data-value'));
                 });
-
                 star.addEventListener('mouseout', function() {
                     highlightStars(ratingInput.value);
                 });
-
                 star.addEventListener('click', function() {
-                    const value = this.getAttribute('data-value');
-                    ratingInput.value = value;
-                    highlightStars(value);
+                    ratingInput.value = this.getAttribute('data-value');
+                    highlightStars(this.getAttribute('data-value'));
                 });
             });
 
@@ -287,5 +228,3 @@
         }
     });
 </script>
-</body>
-</html>

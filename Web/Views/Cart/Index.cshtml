@@ -1,148 +1,104 @@
 ﻿@model MadeByMe.Application.ViewModels.CartViewModel
-
 @{
     ViewData["Title"] = "Кошик";
 }
 
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кошик - MadeByMe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-            <nav class="space-x-4">
-                <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                @if (User.Identity!.IsAuthenticated)
-                {
-                    <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
-                    <a href="/Cart" class="text-orange-600 font-medium">Кошик</a>
-                    @if (!User.IsInRole("Seller") && !User.IsInRole("Admin"))
-                    {
-                        <form action="/Account/BecomeSeller" method="post" class="inline">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="text-yellow-600 hover:text-yellow-700">Стати продавцем</button>
-                        </form>
-                    }
-                    <form action="/Account/Logout" method="post" class="inline">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="text-red-600 hover:text-red-700">Вийти</button>
-                    </form>
-                }
-                else
-                {
-                    <a href="/Account/Login" class="text-orange-600 font-medium hover:underline">Увійти</a>
-                    <a href="/Account/Register" class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-700 transition">Реєстрація</a>
-                }
-            </nav>
-        </div>
-    </header>
-
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-800">Кошик</h2>
-            <span class="text-gray-600">@Model.ItemCount товарів</span>
-        </div>
-
-        @if (Model.Items?.Any() == true)
-        {
-            <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Cart Items -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                        <div class="divide-y divide-gray-200">
-                            @foreach (var item in Model.Items)
-                            {
-                                <div class="p-6 flex items-center space-x-4">
-                                    <img src="@item.Product!.ImageUrl" 
-                                         alt="@item.Product.Name" 
-                                         class="w-24 h-24 object-cover rounded-lg" />
-                                    
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-800">@item.Product.Name</h3>
-                                        <p class="text-gray-600">Продавець: @item.Product.Seller!.UserName</p>
-                                        <div class="mt-2 flex items-center space-x-4">
-                                            <form action="/Cart/UpdateQuantity" method="post" class="flex items-center border rounded-lg">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="productId" value="@item.ProductId" />
-                                                <button type="submit" name="action" value="decrease" class="px-3 py-1 text-gray-600 hover:bg-gray-100">-</button>
-                                                <span class="px-3 py-1">@item.Quantity</span>
-                                                <button type="submit" name="action" value="increase" class="px-3 py-1 text-gray-600 hover:bg-gray-100">+</button>
-                                            </form>
-                                            <span class="text-lg font-semibold text-orange-600">@(item.Product.Price * item.Quantity) ₴</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <form action="/Cart/RemoveFromCart" method="post" class="inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="postId" value="@item.ProductId" />
-                                        <button type="submit" class="text-red-600 hover:text-red-700 p-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Order Summary -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Підсумок замовлення</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="flex justify-between text-gray-600">
-                                <span>Товари (@Model.ItemCount)</span>
-                                <span>@Model.TotalPrice ₴</span>
-                            </div>
-                            <div class="flex justify-between text-gray-600">
-                                <span>Доставка</span>
-                                <span>Безкоштовно</span>
-                            </div>
-                            <div class="border-t pt-4">
-                                <div class="flex justify-between text-lg font-semibold">
-                                    <span>Разом</span>
-                                    <span class="text-orange-600">@Model.TotalPrice ₴</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <a href="/Order/Checkout" class="w-full mt-6 block text-center bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 transition duration-200">
-                            Оформити замовлення
-                        </a>
-
-                        <div class="mt-4 text-center">
-                            <a href="/" class="text-orange-600 hover:text-orange-700 text-sm">
-                                Продовжити покупки
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <h3 class="mt-4 text-xl font-semibold text-gray-800">Ваш кошик порожній</h3>
-                <p class="mt-2 text-gray-600">Додайте товари до кошика, щоб зробити замовлення</p>
-                <a href="/" class="mt-6 inline-block bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition duration-200">
-                    Перейти до покупок
-                </a>
-            </div>
-        }
+<div class="max-w-7xl mx-auto py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900">Кошик</h2>
+        <span class="text-gray-600 font-medium bg-gray-100 px-4 py-1 rounded-full">@Model.ItemCount товарів</span>
     </div>
 
-</body>
-</html>
+    @if (Model.Items?.Any() == true)
+    {
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div class="divide-y divide-gray-100">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="p-6 flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0 hover:bg-orange-50 transition duration-150">
+                                <img src="@item.Product!.ImageUrl" 
+                                     alt="@item.Product.Name" 
+                                     class="w-32 h-32 object-cover rounded-2xl shadow-sm" />
+                                
+                                <div class="flex-1 w-full text-center sm:text-left">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-1">@item.Product.Name</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Продавець: <span class="font-semibold text-gray-700">@item.Product.Seller!.UserName</span></p>
+                                    
+                                    <div class="flex items-center justify-center sm:justify-start space-x-6">
+                                        <form action="/Cart/UpdateQuantity" method="post" class="flex items-center bg-gray-50 border border-gray-200 rounded-xl p-1 shadow-sm">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" name="action" value="decrease" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-white hover:shadow-sm transition font-bold">-</button>
+                                            <span class="w-10 text-center font-bold text-gray-900">@item.Quantity</span>
+                                            <button type="submit" name="action" value="increase" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-white hover:shadow-sm transition font-bold">+</button>
+                                        </form>
+                                        <span class="text-xl font-black text-orange-600">@(item.Product.Price * item.Quantity) ₴</span>
+                                    </div>
+                                </div>
+                                
+                                <form action="/Cart/RemoveFromCart" method="post" class="sm:self-start">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@item.ProductId" />
+                                    <button type="submit" class="text-gray-400 hover:text-red-600 p-2 transition group" title="Видалити">
+                                        <i class="fa-solid fa-trash-can text-xl group-hover:scale-110 transition"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 sticky top-24">
+                    <h3 class="text-xl font-extrabold text-gray-900 mb-6 flex items-center">
+                        <i class="fa-solid fa-receipt text-orange-500 mr-3"></i> Підсумок
+                    </h3>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-gray-600 font-medium">
+                            <span>Товари (@Model.ItemCount)</span>
+                            <span>@Model.TotalPrice ₴</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 font-medium">
+                            <span>Доставка</span>
+                            <span class="text-green-600 font-bold">Безкоштовно</span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-100 pt-6 mb-8">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold text-gray-900">Разом</span>
+                            <span class="text-3xl font-black text-orange-600">@Model.TotalPrice ₴</span>
+                        </div>
+                    </div>
+
+                    <a href="/Order/Checkout" class="w-full flex items-center justify-center bg-orange-600 text-white py-4 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5 mb-4">
+                        Оформити замовлення <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </a>
+
+                    <div class="text-center">
+                        <a href="/Post" class="text-gray-500 hover:text-orange-600 font-semibold transition text-sm">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Продовжити покупки
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-16 text-center max-w-2xl mx-auto mt-8">
+            <div class="w-24 h-24 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <h3 class="text-2xl font-extrabold text-gray-900 mb-2">Ваш кошик порожній</h3>
+            <p class="text-gray-500 mb-8">Додайте товари до кошика, щоб зробити замовлення. У нас багато цікавого!</p>
+            <a href="/Post" class="inline-flex items-center justify-center bg-orange-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5">
+                Перейти до каталогу
+            </a>
+        </div>
+    }
+</div>

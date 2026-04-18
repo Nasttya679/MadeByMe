@@ -1,162 +1,45 @@
-@* Success.cshtml *@
 @{
     ViewData["Title"] = "Дякуємо за покупку";
 }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+@Html.AntiForgeryToken()
 
-<div class="success-page">
-    <div class="success-content">
-        <div class="success-icon">
-            <i class="fas fa-check-circle"></i>
+<div class="max-w-2xl mx-auto py-12 text-center">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-10 transform transition-all hover:shadow-2xl">
+        <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-6">
+            <i class="fa-solid fa-check-circle animate-bounce"></i>
         </div>
-
-        <h1 class="success-title">Дякуємо за покупку!</h1>
-
-        <div class="success-message">
+        
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Дякуємо за покупку!</h1>
+        
+        <div class="text-gray-600 space-y-2 mb-8 text-lg">
             <p>Ваше замовлення успішно оформлено та прийнято до обробки.</p>
             <p>Ми надіслали підтвердження на вашу електронну пошту.</p>
             <p>Наш менеджер зв'яжеться з вами найближчим часом.</p>
         </div>
-
-        <div class="success-buttons">
-            <a href="/" class="btn-home">
-                <i class="fas fa-home"></i>
-                <span>На головну</span>
+        
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="/" class="bg-orange-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-orange-700 transition shadow-lg flex items-center justify-center">
+                <i class="fa-solid fa-house mr-2"></i> На головну
             </a>
-
-            <a href="/Order/History" class="btn-orders">
-                <i class="fas fa-history"></i>
-                <span>Історія покупок</span>
-            </a>
+            <button onclick="clearCartAndRedirect()" class="bg-white text-orange-600 border-2 border-orange-600 font-bold px-8 py-3 rounded-xl hover:bg-orange-50 transition shadow-sm flex items-center justify-center">
+                <i class="fa-solid fa-clock-rotate-left mr-2"></i> Мої замовлення
+            </button>
         </div>
     </div>
 </div>
 
-<style>
-    .success-page {
-        min-height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f9fafb;
-        padding: 20px;
-        font-family: 'Inter', sans-serif;
+<script>
+    function clearCartAndRedirect() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        fetch('/Cart/ClearCart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            }
+        }).then(() => {
+            window.location.href = '/Order/History';
+        });
     }
-
-    .success-content {
-        background: white;
-        padding: 3.5rem 2.5rem;
-        border-radius: 24px;
-        box-shadow: 0 15px 35px rgba(234, 88, 12, 0.1);
-        text-align: center;
-        max-width: 550px;
-        width: 100%;
-        animation: slideUp 0.6s ease-out;
-    }
-
-    .success-icon i {
-        font-size: 5.5rem;
-        color: #ea580c; /* Помаранчевий колір MadeByMe */
-        margin-bottom: 1.5rem;
-        animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .success-title {
-        color: #111827;
-        font-size: 2.25rem;
-        margin-bottom: 1rem;
-        font-weight: 800;
-        letter-spacing: -0.025em;
-    }
-
-    .success-message {
-        color: #4b5563;
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 2.5rem;
-    }
-
-    .success-message p {
-        margin-bottom: 0.5rem;
-    }
-
-    .success-buttons {
-        display: flex;
-        gap: 1.25rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .success-buttons a {
-        padding: 0.875rem 1.75rem;
-        border-radius: 12px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 0.95rem;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        transition: all 0.2s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .btn-home {
-        background: #ea580c;
-        color: white;
-        border: 2px solid #ea580c;
-    }
-
-    .btn-home:hover {
-        background: #c2410c;
-        border-color: #c2410c;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
-    }
-
-    .btn-orders {
-        background: white;
-        color: #ea580c;
-        border: 2px solid #ea580c;
-    }
-
-    .btn-orders:hover {
-        background: #fff7ed;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
-    }
-
-    .success-buttons a:active {
-        transform: scale(0.98);
-    }
-
-    /* Анімації */
-    @@keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@keyframes bounceIn {
-        0% { transform: scale(0.3); opacity: 0; }
-        50% { transform: scale(1.05); opacity: 1; }
-        70% { transform: scale(0.9); }
-        100% { transform: scale(1); }
-    }
-
-    @@media (max-width: 480px) {
-        .success-buttons {
-            flex-direction: column;
-        }
-        .success-buttons a {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-</style>
+</script>

@@ -1,3 +1,4 @@
+using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
@@ -12,6 +13,9 @@ using Serilog;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ProjectSettings>(
+    builder.Configuration.GetSection("ProjectSettings"));
 
 builder.Configuration.AddUserSecrets<Program>();
 

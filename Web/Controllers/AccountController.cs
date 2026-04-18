@@ -166,5 +166,32 @@ namespace MadeByMe.Web.Controllers
             await _signInManager.RefreshSignInAsync(user);
             return RedirectToAction("Profile", "Account");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+        {
+            var result = await _ApplicationUserService.UpdateUserAsync(CurrentUserId!, dto);
+
+            if (result.IsFailure)
+            {
+                SetErrorMessage(result.ErrorMessage);
+                return RedirectToAction("Profile");
+            }
+
+            SetSuccessMessage("Профіль успішно оновлено!");
+
+            var user = result.Value;
+            await _signInManager.RefreshSignInAsync(user);
+
+            return RedirectToAction("Profile");
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
     }
 }

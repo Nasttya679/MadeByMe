@@ -1,128 +1,91 @@
 ﻿@model MadeByMe.Application.DTOs.RegisterDto
-
 @{
     ViewData["Title"] = "Реєстрація";
 }
 
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Реєстрація - MadeByMe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <div class="flex items-center justify-center flex-grow">
-        <div class="max-w-md w-full mx-auto p-8">
-            <div class="bg-white rounded-2xl shadow-lg p-8">
-                <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800">Реєстрація</h2>
-                    <p class="text-gray-600 mt-2">Створіть свій обліковий запис</p>
+<div class="flex items-center justify-center py-8">
+    <div class="bg-white shadow-xl rounded-2xl w-full max-w-lg p-8 border border-gray-100 transform transition-all hover:shadow-2xl">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900">Створити акаунт</h2>
+            <p class="text-gray-500 mt-2">Приєднуйтесь до нашої спільноти</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg text-sm">
+                @Html.ValidationSummary(false, "", new { @class = "list-disc pl-4" })
+            </div>
+        }
+
+        <form method="post" action="/Account/Register" class="space-y-5">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label asp-for="UserName" class="block text-sm font-semibold text-gray-700 mb-1">Ім'я користувача</label>
+                <input asp-for="UserName" required
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                       placeholder="Наприклад: ivan_handmade" />
+                <span asp-validation-for="UserName" class="mt-1 text-sm text-red-600 font-medium"></span>
+            </div>
+
+            <div>
+                <label asp-for="Email" class="block text-sm font-semibold text-gray-700 mb-1">Електронна пошта</label>
+                <input asp-for="Email" type="email" required
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                       placeholder="your@email.com" />
+                <span asp-validation-for="Email" class="mt-1 text-sm text-red-600 font-medium"></span>
+            </div>
+
+            <div>
+                <label asp-for="Password" class="block text-sm font-semibold text-gray-700 mb-1">Пароль</label>
+                <input asp-for="Password" type="password" required
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                       placeholder="Мінімум 6 символів" />
+                <span asp-validation-for="Password" class="mt-1 text-sm text-red-600 font-medium"></span>
+            </div>
+
+            <div>
+                <label asp-for="ConfirmPassword" class="block text-sm font-semibold text-gray-700 mb-1">Підтвердження пароля</label>
+                <input asp-for="ConfirmPassword" type="password" required
+                       class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                       placeholder="Повторіть пароль" />
+                <span asp-validation-for="ConfirmPassword" class="mt-1 text-sm text-red-600 font-medium"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label asp-for="PhoneNumber" class="block text-sm font-semibold text-gray-700 mb-1">Телефон</label>
+                    <input asp-for="PhoneNumber"
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                           placeholder="+380..." />
+                    <span asp-validation-for="PhoneNumber" class="mt-1 text-sm text-red-600 font-medium"></span>
                 </div>
 
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">Будь ласка, виправте наступні помилки:</h3>
-                                <div class="mt-2 text-sm text-red-700">
-                                    <ul class="list-disc pl-5 space-y-1">
-                                        @foreach (var modelState in ViewData.ModelState.Values)
-                                        {
-                                            foreach (var error in modelState.Errors)
-                                            {
-                                                <li>@error.ErrorMessage</li>
-                                            }
-                                        }
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <form asp-action="Register" method="post" class="space-y-6">
-                    @Html.AntiForgeryToken()
-
-                    <div>
-                        <label asp-for="UserName" class="block text-sm font-medium text-gray-700">Ім'я користувача</label>
-                        <input asp-for="UserName" 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        <span asp-validation-for="UserName" class="mt-1 text-sm text-red-600"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="Email" class="block text-sm font-medium text-gray-700">Електронна пошта</label>
-                        <input asp-for="Email" type="email"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        <span asp-validation-for="Email" class="mt-1 text-sm text-red-600"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="PhoneNumber" class="block text-sm font-medium text-gray-700">Номер мобільного телефону</label>
-                        <div class="mt-1 relative rounded-lg shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                                <span class="text-gray-500 sm:text-sm">+38</span>
-                            </div>
-                            <input asp-for="PhoneNumber" type="tel" placeholder="XXX XXX XX XX" style="padding-left: 3.0rem !important;"
-                                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        </div>
-                        <span asp-validation-for="PhoneNumber" class="mt-1 text-sm text-red-600"></span>
-                        <p class="mt-1 text-sm text-gray-500">Введіть номер у форматі: XXX XXX XX XX</p>
-                    </div>
-
-                    <div>
-                        <label asp-for="Password" class="block text-sm font-medium text-gray-700">Пароль</label>
-                        <input asp-for="Password" type="password"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        <span asp-validation-for="Password" class="mt-1 text-sm text-red-600"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="ConfirmPassword" class="block text-sm font-medium text-gray-700">Підтвердження паролю</label>
-                        <input asp-for="ConfirmPassword" type="password"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        <span asp-validation-for="ConfirmPassword" class="mt-1 text-sm text-red-600"></span>
-                    </div>
-
-                    <div>
-                        <label asp-for="Address" class="block text-sm font-medium text-gray-700">Адреса</label>
-                        <input asp-for="Address"
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
-                        <span asp-validation-for="Address" class="mt-1 text-sm text-red-600"></span>
-                    </div>
-
-                    <div>
-                        <button type="submit" 
-                                class="w-full bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition duration-200">
-                            Зареєструватися
-                        </button>
-                    </div>
-
-                    <div class="text-center">
-                        <p class="text-sm text-gray-600">
-                            Вже маєте обліковий запис? 
-                            <a href="/Account/Login" class="text-orange-600 hover:text-orange-800 font-medium">
-                                Увійти
-                            </a>
-                        </p>
-                    </div>
-                </form>
+                <div>
+                    <label asp-for="Address" class="block text-sm font-semibold text-gray-700 mb-1">Адреса</label>
+                    <input asp-for="Address" required
+                           class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition" 
+                           placeholder="Місто, вулиця..." />
+                    <span asp-validation-for="Address" class="mt-1 text-sm text-red-600 font-medium"></span>
+                </div>
             </div>
-        </div>
-    </div>
 
-    @section Scripts {
-        @{
-            await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        }
-    }
-</body>
-</html>
+            <button type="submit" 
+                    class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 px-4 rounded-xl hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 shadow-md transform hover:-translate-y-0.5 transition mt-4">
+                Зареєструватися
+            </button>
+
+            <p class="mt-6 text-sm text-center text-gray-600">
+                Вже маєте обліковий запис? 
+                <a href="/Account/Login" class="text-orange-600 font-bold hover:text-orange-700 hover:underline transition">Увійти</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

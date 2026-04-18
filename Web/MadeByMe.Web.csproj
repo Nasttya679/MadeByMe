@@ -49,4 +49,8 @@
     <Folder Include="Logs\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\User\Profile.cshtml" />
+  </ItemGroup>
+
 </Project>

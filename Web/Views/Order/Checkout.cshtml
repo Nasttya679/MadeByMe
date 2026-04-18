@@ -3,161 +3,141 @@
 
 @{
     ViewData["Title"] = "Оформлення замовлення";
-    // Дістаємо кошик з ViewBag, який ми передали в контролері
     var cart = ViewBag.Cart as CartViewModel;
 }
 
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"] - MadeByMe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<div class="max-w-7xl mx-auto py-8">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-8">Оформлення замовлення</h1>
 
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-            <nav class="space-x-4">
-                <a href="/" class="text-gray-600 hover:text-orange-600">Головна</a>
-                <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600">Профіль</a>
-                <a href="/Cart" class="text-gray-600 hover:text-orange-600 font-semibold">Кошик</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="flex-grow max-w-7xl mx-auto w-full px-4 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">Оформлення замовлення</h1>
+        <div class="lg:col-span-7 space-y-8">
+            <form asp-controller="Order" asp-action="Checkout" method="post" class="space-y-8">
+                @Html.AntiForgeryToken()
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-            <div class="lg:col-span-7 space-y-8">
-                <form asp-controller="Order" asp-action="Checkout" method="post" class="space-y-8">
-                    @Html.AntiForgeryToken()
-
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100">Контакти</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label asp-for="FirstName" class="block text-sm font-semibold text-gray-700 mb-1">Ім'я</label>
-                                <input asp-for="FirstName" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="Ваше ім'я" />
-                                <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                            <div>
-                                <label asp-for="LastName" class="block text-sm font-semibold text-gray-700 mb-1">Прізвище</label>
-                                <input asp-for="LastName" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="Ваше прізвище" />
-                                <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                            <div>
-                                <label asp-for="Email" class="block text-sm font-semibold text-gray-700 mb-1">Пошта</label>
-                                <input asp-for="Email" type="email" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="example@mail.com" />
-                                <span asp-validation-for="Email" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                            <div>
-                                <label asp-for="PhoneNumber" class="block text-sm font-semibold text-gray-700 mb-1">Номер телефону</label>
-                                <input asp-for="PhoneNumber" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="+38 (000) 000-00-00" />
-                                <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
+                <div class="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100 flex items-center">
+                        <i class="fa-solid fa-address-card text-orange-500 mr-3"></i> Контакти
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label asp-for="FirstName" class="block text-sm font-semibold text-gray-700 mb-1">Ім'я</label>
+                            <input asp-for="FirstName" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="Ваше ім'я" />
+                            <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="LastName" class="block text-sm font-semibold text-gray-700 mb-1">Прізвище</label>
+                            <input asp-for="LastName" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="Ваше прізвище" />
+                            <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="Email" class="block text-sm font-semibold text-gray-700 mb-1">Пошта</label>
+                            <input asp-for="Email" type="email" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="example@mail.com" />
+                            <span asp-validation-for="Email" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="PhoneNumber" class="block text-sm font-semibold text-gray-700 mb-1">Номер телефону</label>
+                            <input asp-for="PhoneNumber" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="+38 (000) 000-00-00" />
+                            <span asp-validation-for="PhoneNumber" class="text-red-500 text-xs mt-1 block"></span>
                         </div>
                     </div>
-
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100">Доставка</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label asp-for="City" class="block text-sm font-semibold text-gray-700 mb-1">Місто</label>
-                                <input asp-for="City" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="Наприклад: Львів" />
-                                <span asp-validation-for="City" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                            <div>
-                                <label asp-for="PostOffice" class="block text-sm font-semibold text-gray-700 mb-1">Відділення пошти</label>
-                                <input asp-for="PostOffice" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="Відділення №1" />
-                                <span asp-validation-for="PostOffice" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-                        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100">Оплата онлайн</h2>
-                        <div class="space-y-6">
-                            <div>
-                                <label asp-for="CardNumber" class="block text-sm font-semibold text-gray-700 mb-1">Номер карти</label>
-                                <input asp-for="CardNumber" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="0000 0000 0000 0000" />
-                                <span asp-validation-for="CardNumber" class="text-red-500 text-xs mt-1 block"></span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label asp-for="ExpiryDate" class="block text-sm font-semibold text-gray-700 mb-1">Термін дії</label>
-                                    <input asp-for="ExpiryDate" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="ММ/РР" />
-                                    <span asp-validation-for="ExpiryDate" class="text-red-500 text-xs mt-1 block"></span>
-                                </div>
-                                <div>
-                                    <label asp-for="CVV" class="block text-sm font-semibold text-gray-700 mb-1">CVV</label>
-                                    <input asp-for="CVV" type="password" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-2" placeholder="***" />
-                                    <span asp-validation-for="CVV" class="text-red-500 text-xs mt-1 block"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end space-x-4 pt-4">
-                        <a href="/Cart" class="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition">
-                            Скасувати
-                        </a>
-                        <button type="submit" class="px-8 py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 shadow-md transition">
-                            Підтвердити і оплатити
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-
-            <div class="lg:col-span-5">
-                <div class="bg-gray-50 p-8 rounded-xl border border-gray-200 sticky top-24">
-                    <h2 class="text-xl font-bold text-gray-800 mb-6">Ваше замовлення</h2>
-                    
-                    @if (cart != null && cart.Items != null && cart.Items.Any())
-                    {
-                        <div class="space-y-4 mb-6 max-h-[400px] overflow-y-auto pr-2">
-                            @foreach (var item in cart.Items)
-                            {
-                                <div class="flex items-center space-x-4 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                                    <img src="@item.Product!.ImageUrl" alt="@item.Product.Name" class="w-16 h-16 object-cover rounded-md bg-gray-200">
-                                    <div class="flex-grow">
-                                        <h3 class="text-sm font-bold text-gray-900">@item.Product.Name</h3>
-                                        <p class="text-xs text-gray-500">Кількість: @item.Quantity шт.</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-sm font-bold text-gray-900">$@(item.Product.Price * item.Quantity)</p>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="border-t border-gray-300 pt-6">
-                            <div class="flex justify-between items-center text-xl font-bold text-gray-900">
-                                <span>До сплати:</span>
-                                <span class="text-orange-600">$@cart.TotalPrice.ToString("F2")</span>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-gray-500 text-center py-4">Ваш кошик порожній.</p>
-                    }
                 </div>
-            </div>
 
+                <div class="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100 flex items-center">
+                        <i class="fa-solid fa-truck-fast text-orange-500 mr-3"></i> Доставка
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label asp-for="City" class="block text-sm font-semibold text-gray-700 mb-1">Місто</label>
+                            <input asp-for="City" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="Наприклад: Львів" />
+                            <span asp-validation-for="City" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label asp-for="PostOffice" class="block text-sm font-semibold text-gray-700 mb-1">Відділення пошти</label>
+                            <input asp-for="PostOffice" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="Відділення №1" />
+                            <span asp-validation-for="PostOffice" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-100 flex items-center">
+                        <i class="fa-regular fa-credit-card text-orange-500 mr-3"></i> Оплата онлайн
+                    </h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label asp-for="CardNumber" class="block text-sm font-semibold text-gray-700 mb-1">Номер карти</label>
+                            <input asp-for="CardNumber" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="0000 0000 0000 0000" />
+                            <span asp-validation-for="CardNumber" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label asp-for="ExpiryDate" class="block text-sm font-semibold text-gray-700 mb-1">Термін дії</label>
+                                <input asp-for="ExpiryDate" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="ММ/РР" />
+                                <span asp-validation-for="ExpiryDate" class="text-red-500 text-xs mt-1 block"></span>
+                            </div>
+                            <div>
+                                <label asp-for="CVV" class="block text-sm font-semibold text-gray-700 mb-1">CVV</label>
+                                <input asp-for="CVV" type="password" class="w-full rounded-xl border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 px-4 py-3" placeholder="***" />
+                                <span asp-validation-for="CVV" class="text-red-500 text-xs mt-1 block"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4">
+                    <a href="/Cart" class="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                        Скасувати
+                    </a>
+                    <button type="submit" class="px-8 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 shadow-lg transform hover:-translate-y-0.5 transition flex items-center">
+                        <i class="fa-solid fa-lock mr-2"></i> Оплатити
+                    </button>
+                </div>
+            </form>
         </div>
-    </main>
 
-    @section Scripts {
-        @{
-            await Html.RenderPartialAsync("_ValidationScriptsPartial");
-        }
-    }
-</body>
-</html>
+        <div class="lg:col-span-5">
+            <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 shadow-sm sticky top-24">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-box-open text-orange-500 mr-3"></i> Ваше замовлення
+                </h2>
+                
+                @if (cart != null && cart.Items != null && cart.Items.Any())
+                {
+                    <div class="space-y-4 mb-6 max-h-[400px] overflow-y-auto pr-2">
+                        @foreach (var item in cart.Items)
+                        {
+                            <div class="flex items-center space-x-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                                <img src="@item.Product!.ImageUrl" alt="@item.Product.Name" class="w-16 h-16 object-cover rounded-xl bg-gray-200">
+                                <div class="flex-grow">
+                                    <h3 class="text-sm font-bold text-gray-900">@item.Product.Name</h3>
+                                    <p class="text-xs text-gray-500">Кількість: @item.Quantity шт.</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-black text-orange-600">@((item.Product.Price * item.Quantity).ToString("F2")) ₴</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="flex justify-between items-center text-xl font-bold text-gray-900">
+                            <span>До сплати:</span>
+                            <span class="text-3xl font-black text-orange-600">@cart.TotalPrice.ToString("F2") ₴</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-center py-4">Ваш кошик порожній.</p>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

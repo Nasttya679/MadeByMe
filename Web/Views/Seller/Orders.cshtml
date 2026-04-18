@@ -4,47 +4,25 @@
     ViewData["Title"] = "Журнал замовлень";
 }
 
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Журнал замовлень - MadeByMe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800">
-
-<header class="bg-white shadow-sm sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <a href="/" class="text-2xl font-bold text-orange-700 hover:text-orange-800 transition-colors">MadeByMe</a>
-        <nav class="space-x-4 flex items-center">
-            <a href="/" class="text-gray-600 hover:text-orange-600 font-medium">Головна</a>
-            <a href="/Account/Profile" class="text-gray-600 hover:text-orange-600 font-medium">Профіль</a>
-            <a href="/Cart" class="text-gray-600 hover:text-orange-600 font-medium">Кошик</a>
-            <form action="/Account/Logout" method="post" class="inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="text-red-600 hover:text-red-700 ps-2">Вийти</button>
-            </form>
-        </nav>
-    </div>
-</header>
-
-<main class="max-w-6xl mx-auto px-4 py-10">
-    <div class="flex items-center justify-between mb-10">
+<div class="max-w-6xl mx-auto py-10">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
-            <h1 class="text-4xl font-black text-gray-900 uppercase tracking-tighter">Журнал замовлень</h1>
+            <h1 class="text-3xl font-extrabold text-gray-900">Журнал замовлень</h1>
             <p class="text-gray-500 mt-2 font-medium">Керуйте продажами та статусами замовлень клієнтів</p>
         </div>
-        <div class="bg-orange-100 text-orange-700 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-200 shadow-sm">
+        <div class="bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-sm font-bold border border-orange-200 shadow-sm">
             Панель продавця
         </div>
     </div>
 
     @if (Model == null || !Model.Any())
     {
-        <div class="bg-white rounded-[2rem] p-20 text-center border border-gray-100 shadow-xl shadow-orange-100/20">
-            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Замовлень поки немає</h2>
-            <p class="text-gray-400 mt-2 font-medium">Ваші майбутні продажі з'являться саме тут!</p>
+        <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
+            <div class="w-20 h-20 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+                <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Замовлень поки немає</h2>
+            <p class="text-gray-500 mt-2 font-medium">Ваші майбутні продажі з'являться саме тут!</p>
         </div>
     }
     else
@@ -52,20 +30,22 @@
         <div class="grid gap-8">
             @foreach (var order in Model)
             {
-                <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden hover:border-orange-200 transition-all duration-300">
-                    <div class="bg-gray-50/80 px-8 py-5 flex justify-between items-center border-b border-gray-100">
+                <div class="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    
+                    <div class="bg-gray-50 px-8 py-5 flex flex-wrap justify-between items-center border-b border-gray-100 gap-4">
                         <div class="flex items-center gap-6">
-                            <span class="text-[11px] font-black text-gray-400 uppercase tracking-widest">№ @order.OrderId</span>
-                            <span class="text-xs font-black text-gray-600 uppercase">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</span>
+                            <span class="text-sm font-bold text-gray-700 flex items-center">
+                                <i class="fa-regular fa-calendar text-orange-500 mr-2"></i> @order.OrderDate.ToString("dd.MM.yyyy HH:mm")
+                            </span>
                         </div>
                         
                         @{
                             var statusColor = order.Status switch {
-                                "Processing" => "bg-blue-100 text-blue-700 border-blue-200",
-                                "Shipped" => "bg-purple-100 text-purple-700 border-purple-200",
-                                "Delivered" => "bg-green-100 text-green-700 border-green-200",
-                                "Cancelled" => "bg-red-100 text-red-700 border-red-200",
-                                _ => "bg-gray-100 text-gray-700 border-gray-200"
+                                "Processing" => "bg-blue-50 text-blue-700 border-blue-200",
+                                "Shipped" => "bg-purple-50 text-purple-700 border-purple-200",
+                                "Delivered" => "bg-green-50 text-green-700 border-green-200",
+                                "Cancelled" => "bg-red-50 text-red-700 border-red-200",
+                                _ => "bg-gray-50 text-gray-700 border-gray-200"
                             };
                             var statusUa = order.Status switch {
                                 "Processing" => "В обробці",
@@ -75,49 +55,61 @@
                                 _ => order.Status
                             };
                         }
-                        <span class="px-4 py-1.5 @statusColor text-[10px] font-black uppercase rounded-xl tracking-tighter border">
+                        <span class="px-4 py-1.5 @statusColor text-sm font-bold rounded-xl border shadow-sm">
                             @statusUa
                         </span>
                     </div>
 
-                    <div class="p-8 grid md:grid-cols-12 gap-10">
-                        <div class="md:col-span-4">
-                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5">Деталі товарів</h4>
+                    <div class="p-8 grid md:grid-cols-12 gap-8">
+                        
+                        <div class="md:col-span-5">
+                            <h4 class="text-base font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center">
+                                <i class="fa-solid fa-box-open text-orange-500 mr-2"></i> Деталі товарів
+                            </h4>
                             <div class="space-y-3">
                                 @foreach (var item in order.Items)
                                 {
-                                    <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                                        <span class="text-sm font-black text-gray-900">@item.ProductName</span>
-                                        <span class="text-xs font-black text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">x @item.Quantity</span>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        <span class="text-sm font-semibold text-gray-900">@item.ProductName</span>
+                                        <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-lg">@item.Quantity шт.</span>
                                     </div>
                                 }
                             </div>
                         </div>
 
-                        <div class="md:col-span-5 relative group">
-                            <div class="relative bg-white rounded-[2rem] p-6 border border-orange-100 shadow-sm h-full">
-                                <h4 class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-5">Клієнт та доставка</h4>
-                                <p class="text-xl font-black text-gray-900 tracking-tight">@order.BuyerName</p>
-                                <p class="text-sm text-gray-600 font-bold mt-2">@order.BuyerPhone</p>
-                                <p class="text-xs text-gray-500 mt-2 leading-relaxed">@order.ShippingAddress</p>
+                        <div class="md:col-span-4">
+                            <div class="bg-orange-50 rounded-2xl p-5 border border-orange-100 h-full">
+                                <h4 class="text-sm font-bold text-orange-800 border-b border-orange-200 pb-2 mb-3 flex items-center">
+                                    <i class="fa-solid fa-user text-orange-500 mr-2"></i> Клієнт та доставка
+                                </h4>
+                                <p class="text-lg font-bold text-gray-900">@order.BuyerName</p>
+                                <p class="text-sm text-gray-700 font-medium mt-3 flex items-center">
+                                    <i class="fa-solid fa-phone text-orange-400 mr-2 w-4"></i> @order.BuyerPhone
+                                </p>
+                                <p class="text-sm text-gray-600 mt-2 flex items-start">
+                                    <i class="fa-solid fa-location-dot text-orange-400 mr-2 w-4 mt-1"></i> 
+                                    <span>@order.ShippingAddress</span>
+                                </p>
                             </div>
                         </div>
 
-                        <div class="md:col-span-3 flex flex-col justify-between items-end">
-                            <div class="text-right">
-                                <p class="text-3xl font-black text-orange-600 tracking-tighter">@order.TotalPrice.ToString("N2") ₴</p>
+                        <div class="md:col-span-3 flex flex-col justify-between">
+                            <div class="text-right mb-6 md:mb-0">
+                                <p class="text-sm font-bold text-gray-500 mb-1">Сума замовлення</p>
+                                <p class="text-3xl font-black text-orange-600">@order.TotalPrice.ToString("N2") ₴</p>
                             </div>
                             
-                            <div class="w-full space-y-3 mt-8">
-                                <a href="tel:@order.BuyerPhone" class="flex items-center justify-center w-full bg-orange-600 text-white text-[11px] font-black py-4 rounded-2xl uppercase tracking-widest shadow-lg shadow-orange-200 hover:bg-orange-700 transition">
-                                    Зв'язатися
+                            <div class="space-y-3">
+                                <a href="tel:@order.BuyerPhone" class="flex items-center justify-center w-full bg-white border-2 border-orange-200 text-orange-600 text-sm font-bold py-3 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition shadow-sm">
+                                    <i class="fa-solid fa-phone mr-2"></i> Зателефонувати
                                 </a>
                                 
                                 <form asp-controller="Seller" asp-action="UpdateStatus" method="post" class="w-full">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="orderId" value="@order.OrderId" />
                                     <select name="newStatus" onchange="this.form.submit()" 
-                                            class="w-full bg-white border-2 border-gray-100 text-gray-500 text-[11px] font-black py-4 rounded-2xl uppercase tracking-widest px-4 hover:border-orange-300 focus:outline-none cursor-pointer">
-                                        <option value="" disabled selected>Змінити статус</option>
+                                            class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm font-bold py-3 rounded-xl px-4 hover:border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer transition shadow-sm">
+                                        <option value="" disabled selected>Змінити статус...</option>
                                         <option value="Processing">В обробці</option>
                                         <option value="Shipped">Відправлено</option>
                                         <option value="Delivered">Доставлено</option>
@@ -131,11 +123,4 @@
             }
         </div>
     }
-</main>
-
-<footer class="py-12 text-center text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">
-    &copy; 2026 MadeByMe. Твій простір для творчості.
-</footer>
-
-</body>
-</html>
+</div>

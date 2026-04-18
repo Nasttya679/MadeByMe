@@ -159,7 +159,7 @@ namespace MadeByMe.Web.Controllers
             }
 
             Log.Information("УСПІШНЕ ЗАМОВЛЕННЯ: Покупець {BuyerId} успішно оформив замовлення і кошик очищено", buyerId);
-            return View("CheckoutSuccess");
+            return View("Success");
         }
 
         [HttpPost]

@@ -1,58 +1,13 @@
-@{
-    var currentYear = DateTime.Now.Year;
-}
-
-<footer class="footer mt-auto py-3 bg-light">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6 text-center text-md-start">
-                <p class="mb-0">&copy; @currentYear MadeByMe. Всі права захищені.</p>
+<footer class="bg-white border-t border-gray-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-gray-400 text-sm">
+                &copy; @DateTime.Now.Year <span class="text-orange-600 font-bold">MadeByMe</span>. Усі права захищені.
             </div>
-            <div class="col-md-6 text-center text-md-end">
-                <a href="#" class="text-decoration-none text-dark me-3 hover-effect">Політика конфіденційності</a>
-                <a href="#" class="text-decoration-none text-dark hover-effect">Умови використання</a>
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-400 hover:text-orange-600 transition text-sm">Політика конфіденційності</a>
+                <a href="#" class="text-gray-400 hover:text-orange-600 transition text-sm">Умови використання</a>
             </div>
         </div>
     </div>
 </footer>
-
-<style>
-    .footer {
-        border-top: 1px solid #e9ecef;
-        background-color: #f8f9fa !important;
-    }
-    
-    .footer p {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    
-    .footer a {
-        color: #6c757d !important;
-        font-size: 0.9rem;
-        transition: color 0.3s ease;
-    }
-    
-    .footer a:hover {
-        color: #343a40 !important;
-    }
-    
-    .hover-effect {
-        position: relative;
-    }
-    
-    .hover-effect:after {
-        content: '';
-        position: absolute;
-        width: 0;
-        height: 1px;
-        bottom: -2px;
-        left: 0;
-        background-color: #343a40;
-        transition: width 0.3s ease;
-    }
-    
-    .hover-effect:hover:after {
-        width: 100%;
-    }
-</style> 

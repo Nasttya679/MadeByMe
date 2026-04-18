@@ -1,11 +1,17 @@
 ﻿@model MadeByMe.Application.DTOs.CreateCommentDto
 
-<form asp-controller="Comment" asp-action="Create" method="post">
+<form asp-controller="Comment" asp-action="Create" method="post" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
     <input type="hidden" asp-for="PostId" />
-    <div class="form-group">
-        <label>Ваш коментар</label>
-        <textarea asp-for="Content" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Content" class="text-danger"></span>
+    
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Ваш коментар</label>
+        <textarea asp-for="Content" rows="3" 
+                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 transition" 
+                  placeholder="Що ви думаєте про цей товар?"></textarea>
+        <span asp-validation-for="Content" class="text-sm text-red-600 mt-1 block"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Залишити коментар</button>
+    
+    <button type="submit" class="w-full bg-orange-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-orange-700 transition duration-150">
+        <i class="fa-solid fa-paper-plane mr-2"></i> Залишити коментар
+    </button>
 </form>
