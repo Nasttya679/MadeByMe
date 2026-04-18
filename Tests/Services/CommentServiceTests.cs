@@ -24,7 +24,7 @@ namespace MadeByMe.Tests.Services
 
             _commentService = new CommentService(_commentRepoMock.Object, _postRepoMock.Object);
         }
-        
+
         [Fact]
         public async Task GetCommentsForPostAsync_WhenCommentsExist_ShouldReturnList()
         {
