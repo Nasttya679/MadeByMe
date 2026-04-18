@@ -13,5 +13,9 @@ namespace MadeByMe.Application.Services.Interfaces
         Task<Result<Comment>> AddCommentAsync(CreateCommentDto dto, string userId);
 
         Task<Result> DeleteCommentAsync(int id);
+
+        Task<Result<int>> GetSellerReviewsCountAsync(string sellerId);
+
+        Task<Result<int>> GetUserReviewsCountAsync(string userId);
     }
 }

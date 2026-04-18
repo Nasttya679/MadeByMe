@@ -158,6 +158,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        
         // await dbContext.Database.MigrateAsync();
 
         // Виклик Seed ролей

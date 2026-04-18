@@ -15,7 +15,7 @@ namespace MadeByMe.Web.Controllers
         private readonly ICommentService _commentService;
         private readonly IPhotoService _photoService;
         private readonly ICategoryService _categoryService;
-        private readonly IBuyerCartService _buyerCartService; // Додано для очищення кошиків
+        private readonly IBuyerCartService _buyerCartService;
 
         public PostController(
             IPostService postService,
@@ -221,7 +221,9 @@ namespace MadeByMe.Web.Controllers
             var result = await _postService.GetPostByIdAsync(id);
 
             if (result.IsFailure)
+            {
                 return NotFound(result.ErrorMessage);
+            }
 
             var post = result.Value;
             var currentUserId = CurrentUserId;
@@ -230,41 +232,53 @@ namespace MadeByMe.Web.Controllers
             var isOwner = post.SellerId == currentUserId;
 
             if (!isAdmin && !isOwner)
+            {
                 return Forbid();
+            }
 
             return View(post);
         }
 
-        [Authorize(Roles = "Seller, Admin")]
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
+        [ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var result = await _postService.GetPostByIdAsync(id);
 
             if (result.IsFailure)
+            {
                 return NotFound(result.ErrorMessage);
+            }
 
             var post = result.Value;
-            var currentUserId = CurrentUserId;
 
-            var isAdmin = User.IsInRole("Admin");
-            var isOwner = post.SellerId == currentUserId;
-
-            if (!isAdmin && !isOwner)
-                return Forbid();
-
-            // 🔥 видалення фото через сервіс
-            foreach (var photo in post.Photos)
+            if (!User.IsInRole("Admin") && post.SellerId != CurrentUserId)
             {
-                await _photoService.DeletePhotoAsync(photo);
+                return Forbid();
+            }
+
+            foreach (var photo in post.Photos.ToList())
+            {
+                try
+                {
+                    await _photoService.DeletePhotoAsync(photo);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning("Помилка видалення фото: {Message}", ex.Message);
+                }
             }
 
             var deleteResult = await _postService.DeletePostAsync(id);
 
             if (deleteResult.IsFailure)
-                return NotFound(deleteResult.ErrorMessage);
+            {
+                SetErrorMessage(deleteResult.ErrorMessage);
+                return RedirectToAction(nameof(Index));
+            }
 
+            SetSuccessMessage("Виріб успішно видалено!");
             return RedirectToAction(nameof(Index));
         }
 

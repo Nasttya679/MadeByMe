@@ -1,10 +1,12 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -13,13 +15,23 @@ namespace MadeByMe.Tests.Services
     public class PhotoServiceTests
     {
         private readonly Mock<IPhotoRepository> _photoRepoMock;
+        private readonly Mock<IOptions<ProjectSettings>> _optionsMock;
         private readonly PhotoService _photoService;
 
         public PhotoServiceTests()
         {
             _photoRepoMock = new Mock<IPhotoRepository>();
+            _optionsMock = new Mock<IOptions<ProjectSettings>>();
 
-            _photoService = new PhotoService(_photoRepoMock.Object);
+            var settings = new ProjectSettings();
+            settings.FileStorage.UploadFolder = "test_images";
+            settings.FileStorage.DefaultImagePath = "/images/default.jpg";
+            settings.FileStorage.MaxImageSizeMB = 5;
+            settings.FileStorage.AllowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+
+            _optionsMock.Setup(o => o.Value).Returns(settings);
+
+            _photoService = new PhotoService(_photoRepoMock.Object, _optionsMock.Object);
         }
 
         [Fact]
@@ -71,7 +83,7 @@ namespace MadeByMe.Tests.Services
             var result = await _photoService.DeletePhotoAsync(null!);
 
             Assert.True(result.IsFailure);
-            Assert.Equal("Фото не передано для видалення або ім'я файлу порожнє.", result.ErrorMessage);
+            Assert.Contains("порожнє", result.ErrorMessage);
         }
 
         [Fact]

@@ -1,6 +1,6 @@
 ﻿using MadeByMe.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace MadeByMe.Infrastructure.Data
 {
@@ -12,8 +12,7 @@ namespace MadeByMe.Infrastructure.Data
             modelBuilder.Entity<Category>().HasData(
                 new Category { CategoryId = 1, Name = "Handmade Jewelry" },
                 new Category { CategoryId = 2, Name = "Home Decor" },
-                new Category { CategoryId = 3, Name = "Art"}
-            );
+                new Category { CategoryId = 3, Name = "Art" });
 
             // 2. Користувачі (3 приклади)
             var userId1 = "11111111-1111-1111-1111-111111111111";
@@ -51,8 +50,7 @@ namespace MadeByMe.Infrastructure.Data
                     CategoryId = 3,
                     SellerId = userId2,
                     CreatedAt = new DateTime(2023, 12, 30, 12, 0, 0)
-                }
-            );
+                });
 
             modelBuilder.Entity<Comment>().HasData(
                 new Comment
@@ -70,8 +68,7 @@ namespace MadeByMe.Infrastructure.Data
                     PostId = 3,
                     Content = "Чудова картина, автор - талановитий!",
                     CreatedAt = new DateTime(2024, 1, 9, 12, 0, 0)
-                }
-            );
+                });
 
             modelBuilder.Entity<Cart>().HasData(
                 new Cart
@@ -83,8 +80,7 @@ namespace MadeByMe.Infrastructure.Data
                 {
                     CartId = 2,
                     BuyerId = userId1
-                }
-            );
+                });
 
             modelBuilder.Entity<BuyerCart>().HasData(
                 new BuyerCart
@@ -107,8 +103,7 @@ namespace MadeByMe.Infrastructure.Data
                     CartId = 2,
                     PostId = 2,
                     Quantity = 1
-                }
-            );
+                });
 
             modelBuilder.Entity<SellerPost>().HasData(
                 new SellerPost
@@ -128,8 +123,7 @@ namespace MadeByMe.Infrastructure.Data
                     Id = 3,
                     SellerId = userId2,
                     PostId = 3
-                }
-            );
+                });
 
             // Finally, add the users
             modelBuilder.Entity<ApplicationUser>().HasData(
@@ -159,8 +153,7 @@ namespace MadeByMe.Infrastructure.Data
                     NormalizedEmail = "CUSTOMER@EXAMPLE.COM",
                     PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",  // Admin_123
                     ProfilePicture = "/images/customer.jpg"
-                }
-            );
+                });
 
             modelBuilder.Entity<IdentityRole>().HasData(
                 new IdentityRole
@@ -180,9 +173,7 @@ namespace MadeByMe.Infrastructure.Data
                     Id = "role-user",
                     Name = "User",
                     NormalizedName = "USER"
-                }
-            );
-
+                });
 
             modelBuilder.Entity<IdentityUserRole<string>>().HasData(
                 new IdentityUserRole<string>
@@ -199,8 +190,7 @@ namespace MadeByMe.Infrastructure.Data
                 {
                     UserId = userId3,   // customer
                     RoleId = "role-user"
-                }
-            );
+                });
         }
     }
 }

@@ -1,16 +1,16 @@
+using MadeByMe.Application.Common;
 using MadeByMe.Domain.Entities;
 
 namespace MadeByMe.Application.Services.Interfaces
 {
-
     public interface IAdminService
     {
-        Task<List<ApplicationUser>> GetUsersAsync();
+        Task<Result<List<ApplicationUser>>> GetUsersAsync();
 
-        Task BlockUserAsync(string userId);
+        Task<Result> BlockUserAsync(string userId);
 
-        Task UnblockUserAsync(string userId);
+        Task<Result> UnblockUserAsync(string userId);
 
-        Task DeleteUserAsync(string userId);
+        Task<Result> DeleteUserAsync(string userId);
     }
 }

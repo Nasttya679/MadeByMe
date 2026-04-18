@@ -11,5 +11,9 @@ namespace MadeByMe.Infrastructure.Repositories.Interfaces
         Task AddAsync(Comment comment);
 
         Task DeleteAsync(Comment comment);
+
+        Task<int> GetCountBySellerIdAsync(string sellerId);
+
+        Task<int> GetCountByUserIdAsync(string userId);
     }
 }

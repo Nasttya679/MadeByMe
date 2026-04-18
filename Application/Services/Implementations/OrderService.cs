@@ -25,6 +25,7 @@ namespace MadeByMe.Application.Services.Implementations
             var cartResult = await _cartService.GetUserCartEntityAsync(buyerId);
             if (cartResult.IsFailure || cartResult.Value == null || !cartResult.Value.BuyerCarts.Any())
             {
+                Log.Warning("Помилка створення замовлення: кошик покупця {BuyerId} порожній", buyerId);
                 return "Ваш кошик порожній.";
             }
 
@@ -39,7 +40,8 @@ namespace MadeByMe.Application.Services.Implementations
                 PhoneNumber = dto.PhoneNumber,
                 City = dto.City,
                 PostOffice = dto.PostOffice,
-                Status = "Paid",
+                Status = "Processing",
+                CreatedAt = DateTime.UtcNow,
                 TotalAmount = 0,
                 OrderItems = new List<OrderItem>(),
             };
@@ -64,9 +66,7 @@ namespace MadeByMe.Application.Services.Implementations
             }
 
             order.TotalAmount = total;
-
             await _orderRepo.CreateOrderAsync(order);
-
             await _cartService.ClearCartAsync(cart.CartId);
 
             Log.Information("Замовлення {OrderId} успішно створено", order.Id);
@@ -90,17 +90,50 @@ namespace MadeByMe.Application.Services.Implementations
             var order = await _orderRepo.GetOrderByIdAsync(orderId);
             if (order == null)
             {
+                Log.Warning("Замовлення {OrderId} не знайдено при спробі оновити статус", orderId);
                 return "Замовлення не знайдено.";
             }
 
             bool isSeller = order.OrderItems.Any(oi => oi.Post != null && oi.Post.SellerId == currentUserId);
             if (!isSeller)
             {
+                Log.Warning("Користувач {UserId} намагався змінити статус чужого замовлення {OrderId}", currentUserId, orderId);
                 return "У вас немає прав змінювати статус цього замовлення.";
             }
 
             await _orderRepo.UpdateOrderStatusAsync(orderId, status);
+            Log.Information("Статус замовлення {OrderId} змінено на {Status} продавцем {UserId}", orderId, status, currentUserId);
+
             return Result.Success();
+        }
+
+        public async Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId)
+        {
+            var orders = await _orderRepo.GetOrdersBySellerIdAsync(sellerId);
+
+            var sellerOrders = orders.Select(o => new SellerOrderDto
+            {
+                OrderId = o.Id,
+                BuyerName = $"{o.FirstName} {o.LastName}",
+                BuyerEmail = o.Email ?? string.Empty,
+                BuyerPhone = o.PhoneNumber ?? "Не вказано",
+                ShippingAddress = $"{o.City}, {o.PostOffice}",
+                OrderDate = o.CreatedAt,
+                Status = o.Status,
+                TotalPrice = o.OrderItems
+                    .Where(oi => oi.Post != null && oi.Post.SellerId == sellerId)
+                    .Sum(oi => oi.PriceAtPurchase * oi.Quantity),
+                Items = o.OrderItems
+                    .Where(oi => oi.Post != null && oi.Post.SellerId == sellerId)
+                    .Select(oi => new SellerOrderItemDto
+                    {
+                        ProductName = oi.Post?.Title ?? "Товар",
+                        Quantity = oi.Quantity,
+                        Price = oi.PriceAtPurchase,
+                    }).ToList(),
+            });
+
+            return sellerOrders.ToList();
         }
     }
 }

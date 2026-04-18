@@ -59,6 +59,20 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction("Success");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> History()
+        {
+            var result = await _orderService.GetBuyerHistoryAsync(CurrentUserId!);
+
+            if (result.IsFailure)
+            {
+                SetErrorMessage(result.ErrorMessage);
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View(result.Value);
+        }
+
         public IActionResult Success() => View();
     }
 }

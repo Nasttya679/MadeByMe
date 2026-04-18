@@ -30,6 +30,7 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create(CreateCommentDto dto)
         {
             if (!ModelState.IsValid)
@@ -59,7 +60,9 @@ namespace MadeByMe.Web.Controllers
             var result = await _commentService.GetCommentByIdAsync(id);
 
             if (result.IsFailure)
+            {
                 return NotFound(result.ErrorMessage);
+            }
 
             var comment = result.Value;
             var currentUserId = CurrentUserId;
@@ -69,7 +72,9 @@ namespace MadeByMe.Web.Controllers
                 var deleteResult = await _commentService.DeleteCommentAsync(id);
 
                 if (deleteResult.IsFailure)
+                {
                     return NotFound(deleteResult.ErrorMessage);
+                }
 
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }

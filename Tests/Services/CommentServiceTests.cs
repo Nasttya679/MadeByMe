@@ -24,7 +24,7 @@ namespace MadeByMe.Tests.Services
 
             _commentService = new CommentService(_commentRepoMock.Object, _postRepoMock.Object);
         }
-
+        
         [Fact]
         public async Task GetCommentsForPostAsync_WhenCommentsExist_ShouldReturnList()
         {
@@ -185,6 +185,57 @@ namespace MadeByMe.Tests.Services
 
             Assert.Equal(4.5m, post.Rating);
             _postRepoMock.Verify(repo => repo.UpdateAsync(post), Times.Once);
+        }
+
+
+        [Fact]
+        public async Task GetSellerReviewsCountAsync_ShouldReturnCorrectCount()
+        {
+            string sellerId = "seller-1";
+            _commentRepoMock.Setup(repo => repo.GetCountBySellerIdAsync(sellerId)).ReturnsAsync(15);
+
+            var result = await _commentService.GetSellerReviewsCountAsync(sellerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(15, result.Value);
+            _commentRepoMock.Verify(repo => repo.GetCountBySellerIdAsync(sellerId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetSellerReviewsCountAsync_WhenNoReviews_ShouldReturnZero()
+        {
+            string sellerId = "seller-1";
+            _commentRepoMock.Setup(repo => repo.GetCountBySellerIdAsync(sellerId)).ReturnsAsync(0);
+
+            var result = await _commentService.GetSellerReviewsCountAsync(sellerId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(0, result.Value);
+        }
+
+        [Fact]
+        public async Task GetUserReviewsCountAsync_ShouldReturnCorrectCount()
+        {
+            string userId = "user-1";
+            _commentRepoMock.Setup(repo => repo.GetCountByUserIdAsync(userId)).ReturnsAsync(5);
+
+            var result = await _commentService.GetUserReviewsCountAsync(userId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(5, result.Value);
+            _commentRepoMock.Verify(repo => repo.GetCountByUserIdAsync(userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetUserReviewsCountAsync_WhenNoReviews_ShouldReturnZero()
+        {
+            string userId = "user-1";
+            _commentRepoMock.Setup(repo => repo.GetCountByUserIdAsync(userId)).ReturnsAsync(0);
+
+            var result = await _commentService.GetUserReviewsCountAsync(userId);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(0, result.Value);
         }
     }
 }
