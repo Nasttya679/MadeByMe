@@ -9,12 +9,12 @@ variable "aws_region" {
 variable "task_sizes" {
   description = "ECS task CPU and RAM configurations"
 
-  type = map(object({
+  type        = map(object({
     cpu    = number
     memory = number
   }))
 
-  default = {
+  default     = {
       small = {
         cpu    = 512
         memory = 1024
