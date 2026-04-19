@@ -40,7 +40,7 @@ services:
 
     env_file: .env
     environment:
-      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+      - DEFAULT_CONNECTION=${DEFAULT_CONNECTION}
 
 volumes:
   postgres_data:
