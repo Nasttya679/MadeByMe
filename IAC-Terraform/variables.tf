@@ -57,7 +57,7 @@ variable "alb_listener_https_port" {
 variable "app_container_image" {
   description = "App service container image with tag version"
   type        = string
-  default     = "971778147356.dkr.ecr.us-east-1.amazonaws.com/made-by-me-app:2.0"
+  default     = "971778147356.dkr.ecr.us-east-1.amazonaws.com/made-by-me-app:3.0"
 }
 
 

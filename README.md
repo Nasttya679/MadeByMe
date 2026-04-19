@@ -106,6 +106,7 @@ MadeByMe/
 
 ------------------------------------------------------
 
+
 # Setup & Run
 
 ### Clone repository
@@ -117,36 +118,72 @@ cd MadeByMe
 
 ## 1. Local run
 
-Run from the root directory:
+Run from the root directory to restore dependencies and compile the solution:
 
 ``` bash
 dotnet restore
 dotnet build
 ```
 
-1. Before running the application, make sure that a PostgreSQL database is running locally on your PC
+1. Before running the application, make sure that a PostgreSQL database is running locally on PC
 
-  - The database must be created using the same credentials as defined in `Web/appsettings.json`:
 
-  ```bash
-  Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres12345
-  ```
+2. In directory `Web/` open the `appsettings.json` file and locate the following section:
 
-  - Alternatively, you can update the connection string in `Web/appsettings.json` to match the credentials of your existing local PostgreSQL setup
+    ```bash
+    "ConnectionStrings": {
+      "DefaultConnection": ""
+    }
+    ```
 
-2. Create migrations if not exist in folder - `Infrastrucure/Migrations/`:
+    Insert PostgreSQL database credentials into the `DefaultConnection`
+    value, for example:
 
-```bash
-dotnet ef migrations add Init --project Infrastructure --startup-project Web
-```
+    ```bash
+    "ConnectionStrings": {
+      "DefaultConnection": "Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres12345"
+    }
+    ```
 
-and run: 
 
-```bash
-dotnet ef database update --project Infrastructure --startup-project Web
-```
+<!-- 2. The project uses .NET User Secrets to store sensitive data like database credentials outside of the source code:
 
-3. Run Application:
+    - From the root directory, navigate to the Web project and initialize secret:
+
+      ```bash
+      cd Web
+      dotnet user-secrets init
+      ```
+
+    - then set your connection string, an example:
+
+      ```bash
+      dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres123456"
+      ```
+
+    - Run to verify your configuration:
+    
+      ```bash
+      dotnet user-secrets list
+      ```
+
+    - It should display your connection string in the output. This data is stored locally in your user profile and will not be committed to Git repository -->
+
+3. From root directory:
+
+  - Create migrations if not exist in folder - `Infrastrucure/Migrations/`:
+
+    ```bash
+    dotnet ef migrations add Init --project Infrastructure --startup-project Web
+    ```
+
+  - and run: 
+
+    ```bash
+    dotnet ef database update --project Infrastructure --startup-project Web
+    ```
+
+4. Run Application:
 ```bash
 cd Web
 dotnet run

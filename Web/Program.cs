@@ -1,4 +1,3 @@
-using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
@@ -14,15 +13,8 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<ProjectSettings>(
-    builder.Configuration.GetSection("ProjectSettings"));
-
-builder.Configuration.AddUserSecrets<Program>();
-
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
-// ---------------------------
-// 1. Підключення до БД
 // ---------------------------
 string? connectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -32,8 +24,6 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Connection string not found");
 }
 
-// ---------------------------
-// 2. DbContext з ретраями
 // ---------------------------
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -50,16 +40,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // ---------------------------
-// 3. Controllers + Views
-// ---------------------------
 builder.Services.AddControllersWithViews();
 
 // ---------------------------
-// 4. Сервіси та Identity
-// ---------------------------
 builder.Services.AddHttpContextAccessor();
 
-// AddScoped для всіх сервісів і репозиторіїв
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IApplicationUserService, ApplicationUserService>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
@@ -97,14 +82,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // ---------------------------
-// 5. Static files
-// ---------------------------
 builder.Services.AddDirectoryBrowser();
 
 var app = builder.Build();
 
-// ---------------------------
-// 8. Middleware
 // ---------------------------
 app.UseMiddleware<MadeByMe.Web.Middlewares.ExceptionHandlingMiddleware>();
 
@@ -114,7 +95,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Перевірка та створення папок для зображень
 var wwwrootPath = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
 if (!Directory.Exists(wwwrootPath))
 {
@@ -140,8 +120,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ---------------------------
-// 6. Seed ролей (Логіка методу)
-// ---------------------------
 async Task SeedRoles(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -156,18 +134,14 @@ async Task SeedRoles(IServiceProvider serviceProvider)
 }
 
 // ---------------------------
-// 7. Міграції та Seed ролей (Об'єднано в один scope)
-// ---------------------------
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
 
-        // await dbContext.Database.MigrateAsync();
-
-        // Виклик Seed ролей
         await SeedRoles(services);
     }
     catch (Exception ex)
@@ -178,14 +152,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ---------------------------
-// Маршрутизація
-// ---------------------------
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// ---------------------------
-// 9. Запуск на HTTP
+// Run HTTP
 // ---------------------------
 // string urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5000";
 // app.Urls.Clear();
