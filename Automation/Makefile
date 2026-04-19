@@ -14,7 +14,7 @@ show-plan:
 	cd ../IAC-Terraform && terraform init && terraform plan
 
 local-deploy:
-	bash cloud/deploy/main.sh
+	bash local/deploy/main.sh
 
 local-destroy:
 	bash local/destroy/main.sh
