@@ -128,7 +128,7 @@ dotnet build
 1. Before running the application, make sure that a PostgreSQL database is running locally on PC
 
 
-2. In directory `Web/` open the `appsettings.json` file and locate the following section:
+<!-- 2. In directory `Web/` open the `appsettings.json` file and locate the following section:
 
     ```bash
     "ConnectionStrings": {
@@ -143,33 +143,33 @@ dotnet build
     "ConnectionStrings": {
       "DefaultConnection": "Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres12345"
     }
-    ```
+    ``` -->
 
 
-<!-- 2. The project uses .NET User Secrets to store sensitive data like database credentials outside of the source code:
+2. The project uses .NET User Secrets to store sensitive data like database credentials outside of the source code:
 
-    - From the root directory, navigate to the Web project and initialize secret:
+    - From the root directory, navigate to the `Web` directory and initialize secret:
 
       ```bash
       cd Web
       dotnet user-secrets init
       ```
 
-    - then set your connection string, an example:
+    - then set connection string, for example:
 
       ```bash
-      dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres123456"
+      dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=MadeByMeExam;Username=postgres;Password=postgres1234"
       ```
 
-    - Run to verify your configuration:
+    - Run to verify configuration:
     
       ```bash
       dotnet user-secrets list
       ```
 
-    - It should display your connection string in the output. This data is stored locally in your user profile and will not be committed to Git repository -->
+    - It should display your connection string in the output. This data is stored locally in your user profile and will not be committed to Git repository
 
-3. From root directory:
+<!-- 3. From root directory:
 
   - Create migrations if not exist in folder - `Infrastrucure/Migrations/`:
 
@@ -181,18 +181,19 @@ dotnet build
 
     ```bash
     dotnet ef database update --project Infrastructure --startup-project Web
-    ```
+    ``` -->
 
-4. Run Application:
-```bash
-cd Web
-dotnet run
-```
+3. Run Application:
+  ```bash
+  cd Web
+  dotnet run
+  ```
 
-In this case application listening on: 
-```bash
-http://localhost:5213
-```
+  In this case application listening on: 
+
+  ```bash
+  http://localhost:5213
+  ```
 but check the logs in console to be confident
 
 
