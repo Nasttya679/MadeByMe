@@ -107,7 +107,6 @@ namespace MadeByMe.Tests.Services
             _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(1, "Delivered"), Times.Once);
         }
 
-
         [Fact]
         public async Task GetBuyerHistoryAsync_WhenOrdersExist_ShouldReturnOrderList()
         {
@@ -172,9 +171,9 @@ namespace MadeByMe.Tests.Services
                     OrderItems = new List<OrderItem>
                     {
                         new OrderItem { Quantity = 2, PriceAtPurchase = 50, Post = new Post { SellerId = sellerId, Title = "Item 1" } },
-                        new OrderItem { Quantity = 1, PriceAtPurchase = 100, Post = new Post { SellerId = "other-seller" } }
-                    }
-                }
+                        new OrderItem { Quantity = 1, PriceAtPurchase = 100, Post = new Post { SellerId = "other-seller" } },
+                    },
+                },
             };
 
             _orderRepoMock.Setup(r => r.GetOrdersBySellerIdAsync(sellerId)).ReturnsAsync(orders);

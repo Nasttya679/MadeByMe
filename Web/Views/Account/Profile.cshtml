@@ -125,12 +125,9 @@
                         @if (!isSeller && !isAdmin)
                         {
                             <div class="pt-6 border-t border-gray-100 mt-6">
-                                <form action="/Account/BecomeSeller" method="post" class="max-w-xs">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="w-full bg-white text-orange-600 border border-orange-200 px-4 py-3 rounded-xl hover:bg-orange-50 transition font-bold flex items-center justify-center shadow-sm">
-                                        <i class="fa-solid fa-store mr-2"></i> Хочу продавати вироби
-                                    </button>
-                                </form>
+                                <button type="submit" formaction="/Account/BecomeSeller" class="w-full bg-white text-orange-600 border border-orange-200 px-4 py-3 rounded-xl hover:bg-orange-50 transition font-bold flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-store mr-2"></i> Хочу продавати вироби
+                                </button>
                             </div>
                         }
                     </div>

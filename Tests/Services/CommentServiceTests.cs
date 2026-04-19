@@ -187,7 +187,6 @@ namespace MadeByMe.Tests.Services
             _postRepoMock.Verify(repo => repo.UpdateAsync(post), Times.Once);
         }
 
-
         [Fact]
         public async Task GetSellerReviewsCountAsync_ShouldReturnCorrectCount()
         {

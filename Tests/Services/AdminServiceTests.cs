@@ -59,7 +59,6 @@ namespace MadeByMe.Tests.Services
             _userRepoMock.Verify(r => r.GetAllExceptAdminsAsync(), Times.Once);
         }
 
-
         [Fact]
         public async Task BlockUserAsync_UserExists_ShouldSetIsBlockedTrue_AndReturnSuccess()
         {
@@ -88,7 +87,6 @@ namespace MadeByMe.Tests.Services
             _userRepoMock.Verify(r => r.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
-
         [Fact]
         public async Task UnblockUserAsync_UserExists_ShouldSetIsBlockedFalse_AndReturnSuccess()
         {
@@ -116,7 +114,6 @@ namespace MadeByMe.Tests.Services
             Assert.Equal("Користувача не знайдено.", result.ErrorMessage);
             _userRepoMock.Verify(r => r.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
         }
-
 
         [Fact]
         public async Task DeleteUserAsync_UserExists_ShouldCallDelete_AndReturnSuccess()

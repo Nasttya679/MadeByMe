@@ -59,7 +59,7 @@ namespace MadeByMe.Tests.Services
             {
                 CartId = 1,
                 BuyerId = buyerId,
-                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 99, Quantity = 1 } }
+                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 99, Quantity = 1 }, },
             };
 
             _cartRepoMock.Setup(repo => repo.GetCartByBuyerIdAsync(buyerId)).ReturnsAsync(cart);
@@ -79,7 +79,7 @@ namespace MadeByMe.Tests.Services
             {
                 CartId = 1,
                 BuyerId = buyerId,
-                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 1, Quantity = 2 } }
+                BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 1, Quantity = 2 }, },
             };
             var post = new Post { Id = 1, Title = "Handmade Item", Price = 150, Photos = new List<Photo>() };
 
@@ -91,7 +91,7 @@ namespace MadeByMe.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Single(result.Value.Items);
             Assert.Equal(300, result.Value.TotalPrice); // 150 * 2
-            Assert.Equal("/images/default.jpg", result.Value.Items.First().Product.ImageUrl);
+            Assert.Equal("/images/default.jpg", result.Value.Items.First().Product!.ImageUrl);
         }
 
         [Fact]
