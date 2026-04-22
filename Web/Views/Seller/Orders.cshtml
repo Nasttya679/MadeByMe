@@ -2,7 +2,17 @@
 
 @{
     ViewData["Title"] = "Журнал замовлень";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+    var search = ViewBag.Search as string;
+    var date = ViewBag.Date as string;
 }
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day.selected { background: #ea580c !important; border-color: #ea580c !important; }
+    .flatpickr-months .flatpickr-month { background: #ea580c !important; color: white !important; fill: white !important; }
+    .flatpickr-calendar { border-radius: 1rem !important; border: none !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+</style>
 
 <div class="max-w-6xl mx-auto py-10">
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -10,9 +20,46 @@
             <h1 class="text-3xl font-extrabold text-gray-900">Журнал замовлень</h1>
             <p class="text-gray-500 mt-2 font-medium">Керуйте продажами та статусами замовлень клієнтів</p>
         </div>
-        <div class="bg-orange-100 text-orange-700 px-4 py-1.5 rounded-full text-sm font-bold border border-orange-200 shadow-sm">
-            Панель продавця
+
+        <div class="flex items-center">
+            <div class="flex bg-gray-100 p-1.5 rounded-xl shadow-inner overflow-x-auto max-w-full">
+                @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлені"), ("Delivered", "Доставлені"), ("Cancelled", "Скасовані") })
+                {
+                    <a href="?status=@s.Item1&search=@search&date=@date" class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
+                        @s.Item2
+                    </a>
+                }
+            </div>
         </div>
+    </div>
+
+    <div class="mb-10">
+        <form method="get" class="flex flex-wrap gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <input type="hidden" name="status" value="@currentStatus" />
+
+            <div class="relative flex-1 md:min-w-[300px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@search" placeholder="Пошук за товаром..."
+                       class="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition" />
+            </div>
+
+            <div class="relative">
+                <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none"></i>
+                <input type="text" id="sellerDatePicker" name="date" value="@date" placeholder="Оберіть дату..."
+                       class="pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition text-gray-600 bg-white cursor-pointer" />
+            </div>
+
+            <button type="submit" class="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition">
+                Знайти
+            </button>
+
+            @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(date))
+            {
+                <a href="/Seller/Orders?status=@currentStatus" class="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition flex items-center">
+                    Очистити пошук
+                </a>
+            }
+        </form>
     </div>
 
     @if (Model == null || !Model.Any())
@@ -21,8 +68,11 @@
             <div class="w-20 h-20 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
                 <i class="fa-solid fa-clipboard-list"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Замовлень поки немає</h2>
-            <p class="text-gray-500 mt-2 font-medium">Ваші майбутні продажі з'являться саме тут!</p>
+            <h2 class="text-2xl font-bold text-gray-800">Замовлень не знайдено</h2>
+            <p class="text-gray-500 mt-2 mb-6 font-medium">Спробуйте змінити умови пошуку або статус.</p>
+            <a href="/Seller/Orders" class="inline-block bg-orange-600 text-white font-bold px-8 py-4 rounded-xl hover:bg-orange-700 transition shadow-lg">
+                Скинути все
+            </a>
         </div>
     }
     else
@@ -31,19 +81,19 @@
             @foreach (var order in Model)
             {
                 <div class="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                    
+
                     <div class="bg-gray-50 px-8 py-5 flex flex-wrap justify-between items-center border-b border-gray-100 gap-4">
                         <div class="flex items-center gap-6">
                             <span class="text-sm font-bold text-gray-700 flex items-center">
                                 <i class="fa-regular fa-calendar text-orange-500 mr-2"></i> @order.OrderDate.ToString("dd.MM.yyyy HH:mm")
                             </span>
                         </div>
-                        
+
                         @{
                             var statusColor = order.Status switch {
                                 "Processing" => "bg-blue-50 text-blue-700 border-blue-200",
                                 "Shipped" => "bg-purple-50 text-purple-700 border-purple-200",
-                                "Delivered" => "bg-green-50 text-green-700 border-green-200",
+                                "Delivered" => "bg-green-100 text-green-700 border-green-200",
                                 "Cancelled" => "bg-red-50 text-red-700 border-red-200",
                                 _ => "bg-gray-50 text-gray-700 border-gray-200"
                             };
@@ -61,7 +111,7 @@
                     </div>
 
                     <div class="p-8 grid md:grid-cols-12 gap-8">
-                        
+
                         <div class="md:col-span-5">
                             <h4 class="text-base font-bold text-gray-800 border-b border-gray-100 pb-2 mb-4 flex items-center">
                                 <i class="fa-solid fa-box-open text-orange-500 mr-2"></i> Деталі товарів
@@ -87,7 +137,7 @@
                                     <i class="fa-solid fa-phone text-orange-400 mr-2 w-4"></i> @order.BuyerPhone
                                 </p>
                                 <p class="text-sm text-gray-600 mt-2 flex items-start">
-                                    <i class="fa-solid fa-location-dot text-orange-400 mr-2 w-4 mt-1"></i> 
+                                    <i class="fa-solid fa-location-dot text-orange-400 mr-2 w-4 mt-1"></i>
                                     <span>@order.ShippingAddress</span>
                                 </p>
                             </div>
@@ -98,16 +148,16 @@
                                 <p class="text-sm font-bold text-gray-500 mb-1">Сума замовлення</p>
                                 <p class="text-3xl font-black text-orange-600">@order.TotalPrice.ToString("N2") ₴</p>
                             </div>
-                            
+
                             <div class="space-y-3">
                                 <a href="tel:@order.BuyerPhone" class="flex items-center justify-center w-full bg-white border-2 border-orange-200 text-orange-600 text-sm font-bold py-3 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition shadow-sm">
                                     <i class="fa-solid fa-phone mr-2"></i> Зателефонувати
                                 </a>
-                                
+
                                 <form asp-controller="Seller" asp-action="UpdateStatus" method="post" class="w-full">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="orderId" value="@order.OrderId" />
-                                    <select name="newStatus" onchange="this.form.submit()" 
+                                    <select name="newStatus" onchange="this.form.submit()"
                                             class="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm font-bold py-3 rounded-xl px-4 hover:border-gray-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer transition shadow-sm">
                                         <option value="" disabled selected>Змінити статус...</option>
                                         <option value="Processing">В обробці</option>
@@ -118,9 +168,39 @@
                                 </form>
                             </div>
                         </div>
+
+                        @if (order.Status == "Cancelled")
+                        {
+                            <div class="md:col-span-12 mt-2 pt-6 border-t border-gray-100">
+                                <div class="bg-red-50 rounded-2xl p-5 border border-red-100 flex items-start gap-4 shadow-sm">
+                                    <div class="w-10 h-10 bg-red-100 text-red-500 rounded-full flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-bold text-red-800 uppercase tracking-widest mb-1">Причина скасування покупцем</p>
+                                        <p class="text-sm font-medium text-red-700 italic">
+                                            "@(string.IsNullOrEmpty(order.CancellationReason) ? "Покупець не вказав причину скасування." : order.CancellationReason)"
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
                     </div>
                 </div>
             }
         </div>
     }
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+<script>
+    flatpickr("#sellerDatePicker", {
+        locale: "uk",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d.m.Y",
+        disableMobile: "true"
+    });
+</script>

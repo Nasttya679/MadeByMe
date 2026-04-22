@@ -1,8 +1,10 @@
 using MadeByMe.Application.Common;
+using MadeByMe.Application.Services;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Data;
+using MadeByMe.Infrastructure.Repositories;
 using MadeByMe.Infrastructure.Repositories.Implementations;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -53,6 +55,8 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IBuyerCartRepository, BuyerCartRepository>();
@@ -80,6 +84,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 var app = builder.Build();
 
 app.UseMiddleware<MadeByMe.Web.Middlewares.ExceptionHandlingMiddleware>();
+app.UseMiddleware<MadeByMe.Web.Middlewares.ExecutionTimeMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -99,6 +104,8 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<MadeByMe.Web.Middlewares.RequestLoggingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {

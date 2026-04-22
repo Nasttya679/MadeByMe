@@ -3,6 +3,7 @@ using System;
 using MadeByMe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MadeByMe.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422095351_AddSoftDelete")]
+    partial class AddSoftDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,7 +104,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f525fdc8-77b0-4dc1-98a0-e86cd1e1d114",
+                            ConcurrencyStamp = "1083953d-30ba-45b9-bf60-a9f727c06db9",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -110,7 +113,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "72389312-8ccb-4c1a-9dce-e271d51122c5",
+                            SecurityStamp = "68e7cb31-1d3c-409b-85e1-d2e586d1e635",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -118,7 +121,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0c81f914-1379-42cc-a067-ac2d368bc1c1",
+                            ConcurrencyStamp = "2454d5d8-3c38-4b51-9d6e-a7b3c88e4531",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -127,7 +130,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "a9ec0e2b-b8bf-4760-a8fb-23ffb235073a",
+                            SecurityStamp = "2703c3d7-05cf-47e5-9647-c256bc33430e",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -135,7 +138,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "db964f37-0deb-4346-8350-ecf73ea4c869",
+                            ConcurrencyStamp = "3d988e32-47ff-45e8-b0eb-b10e7e077613",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -144,7 +147,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "f0f7c1c8-80f7-4c3f-946e-c8cc42628910",
+                            SecurityStamp = "69ffca53-8405-43e6-8a51-9d000c91b54e",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -459,9 +462,6 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<string>("DeletedByUserId")
-                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");

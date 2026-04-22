@@ -43,6 +43,9 @@ namespace MadeByMe.Domain.Entities
         [MaxLength(50)]
         public string Status { get; set; } = "Pending"; // Статуси: Pending, Paid, Shipped, Delivered, Cancelled
 
+        [MaxLength(500)]
+        public string? CancellationReason { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

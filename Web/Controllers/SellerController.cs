@@ -15,17 +15,21 @@ namespace MadeByMe.Web.Controllers
             _orderService = orderService;
         }
 
-        public async Task<IActionResult> Orders()
+        public async Task<IActionResult> Orders(string status = "All", string? search = null, DateTime? date = null)
         {
-            Log.Information("Продавець {SellerId} переглядає журнал своїх замовлень", CurrentUserId);
-            var result = await _orderService.GetSellerOrdersAsync(CurrentUserId!);
+            Log.Information("Продавець {SellerId} переглядає журнал замовлень: статус={Status}, пошук={Search}, дата={Date}", CurrentUserId, status, search, date);
+
+            var result = await _orderService.GetSellerOrdersAsync(CurrentUserId!, status, search, date);
 
             if (result.IsFailure)
             {
-                Log.Warning("Не вдалося завантажити журнал замовлень для продавця {SellerId}. Причина: {Error}", CurrentUserId, result.ErrorMessage);
                 SetErrorMessage("Не вдалося завантажити журнал замовлень.");
                 return RedirectToAction("Profile", "Account");
             }
+
+            ViewBag.CurrentStatus = status;
+            ViewBag.Search = search;
+            ViewBag.Date = date?.ToString("yyyy-MM-dd");
 
             return View(result.Value);
         }

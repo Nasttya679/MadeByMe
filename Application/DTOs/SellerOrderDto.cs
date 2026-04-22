@@ -21,6 +21,8 @@ namespace MadeByMe.Application.DTOs
         [Required(ErrorMessage = "Адреса доставки є обов'язковою")]
         public string ShippingAddress { get; set; } = string.Empty;
 
+        public string? CancellationReason { get; set; }
+
         [Required]
         public decimal TotalPrice { get; set; }
 

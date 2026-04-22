@@ -1,13 +1,65 @@
 @model List<MadeByMe.Domain.Entities.Order>
-
 @{
     ViewData["Title"] = "Історія покупок";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+    var search = ViewBag.Search as string;
+    var date = ViewBag.Date as string;
 }
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-day.selected { background: #ea580c !important; border-color: #ea580c !important; }
+    .flatpickr-months .flatpickr-month { background: #ea580c !important; color: white !important; fill: white !important; }
+    .flatpickr-current-month .flatpickr-monthDropdown-months { background: #ea580c !important; }
+    .flatpickr-calendar { border-radius: 1rem !important; border: none !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+</style>
+
 <div class="max-w-5xl mx-auto py-12">
-    <div class="mb-10 text-center md:text-left">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Історія покупок</h1>
-        <p class="text-gray-500 font-medium">Стежте за статусом та деталями ваших замовлень</p>
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-6">
+        <div class="text-center md:text-left">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Історія покупок</h1>
+            <p class="text-gray-500 font-medium">Стежте за статусом ваших замовлень</p>
+        </div>
+
+        <div class="flex bg-gray-100 p-1.5 rounded-xl shadow-inner overflow-x-auto max-w-full">
+            @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлено"), ("Delivered", "Доставлено"), ("Cancelled", "Скасовано") })
+            {
+                <a href="?status=@s.Item1&search=@search&date=@date"
+                   class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
+                    @s.Item2
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="mb-10">
+        <form method="get" class="flex flex-wrap gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <input type="hidden" name="status" value="@currentStatus" />
+
+            <div class="relative flex-1 md:min-w-[300px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@search" placeholder="Пошук за назвою товару..."
+                       class="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition" />
+            </div>
+
+            <div class="relative flex-1 md:flex-none">
+                <i class="fa-regular fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                <input type="text" id="datePicker" name="date" value="@date" placeholder="Оберіть дату..."
+                       class="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition text-gray-600 bg-white cursor-pointer" />
+            </div>
+
+            <button type="submit" class="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition flex items-center">
+                Знайти
+            </button>
+
+            @* Кнопка очищення тільки для пошуку/дати *@
+            @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(date))
+            {
+                <a href="/Order/History?status=@currentStatus" class="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition flex items-center">
+                    Очистити пошук
+                </a>
+            }
+        </form>
     </div>
 
     @if (Model == null || !Model.Any())
@@ -16,10 +68,10 @@
             <div class="w-20 h-20 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
                 <i class="fa-solid fa-box-open"></i>
             </div>
-            <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Ви ще нічого не замовили</h2>
-            <p class="text-gray-500 mb-6">У нас є багато цікавого ручної роботи!</p>
-            <a href="/Post" class="inline-block bg-orange-600 text-white font-bold px-8 py-4 rounded-xl hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5">
-                Перейти до каталогу
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Нічого не знайдено</h2>
+            <p class="text-gray-500 mb-6">За вашим запитом результатів немає.</p>
+            <a href="/Order/History" class="inline-block bg-orange-600 text-white font-bold px-8 py-4 rounded-xl hover:bg-orange-700 transition shadow-lg">
+                Скинути все
             </a>
         </div>
     }
@@ -33,9 +85,9 @@
                         <span class="text-sm font-bold text-gray-700 flex items-center">
                             <i class="fa-regular fa-calendar text-orange-500 mr-2"></i> @order.CreatedAt.ToString("dd.MM.yyyy HH:mm")
                         </span>
+                        <span class="text-xs font-bold text-gray-400">ID: #@order.Id</span>
                     </div>
 
-                    @* ЛОГІКА СТАТУСІВ *@
                     @{
                         var statusColor = order.Status switch {
                             "Processing" => "bg-blue-100 text-blue-700",
@@ -60,47 +112,65 @@
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-sm">
                         <thead>
-                            <tr class="bg-white text-gray-400 uppercase tracking-wider border-b border-gray-50">
-                                <th class="px-8 py-4 text-left font-bold">Товар</th>
-                                <th class="px-8 py-4 text-center font-bold">Кількість</th>
-                                <th class="px-8 py-4 text-center font-bold">Ціна</th>
-                                <th class="px-8 py-4 text-right font-bold">Дія</th>
-                            </tr>
+                        <tr class="bg-white text-gray-400 uppercase tracking-wider border-b border-gray-50">
+                            <th class="px-8 py-4 text-left font-bold">Товар</th>
+                            <th class="px-8 py-4 text-center font-bold">Кількість</th>
+                            <th class="px-8 py-4 text-center font-bold">Ціна</th>
+                            <th class="px-8 py-4 text-right font-bold">Дія</th>
+                        </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
-                            @foreach (var item in order.OrderItems)
-                            {
-                                <tr class="hover:bg-orange-50 transition-colors">
-                                    <td class="px-8 py-5">
-                                        <p class="font-bold text-gray-900">@(item.Post?.Title ?? "Товар видалено")</p>
-                                    </td>
-                                    <td class="px-8 py-5 text-center">
-                                        <span class="font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">@item.Quantity шт.</span>
-                                    </td>
-                                    <td class="px-8 py-5 text-center font-black text-gray-900">
-                                        @item.PriceAtPurchase.ToString("N2") ₴
-                                    </td>
-                                    <td class="px-8 py-5 text-right">
-                                        <a href="/Post/Details/@item.PostId" class="inline-block bg-white border border-gray-200 text-xs font-bold px-4 py-2 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-600 transition shadow-sm">
-                                            Огляд
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr class="hover:bg-orange-50 transition-colors">
+                                <td class="px-8 py-5">
+                                    <p class="font-bold text-gray-900">@(item.Post?.Title ?? "Товар видалено")</p>
+                                </td>
+                                <td class="px-8 py-5 text-center">
+                                    <span class="font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">@item.Quantity шт.</span>
+                                </td>
+                                <td class="px-8 py-5 text-center font-black text-gray-900">@item.PriceAtPurchase.ToString("N2") ₴</td>
+                                <td class="px-8 py-5 text-right">
+                                    <a href="/Post/Details/@item.PostId" class="inline-block bg-white border border-gray-200 text-xs font-bold px-4 py-2 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-600 transition shadow-sm">
+                                        Огляд
+                                    </a>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 </div>
 
-                <div class="bg-orange-50 px-8 py-6 flex justify-between items-center border-t border-orange-100">
-                    <div>
-                        <p class="text-xs font-bold text-orange-800 uppercase tracking-wider">Разом до сплати</p>
+                <div class="bg-orange-50 px-8 py-6 flex flex-col sm:flex-row justify-between items-center border-t border-orange-100 gap-4">
+                    <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+                        <div><p class="text-xs font-bold text-orange-800 uppercase tracking-wider">Разом до сплати</p></div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-3xl font-black text-orange-600">@order.TotalAmount.ToString("N2")</span>
+                            <span class="text-lg font-black text-orange-600">₴</span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline gap-1">
-                        <span class="text-3xl font-black text-orange-600">@order.TotalAmount.ToString("N2")</span>
-                        <span class="text-lg font-black text-orange-600">₴</span>
-                    </div>
+                    
+                    @if (order.Status == "Processing")
+                    {
+                        <a href="/Order/Cancel/@order.Id" class="px-6 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 transition text-sm flex items-center justify-center shadow-sm w-full sm:w-auto">
+                            <i class="fa-solid fa-xmark mr-2"></i> Скасувати
+                        </a>
+                    }
                 </div>
             </div>
         }
     }
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
+
+<script>
+    flatpickr("#datePicker", {
+        locale: "uk",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d.m.Y",
+        disableMobile: "true",
+    });
+</script>

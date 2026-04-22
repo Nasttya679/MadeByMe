@@ -73,10 +73,28 @@ namespace MadeByMe.Application.Services.Implementations
             return order;
         }
 
-        public async Task<Result<List<Order>>> GetBuyerHistoryAsync(string buyerId)
+        public async Task<Result<List<Order>>> GetBuyerHistoryAsync(string buyerId, string? status = "All", string? search = null, DateTime? date = null)
         {
             var orders = await _orderRepo.GetOrdersByBuyerIdAsync(buyerId);
-            return orders;
+
+            if (!string.IsNullOrEmpty(status) && status != "All")
+            {
+                orders = orders.Where(o => o.Status.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                orders = orders.Where(o => o.OrderItems.Any(oi =>
+                    oi.Post != null && oi.Post.Title!.ToLower().Contains(search))).ToList();
+            }
+
+            if (date.HasValue)
+            {
+                orders = orders.Where(o => o.CreatedAt.Date == date.Value.Date).ToList();
+            }
+
+            return orders.OrderByDescending(o => o.CreatedAt).ToList();
         }
 
         public async Task<Result<List<Order>>> GetSellerJournalAsync(string sellerId)
@@ -107,9 +125,26 @@ namespace MadeByMe.Application.Services.Implementations
             return Result.Success();
         }
 
-        public async Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId)
+        public async Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId, string? status = "All", string? search = null, DateTime? date = null)
         {
             var orders = await _orderRepo.GetOrdersBySellerIdAsync(sellerId);
+
+            if (!string.IsNullOrEmpty(status) && status != "All")
+            {
+                orders = orders.Where(o => o.Status.Equals(status, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                orders = orders.Where(o => o.OrderItems.Any(oi =>
+                    oi.Post != null && oi.Post.SellerId == sellerId && oi.Post.Title!.ToLower().Contains(search))).ToList();
+            }
+
+            if (date.HasValue)
+            {
+                orders = orders.Where(o => o.CreatedAt.Date == date.Value.Date).ToList();
+            }
 
             var sellerOrders = orders.Select(o => new SellerOrderDto
             {
@@ -120,6 +155,7 @@ namespace MadeByMe.Application.Services.Implementations
                 ShippingAddress = $"{o.City}, {o.PostOffice}",
                 OrderDate = o.CreatedAt,
                 Status = o.Status,
+                CancellationReason = o.CancellationReason,
                 TotalPrice = o.OrderItems
                     .Where(oi => oi.Post != null && oi.Post.SellerId == sellerId)
                     .Sum(oi => oi.PriceAtPurchase * oi.Quantity),
@@ -134,6 +170,42 @@ namespace MadeByMe.Application.Services.Implementations
             });
 
             return sellerOrders.ToList();
+        }
+
+        public async Task<Result<Order>> GetOrderByIdAndBuyerAsync(int orderId, string buyerId)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+            if (order == null || order.BuyerId != buyerId)
+            {
+                return "Замовлення не знайдено або у вас немає доступу.";
+            }
+
+            return order;
+        }
+
+        public async Task<Result> CancelOrderAsync(int orderId, string buyerId, string? reason)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+            if (order == null || order.BuyerId != buyerId)
+            {
+                return "Замовлення не знайдено.";
+            }
+
+            if (order.Status != "Processing")
+            {
+                return "Скасувати можна лише замовлення, які ще знаходяться в обробці.";
+            }
+
+            order.Status = "Cancelled";
+            order.CancellationReason = reason;
+
+            await _orderRepo.UpdateOrderStatusAsync(orderId, "Cancelled");
+
+            Log.Information("Покупець {BuyerId} скасував замовлення {OrderId}. Причина: {Reason}", buyerId, orderId, reason);
+
+            return Result.Success();
         }
     }
 }

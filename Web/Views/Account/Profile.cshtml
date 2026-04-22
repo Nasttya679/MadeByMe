@@ -10,30 +10,38 @@
         <div class="h-32 bg-gradient-to-r from-orange-400 to-orange-600"></div>
 
         <div class="px-8 pb-8">
-            <form id="profileForm" asp-action="UpdateProfile" method="post">
+            <form id="profileForm" asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
 
                 <div class="relative flex flex-col md:flex-row md:justify-between md:items-end -mt-12 mb-8 gap-4">
                     <div class="relative inline-block">
-                        @if (!string.IsNullOrEmpty(Model.ProfilePicture))
-                        {
-                            <img src="@Model.ProfilePicture" alt="@Model.UserName" class="w-24 h-24 rounded-2xl border-4 border-white shadow-md object-cover bg-white" />
-                        }
-                        else
-                        {
-                            <div class="w-24 h-24 rounded-2xl border-4 border-white shadow-md bg-white flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                <span class="text-4xl font-extrabold text-orange-500">@(Model.UserName?.Substring(0, 1).ToUpper() ?? "U")</span>
-                            </div>
-                        }
+                        <div id="avatarContainer" class="w-24 h-24 rounded-2xl border-4 border-white shadow-md overflow-hidden bg-white flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                            {
+                                <img id="profileImagePreview" src="@Model.ProfilePicture" alt="@Model.UserName" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                <span id="profileInitials" class="text-4xl font-extrabold text-orange-500">@(Model.UserName?.Substring(0, 1).ToUpper() ?? "U")</span>
+                            }
+                        </div>
+
+                        <div class="edit-mode hidden absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-max z-20">
+                            <label class="cursor-pointer bg-white border border-gray-200 text-gray-700 hover:text-orange-600 text-[10px] font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                                <i class="fa-solid fa-camera"></i> Змінити
+                                <input type="file" name="ProfilePictureFile" id="avatarInput" accept="image/*" class="hidden" />
+                            </label>
+                        </div>
+
                         @if (isSeller)
                         {
-                            <div class="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-lg border-2 border-white shadow-sm">
+                            <div class="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-lg border-2 border-white shadow-sm z-10">
                                 <i class="fa-solid fa-store mr-1"></i> Seller
                             </div>
                         }
                         @if (isAdmin)
                         {
-                            <div class="absolute -bottom-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-lg border-2 border-white shadow-sm">
+                            <div class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-lg border-2 border-white shadow-sm z-10">
                                 <i class="fa-solid fa-shield-halved mr-1"></i> Admin
                             </div>
                         }
@@ -106,20 +114,30 @@
                         </div>
 
                         <div class="pt-2 view-mode">
-                            @if (isAdmin)
-                            {
-                                <a href="/Admin/Index" class="inline-flex items-center bg-gray-900 text-white px-6 py-3 rounded-2xl hover:bg-gray-800 transition font-bold shadow-md group">
-                                    <i class="fa-solid fa-screwdriver-wrench mr-3 text-orange-500 group-hover:rotate-12 transition"></i>
-                                    Панель керування
-                                </a>
-                            }
-                            else
-                            {
-                                <a href="/Order/History" class="inline-flex items-center bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl hover:bg-orange-100 hover:text-orange-700 transition font-bold group">
-                                    <i class="fa-solid fa-clock-rotate-left mr-3 text-orange-500"></i>
-                                    Моя історія замовлень
-                                </a>
-                            }
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @if (isAdmin)
+                                {
+                                    <a href="/Admin/Index" class="inline-flex items-center justify-center bg-gray-900 text-white px-6 py-3 rounded-2xl hover:bg-gray-800 transition font-bold shadow-md group">
+                                        <i class="fa-solid fa-screwdriver-wrench mr-3 text-orange-500 group-hover:rotate-12 transition"></i>
+                                        Панель керування
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="/Order/History" class="inline-flex items-center justify-center bg-gray-100 text-gray-700 px-6 py-3 rounded-2xl hover:bg-orange-100 hover:text-orange-700 transition font-bold group">
+                                        <i class="fa-solid fa-clock-rotate-left mr-3 text-orange-500"></i>
+                                        Моя історія замовлень
+                                    </a>
+                                }
+
+                                @if (isSeller)
+                                {
+                                    <a href="/Profile/Seller" class="inline-flex items-center justify-center bg-white text-orange-600 border-2 border-orange-100 px-6 py-3 rounded-2xl hover:bg-orange-50 hover:border-orange-200 transition font-bold shadow-sm">
+                                        <i class="fa-solid fa-chart-line mr-3"></i>
+                                        Панель продавця
+                                    </a>
+                                }
+                            </div>
                         </div>
 
                         @if (!isSeller && !isAdmin)
@@ -178,6 +196,19 @@
             editBtn.classList.remove('hidden');
             cancelBtn.classList.add('hidden');
             saveBtn.classList.add('hidden');
+            
+            document.getElementById('avatarInput').value = '';
         }
     }
+    
+    document.getElementById('avatarInput')?.addEventListener('change', function (e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const container = document.getElementById('avatarContainer');
+                container.innerHTML = `<img id="profileImagePreview" src="${event.target.result}" class="w-full h-full object-cover" />`;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
 </script>

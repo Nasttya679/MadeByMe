@@ -74,5 +74,9 @@ namespace MadeByMe.Application.DTOs
         public string? SellerId { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public bool IsFavorite { get; set; } = false;
+
+        public bool IsDeleted { get; set; } = false;
     }
 }

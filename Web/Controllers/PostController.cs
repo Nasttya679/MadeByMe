@@ -16,19 +16,22 @@ namespace MadeByMe.Web.Controllers
         private readonly IPhotoService _photoService;
         private readonly ICategoryService _categoryService;
         private readonly IBuyerCartService _buyerCartService;
+        private readonly IWishlistService _wishlistService;
 
         public PostController(
             IPostService postService,
             ICommentService commentService,
             IPhotoService photoService,
             ICategoryService categoryService,
-            IBuyerCartService buyerCartService)
+            IBuyerCartService buyerCartService,
+            IWishlistService wishlistService)
         {
             _postService = postService;
             _commentService = commentService;
             _photoService = photoService;
             _categoryService = categoryService;
             _buyerCartService = buyerCartService;
+            _wishlistService = wishlistService;
         }
 
         public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? sortBy)
@@ -48,6 +51,18 @@ namespace MadeByMe.Web.Controllers
             ViewBag.CurrentCategory = categoryId;
             ViewBag.CurrentSort = sortBy;
 
+            var currentUserId = CurrentUserId;
+            var favoritePostIds = new HashSet<int>();
+
+            if (currentUserId != null)
+            {
+                var wishlistResult = await _wishlistService.GetUserWishlistAsync(currentUserId);
+                if (wishlistResult.IsSuccess)
+                {
+                    favoritePostIds = wishlistResult.Value.Select(w => w.PostId).ToHashSet();
+                }
+            }
+
             var postsList = result.Value.Select(post => new PostResponseDto
             {
                 Id = post.Id,
@@ -60,6 +75,8 @@ namespace MadeByMe.Web.Controllers
                 CategoryName = post.Category,
                 SellerName = post.Seller,
                 CreatedAt = post.CreatedAt,
+                IsFavorite = favoritePostIds.Contains(post.Id),
+                IsDeleted = post.IsDeleted,
             }).ToList();
 
             Log.Information("Каталог відображено успішно. Знайдено товарів: {Count}", postsList.Count);
@@ -78,10 +95,23 @@ namespace MadeByMe.Web.Controllers
             var commentsResult = await _commentService.GetCommentsForPostAsync(id);
             var comments = commentsResult.IsSuccess ? commentsResult.Value : new List<Comment>();
 
+            bool isFavorite = false;
+            var currentUserId = CurrentUserId;
+
+            if (currentUserId != null)
+            {
+                var wishlistResult = await _wishlistService.GetUserWishlistAsync(currentUserId);
+                if (wishlistResult.IsSuccess)
+                {
+                    isFavorite = wishlistResult.Value.Any(w => w.PostId == id);
+                }
+            }
+
             var viewModel = new PostDetailsViewModel
             {
                 Post = postResult.Value,
                 CommentsList = comments,
+                IsFavorite = isFavorite,
             };
 
             Log.Information("Перегляд деталей поста: {PostTitle} (ID: {PostId})", postResult.Value.Title, id);
@@ -141,7 +171,7 @@ namespace MadeByMe.Web.Controllers
             var post = postResult.Value;
             var currentUserId = CurrentUserId;
 
-            if (post.SellerId != currentUserId)
+            if (post.SellerId != currentUserId && !User.IsInRole("Admin"))
             {
                 Log.Warning("Відмовлено в доступі: користувач {UserId} намагався редагувати чужий пост {PostId}", currentUserId, id);
                 return Forbid();
@@ -183,7 +213,7 @@ namespace MadeByMe.Web.Controllers
             var post = postResult.Value;
             var currentUserId = CurrentUserId;
 
-            if (post.SellerId != currentUserId)
+            if (post.SellerId != currentUserId && !User.IsInRole("Admin"))
             {
                 Log.Warning("Незаконна спроба оновлення: користувач {UserId} намагався змінити пост {PostId}", currentUserId, id);
                 return Forbid();
@@ -258,6 +288,106 @@ namespace MadeByMe.Web.Controllers
                 return Forbid();
             }
 
+            var deleteResult = await _postService.DeletePostAsync(id, CurrentUserId!);
+
+            if (deleteResult.IsFailure)
+            {
+                SetErrorMessage(deleteResult.ErrorMessage);
+                return RedirectToAction(nameof(Index));
+            }
+
+            SetSuccessMessage("Виріб успішно переміщено до кошика!");
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Roles = "Seller, Admin")]
+        public async Task<IActionResult> DeletedPosts()
+        {
+            var currentUserId = CurrentUserId;
+            var isAdmin = User.IsInRole("Admin");
+
+            string? userIdFilter = isAdmin ? null : currentUserId;
+
+            var result = await _postService.GetDeletedPostsAsync(userIdFilter);
+
+            if (result.IsFailure)
+            {
+                Log.Warning("Помилка завантаження видалених постів: {ErrorMessage}", result.ErrorMessage);
+                SetErrorMessage("Не вдалося завантажити кошик видалених товарів.");
+                return RedirectToAction(nameof(Index));
+            }
+
+            var deletedPostsList = result.Value.Select(post => new PostResponseDto
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Price = post.Price,
+                PhotoUrl = post.Photos.FirstOrDefault()?.FilePath ?? "/images/default.jpg",
+                CategoryName = post.Category,
+                SellerName = post.Seller,
+                CreatedAt = post.CreatedAt,
+                IsDeleted = post.IsDeleted,
+            }).ToList();
+
+            Log.Information("Користувач {UserId} переглядає кошик видалених товарів. Знайдено: {Count}", currentUserId, deletedPostsList.Count);
+
+            return View(deletedPostsList);
+        }
+
+        [Authorize(Roles = "Seller, Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Restore(int id)
+        {
+            var result = await _postService.GetPostByIdAsync(id);
+
+            if (result.IsFailure)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            var post = result.Value;
+
+            if (!User.IsInRole("Admin") && post.SellerId != CurrentUserId)
+            {
+                Log.Warning("Користувач {UserId} намагався відновити чужий товар {PostId}", CurrentUserId, id);
+                return Forbid();
+            }
+
+            var restoreResult = await _postService.RestorePostAsync(id);
+
+            if (restoreResult.IsFailure)
+            {
+                SetErrorMessage(restoreResult.ErrorMessage);
+            }
+            else
+            {
+                SetSuccessMessage($"Товар '{post.Title}' успішно відновлено і повернуто на вітрину!");
+            }
+
+            return RedirectToAction(nameof(DeletedPosts));
+        }
+
+        [Authorize(Roles = "Seller, Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HardDelete(int id)
+        {
+            var result = await _postService.GetPostByIdAsync(id);
+
+            if (result.IsFailure)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            var post = result.Value;
+
+            if (!User.IsInRole("Admin") && post.SellerId != CurrentUserId)
+            {
+                Log.Warning("Користувач {UserId} намагався назавжди видалити чужий товар {PostId}", CurrentUserId, id);
+                return Forbid();
+            }
+
             foreach (var photo in post.Photos.ToList())
             {
                 try
@@ -266,20 +396,22 @@ namespace MadeByMe.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("Помилка видалення фото: {Message}", ex.Message);
+                    Log.Warning("Помилка видалення фото при повному видаленні товару: {Message}", ex.Message);
                 }
             }
 
-            var deleteResult = await _postService.DeletePostAsync(id);
+            var deleteResult = await _postService.HardDeletePostAsync(id);
 
             if (deleteResult.IsFailure)
             {
                 SetErrorMessage(deleteResult.ErrorMessage);
-                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                SetSuccessMessage($"Товар '{post.Title}' було видалено назавжди!");
             }
 
-            SetSuccessMessage("Виріб успішно видалено!");
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(DeletedPosts));
         }
 
         private async Task LoadCategoriesToViewBagAsync()
