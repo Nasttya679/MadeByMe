@@ -8,12 +8,16 @@ namespace MadeByMe.Application.Services.Interfaces
     {
         Task<Result<Order>> CreateOrderAsync(string buyerId, OrderDto dto);
 
-        Task<Result<List<Order>>> GetBuyerHistoryAsync(string buyerId);
+        Task<Result<List<Order>>> GetBuyerHistoryAsync(string buyerId, string? status = "All", string? search = null, DateTime? date = null);
 
         Task<Result<List<Order>>> GetSellerJournalAsync(string sellerId);
 
         Task<Result> UpdateOrderStatusAsync(int orderId, string status, string currentUserId);
 
-        Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId);
+        Task<Result<IEnumerable<SellerOrderDto>>> GetSellerOrdersAsync(string sellerId, string? status = "All", string? search = null, DateTime? date = null);
+
+        Task<Result<Order>> GetOrderByIdAndBuyerAsync(int orderId, string buyerId);
+
+        Task<Result> CancelOrderAsync(int orderId, string buyerId, string? reason);
     }
 }

@@ -1,6 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using MadeByMe.Domain.Entities
 @inject UserManager<ApplicationUser> UserManager
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+}
 
 <!DOCTYPE html>
 <html lang="uk" class="h-full">
@@ -34,7 +37,6 @@
                 </a>
 
                 <nav class="hidden md:flex space-x-6 items-center">
-                    @* ДИНАМІЧНА КНОПКА ЗАЛЕЖНО ВІД РОЛІ *@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         if (User.IsInRole("Seller"))
@@ -59,14 +61,32 @@
             <div class="flex items-center space-x-6">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    <a href="/Wishlist" class="text-gray-600 hover:text-red-500 font-medium transition flex items-center group">
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-heart text-xl mr-1.5 group-hover:scale-110 transition-transform"></i>
+        
+                            <span id="wishlist-badge" class="hidden absolute -top-2 -left-2.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-[2px] rounded-full shadow-sm leading-none">
+                                0
+                            </span>
+                        </div>
+                        <span class="hidden md:inline">Обране</span>
+                    </a>
+
                     <a href="/Cart" class="text-gray-600 hover:text-orange-600 font-medium transition flex items-center">
                         <i class="fa-solid fa-cart-shopping mr-2"></i> Кошик
                     </a>
 
                     <a href="/Account/Profile" class="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition group">
-                        <div class="w-8 h-8 rounded-full gradient-orange flex items-center justify-center text-white font-bold text-xs shadow-sm group-hover:scale-110 transition">
-                            @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
-                        </div>
+                        @if (currentUser != null && !string.IsNullOrEmpty(currentUser.ProfilePicture))
+                        {
+                            <img src="@currentUser.ProfilePicture" alt="Аватар" class="w-8 h-8 rounded-full object-cover shadow-sm group-hover:scale-110 transition border border-gray-200" />
+                        }
+                        else
+                        {
+                            <div class="w-8 h-8 rounded-full gradient-orange flex items-center justify-center text-white font-bold text-xs shadow-sm group-hover:scale-110 transition">
+                                @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
+                            </div>
+                        }
                         <span class="font-semibold">Профіль</span>
                     </a>
 
@@ -118,7 +138,66 @@
                 setTimeout(() => alert.remove(), 1000);
             });
         }, 5000);
+        
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <text>
+                fetch('/Wishlist/GetWishlistCount')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateWishlistBadge(data.count, false);
+                    })
+                    .catch(err => console.error("Помилка завантаження обраного:", err));
+            </text>
+        }
     });
+    
+    function toggleWishlist(btnElement, postId) {
+        const icon = btnElement.querySelector('i');
+        
+        btnElement.style.transform = 'scale(0.8)';
+        setTimeout(() => btnElement.style.transform = 'scale(1)', 150);
+
+        fetch(`/Wishlist/ToggleFavorite?postId=${postId}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isAdded) {
+                        icon.classList.remove('fa-regular', 'text-gray-400');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        icon.classList.add('scale-125');
+                        setTimeout(() => icon.classList.remove('scale-125'), 200);
+                    } else {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular', 'text-gray-400');
+                    }
+                    updateWishlistBadge(data.totalCount, true);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Помилка:', error));
+    }
+    
+    function updateWishlistBadge(count, animate) {
+        const badge = document.getElementById('wishlist-badge');
+        if (!badge) return;
+
+        if (count > 0) {
+            badge.innerText = count;
+            badge.classList.remove('hidden');
+            if (animate) {
+                badge.classList.add('animate-bounce');
+                setTimeout(() => badge.classList.remove('animate-bounce'), 1000);
+            }
+        } else {
+            badge.classList.add('hidden');
+            badge.innerText = '0';
+        }
+    }
 </script>
 
 @await RenderSectionAsync("Scripts", required: false)

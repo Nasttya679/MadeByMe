@@ -7,5 +7,7 @@ namespace MadeByMe.Application.ViewModels
         public Post? Post { get; set; }
 
         public List<Comment>? CommentsList { get; set; }
+
+        public bool IsFavorite { get; set; } = false;
     }
 }

@@ -60,17 +60,55 @@ namespace MadeByMe.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> History()
+        public async Task<IActionResult> History(string status = "All", string? search = null, DateTime? date = null)
         {
-            var result = await _orderService.GetBuyerHistoryAsync(CurrentUserId!);
+            Log.Information("Користувач {UserId} переглядає журнал замовлень: статус={Status}, пошук={Search}, дата={Date}", CurrentUserId, status, search, date);
+
+            var result = await _orderService.GetBuyerHistoryAsync(CurrentUserId!, status, search, date);
+
+            ViewBag.CurrentStatus = status;
+            ViewBag.Search = search;
+            ViewBag.Date = date?.ToString("yyyy-MM-dd");
+
+            return View(result.Value);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var result = await _orderService.GetOrderByIdAndBuyerAsync(id, CurrentUserId!);
 
             if (result.IsFailure)
             {
                 SetErrorMessage(result.ErrorMessage);
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("History");
+            }
+
+            if (result.Value.Status != "Processing")
+            {
+                SetErrorMessage("Це замовлення вже не можна скасувати (воно відправлене або доставлене).");
+                return RedirectToAction("History");
             }
 
             return View(result.Value);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelConfirm(int id, string reason)
+        {
+            var result = await _orderService.CancelOrderAsync(id, CurrentUserId!, reason);
+
+            if (result.IsFailure)
+            {
+                SetErrorMessage(result.ErrorMessage);
+            }
+            else
+            {
+                SetSuccessMessage("Ваше замовлення успішно скасовано.");
+            }
+
+            return RedirectToAction("History");
         }
 
         public IActionResult Success() => View();

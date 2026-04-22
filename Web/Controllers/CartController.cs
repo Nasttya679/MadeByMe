@@ -183,5 +183,31 @@ namespace MadeByMe.Web.Controllers
 
             return Ok();
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToCartSilent(AddToCartDto dto)
+        {
+            var buyerId = CurrentUserId;
+
+            var result = await _buyerCartService.AddToCartAsync(buyerId!, dto);
+
+            if (result.IsFailure)
+            {
+                Log.Warning("Не вдалося додати товар {PostId} у кошик. Причина: {ErrorMessage}", dto.PostId, result.ErrorMessage);
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            Log.Information("Товар {PostId} успішно додано у кошик", dto.PostId);
+
+            var cartResult = await _cartService.GetUserCartEntityAsync(buyerId!);
+            int newCount = 0;
+            if (cartResult.IsSuccess && cartResult.Value.BuyerCarts != null)
+            {
+                newCount = cartResult.Value.BuyerCarts.Sum(c => c.Quantity);
+            }
+
+            return Json(new { success = true, cartCount = newCount });
+        }
     }
 }

@@ -34,6 +34,10 @@ namespace MadeByMe.Domain.Entities
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public bool IsDeleted { get; set; } = false;
+
+        public string? DeletedByUserId { get; set; }
+
         public ICollection<Comment> CommentsList { get; set; } = new List<Comment>();
 
         public ICollection<Photo> Photos { get; set; } = new List<Photo>();

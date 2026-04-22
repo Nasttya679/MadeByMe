@@ -21,7 +21,7 @@ namespace MadeByMe.Application.Services.Implementations
 
         public async Task<Result<List<Post>>> GetAllPostsAsync()
         {
-            var posts = await _repo.GetAllAsync();
+            var posts = (await _repo.GetAllAsync()).Where(p => !p.IsDeleted).ToList();
             Log.Information("Отримано список усіх постів. Кількість: {Count}", posts.Count);
 
             return posts;
@@ -50,6 +50,7 @@ namespace MadeByMe.Application.Services.Implementations
                 Price = dto.Price,
                 CategoryId = dto.CategoryId,
                 SellerId = sellerId,
+                IsDeleted = false,
             };
 
             await _repo.AddAsync(post);
@@ -64,7 +65,7 @@ namespace MadeByMe.Application.Services.Implementations
             Log.Information("Запит на оновлення поста {PostId}", id);
 
             var post = await _repo.GetByIdAsync(id);
-            if (post == null)
+            if (post == null || post.IsDeleted)
             {
                 Log.Warning("Невдала спроба оновлення: пост {PostId} не знайдено", id);
                 return "Товар для оновлення не знайдено.";
@@ -82,7 +83,7 @@ namespace MadeByMe.Application.Services.Implementations
             return post;
         }
 
-        public async Task<Result> DeletePostAsync(int id)
+        public async Task<Result> DeletePostAsync(int id, string deleterId)
         {
             Log.Information("Запит на видалення поста {PostId}", id);
 
@@ -93,16 +94,18 @@ namespace MadeByMe.Application.Services.Implementations
                 return "Товар для видалення не знайдено.";
             }
 
-            await _repo.DeleteAsync(post);
+            post.IsDeleted = true;
+            post.DeletedByUserId = deleterId;
+            await _repo.UpdateAsync(post);
 
-            Log.Information("Пост {PostId} успішно видалено з бази даних", id);
+            Log.Information("Пост {PostId} успішно переміщено в кошик видалених товарів", id);
 
             return Result.Success();
         }
 
         public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1)
         {
-            var postsQuery = (await _repo.GetAllAsync()).AsQueryable();
+            var postsQuery = (await _repo.GetAllAsync()).AsQueryable().Where(p => !p.IsDeleted);
 
             if (categoryId.HasValue && categoryId > 0)
             {
@@ -138,5 +141,73 @@ namespace MadeByMe.Application.Services.Implementations
 
         public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
             => await GetFilteredPostsAsync(searchTerm, null, null, 1);
+
+        public async Task<Result<List<Post>>> GetDeletedPostsAsync(string? userId = null)
+        {
+            var query = (await _repo.GetAllAsync()).AsQueryable().Where(p => p.IsDeleted);
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(p => p.DeletedByUserId == userId);
+            }
+
+            var deletedList = query.OrderByDescending(p => p.CreatedAt).ToList();
+            Log.Information("Отримано список видалених постів. Знайдено: {Count}", deletedList.Count);
+
+            return deletedList;
+        }
+
+        public async Task<Result> RestorePostAsync(int id)
+        {
+            Log.Information("Запит на відновлення поста {PostId} з кошика видалених товарів", id);
+
+            var post = await _repo.GetByIdAsync(id);
+            if (post == null)
+            {
+                return "Товар для відновлення не знайдено.";
+            }
+
+            post.IsDeleted = false;
+            post.DeletedByUserId = null;
+
+            await _repo.UpdateAsync(post);
+
+            Log.Information("Пост {PostId} успішно відновлено і повернуто в каталог", id);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> HardDeletePostAsync(int id)
+        {
+            Log.Information("Запит на ПОВНЕ видалення поста {PostId} з бази даних", id);
+
+            var post = await _repo.GetByIdAsync(id);
+            if (post == null)
+            {
+                return "Товар не знайдено.";
+            }
+
+            await _repo.DeleteAsync(post);
+
+            Log.Information("Пост {PostId} остаточно видалено з бази даних", id);
+
+            return Result.Success();
+        }
+
+        public async Task<Result<List<Post>>> GetTopRatedPostsAsync(int count = 4)
+        {
+            Log.Information("Запит на отримання {Count} товарів з найвищим рейтингом", count);
+
+            var query = (await _repo.GetAllAsync())
+                .AsQueryable()
+                .Where(p => !p.IsDeleted);
+
+            var topPosts = query
+                .OrderByDescending(p => p.Rating)
+                .Take(count)
+                .ToList();
+
+            return topPosts;
+        }
     }
 }

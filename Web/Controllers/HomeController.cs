@@ -18,7 +18,9 @@ namespace MadeByMe.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var result = await _postService.GetAllPostsAsync();
+            Log.Information("Завантаження головної сторінки (Топ-4 популярних товарів)");
+
+            var result = await _postService.GetTopRatedPostsAsync(4);
 
             if (result.IsFailure)
             {
@@ -38,9 +40,11 @@ namespace MadeByMe.Web.Controllers
                 CategoryName = post.Category,
                 SellerName = post.Seller,
                 CreatedAt = post.CreatedAt,
+                IsDeleted = post.IsDeleted,
             }).ToList();
 
             Log.Information("Головна сторінка успішно завантажена. Відображено постів: {PostCount}", postsList.Count);
+
             return View(postsList);
         }
 

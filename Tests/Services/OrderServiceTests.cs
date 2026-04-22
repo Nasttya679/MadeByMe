@@ -201,5 +201,93 @@ namespace MadeByMe.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Empty(result.Value);
         }
+
+        [Fact]
+        public async Task GetSellerOrdersAsync_WithStatusFilter_ShouldReturnOnlyMatchingOrders()
+        {
+            string sellerId = "seller-1";
+            var orders = new List<Order>
+            {
+                new Order { Id = 1, Status = "Processing", OrderItems = new List<OrderItem> { new OrderItem { Post = new Post { SellerId = sellerId } } } },
+                new Order { Id = 2, Status = "Shipped", OrderItems = new List<OrderItem> { new OrderItem { Post = new Post { SellerId = sellerId } } } },
+                new Order { Id = 3, Status = "Processing", OrderItems = new List<OrderItem> { new OrderItem { Post = new Post { SellerId = sellerId } } } },
+            };
+            _orderRepoMock.Setup(r => r.GetOrdersBySellerIdAsync(sellerId)).ReturnsAsync(orders);
+
+            var result = await _orderService.GetSellerOrdersAsync(sellerId, "Processing");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count());
+            Assert.All(result.Value, o => Assert.Equal("Processing", o.Status));
+        }
+
+        [Fact]
+        public async Task GetSellerOrdersAsync_WithStatusAll_ShouldReturnAllOrdersIgnoringFilter()
+        {
+            string sellerId = "seller-1";
+            var orders = new List<Order>
+            {
+                new Order { Id = 1, Status = "Processing", OrderItems = new List<OrderItem> { new OrderItem { Post = new Post { SellerId = sellerId } } } },
+                new Order { Id = 2, Status = "Shipped", OrderItems = new List<OrderItem> { new OrderItem { Post = new Post { SellerId = sellerId } } } },
+            };
+            _orderRepoMock.Setup(r => r.GetOrdersBySellerIdAsync(sellerId)).ReturnsAsync(orders);
+
+            var result = await _orderService.GetSellerOrdersAsync(sellerId, "All");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count());
+        }
+
+        [Fact]
+        public async Task GetOrderByIdAndBuyerAsync_WhenValid_ShouldReturnOrder()
+        {
+            var expectedOrder = new Order { Id = 1, BuyerId = "buyer-1" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(expectedOrder);
+
+            var result = await _orderService.GetOrderByIdAndBuyerAsync(1, "buyer-1");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(1, result.Value.Id);
+            Assert.Equal("buyer-1", result.Value.BuyerId);
+        }
+
+        [Fact]
+        public async Task GetOrderByIdAndBuyerAsync_WhenWrongBuyer_ShouldReturnFailure()
+        {
+            var existingOrder = new Order { Id = 1, BuyerId = "buyer-1" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(existingOrder);
+
+            var result = await _orderService.GetOrderByIdAndBuyerAsync(1, "hacker-user");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("Замовлення не знайдено або у вас немає доступу.", result.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task CancelOrderAsync_WhenProcessing_ShouldCancelSuccessfully()
+        {
+            var order = new Order { Id = 1, BuyerId = "buyer-1", Status = "Processing" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.CancelOrderAsync(1, "buyer-1", "Передумав");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal("Cancelled", order.Status);
+            Assert.Equal("Передумав", order.CancellationReason);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(1, "Cancelled"), Times.Once); // Перевіряємо чи збереглось в БД
+        }
+
+        [Fact]
+        public async Task CancelOrderAsync_WhenAlreadyShipped_ShouldReturnFailure()
+        {
+            var order = new Order { Id = 1, BuyerId = "buyer-1", Status = "Shipped" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.CancelOrderAsync(1, "buyer-1", "reason");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("Скасувати можна лише замовлення, які ще знаходяться в обробці.", result.ErrorMessage);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never); // Перевіряємо що БД НЕ оновилась
+        }
     }
 }

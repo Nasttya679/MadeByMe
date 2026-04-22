@@ -1,30 +1,29 @@
 ﻿@model MadeByMe.Application.ViewModels.CartViewModel
 @{
     ViewData["Title"] = "Кошик";
+    var itemsCount = Model.Items?.Count ?? 0;
 }
 
 <div class="max-w-7xl mx-auto py-8">
     <div class="flex justify-between items-center mb-8">
         <h2 class="text-3xl font-extrabold text-gray-900">Кошик</h2>
-        <span class="text-gray-600 font-medium bg-gray-100 px-4 py-1 rounded-full">@Model.ItemCount товарів</span>
+        <span class="text-gray-600 font-medium bg-gray-100 px-4 py-1 rounded-full">@itemsCount товарів</span>
     </div>
 
-    @if (Model.Items?.Any() == true)
+    @if (itemsCount > 0)
     {
         <div class="grid lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
                     <div class="divide-y divide-gray-100">
-                        @foreach (var item in Model.Items)
+                        @foreach (var item in Model.Items!)
                         {
                             <div class="p-6 flex flex-col sm:flex-row items-center sm:space-x-6 space-y-4 sm:space-y-0 hover:bg-orange-50 transition duration-150">
-                                <img src="@item.Product!.ImageUrl" 
-                                     alt="@item.Product.Name" 
-                                     class="w-32 h-32 object-cover rounded-2xl shadow-sm" />
+                                <img src="@item.Product!.ImageUrl" alt="@item.Product.Name" class="w-32 h-32 object-cover rounded-2xl shadow-sm" />
                                 
                                 <div class="flex-1 w-full text-center sm:text-left">
                                     <h3 class="text-xl font-bold text-gray-900 mb-1">@item.Product.Name</h3>
-                                    <p class="text-sm text-gray-500 mb-4">Продавець: <span class="font-semibold text-gray-700">@item.Product.Seller!.UserName</span></p>
+                                    <p class="text-sm text-gray-500 mb-4">Продавець: <span class="font-semibold text-gray-700">@(item.Product.Seller?.UserName ?? "Невідомо")</span></p>
                                     
                                     <div class="flex items-center justify-center sm:justify-start space-x-6">
                                         <form action="/Cart/UpdateQuantity" method="post" class="flex items-center bg-gray-50 border border-gray-200 rounded-xl p-1 shadow-sm">
@@ -59,7 +58,7 @@
                     
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between text-gray-600 font-medium">
-                            <span>Товари (@Model.ItemCount)</span>
+                            <span>Товари (@itemsCount)</span>
                             <span>@Model.TotalPrice ₴</span>
                         </div>
                         <div class="flex justify-between text-gray-600 font-medium">

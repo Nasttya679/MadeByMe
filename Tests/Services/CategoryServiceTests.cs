@@ -4,6 +4,8 @@ using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Implementations;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Serilog;
 using Xunit;
@@ -13,13 +15,26 @@ namespace MadeByMe.Tests.Services
     public class CategoryServiceTests
     {
         private readonly Mock<ICategoryRepository> _categoryRepoMock;
+        private readonly IMemoryCache _memoryCache;
+        private readonly Mock<IConfiguration> _configMock;
         private readonly CategoryService _categoryService;
 
         public CategoryServiceTests()
         {
             Log.Logger = Serilog.Core.Logger.None;
             _categoryRepoMock = new Mock<ICategoryRepository>();
-            _categoryService = new CategoryService(_categoryRepoMock.Object);
+
+            _memoryCache = new MemoryCache(new MemoryCacheOptions());
+
+            _configMock = new Mock<IConfiguration>();
+            var sectionMock = new Mock<IConfigurationSection>();
+            sectionMock.Setup(s => s.Value).Returns("30");
+            _configMock.Setup(c => c.GetSection(It.IsAny<string>())).Returns(sectionMock.Object);
+
+            _categoryService = new CategoryService(
+                _categoryRepoMock.Object,
+                _memoryCache,
+                _configMock.Object);
         }
 
         [Fact]

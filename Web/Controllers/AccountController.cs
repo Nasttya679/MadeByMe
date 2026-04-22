@@ -2,6 +2,7 @@
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -15,19 +16,22 @@ namespace MadeByMe.Web.Controllers
         private readonly IApplicationUserService _ApplicationUserService;
         private readonly IOrderService _orderService;
         private readonly ICommentService _commentService;
+        private readonly IWebHostEnvironment _env;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IApplicationUserService applicationUserService,
             IOrderService orderService,
-            ICommentService commentService)
+            ICommentService commentService,
+            IWebHostEnvironment env)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _ApplicationUserService = applicationUserService;
             _orderService = orderService;
             _commentService = commentService;
+            _env = env;
         }
 
         public IActionResult Register()
@@ -172,6 +176,26 @@ namespace MadeByMe.Web.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
         {
+            if (dto.ProfilePictureFile != null && dto.ProfilePictureFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "avatars");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.ProfilePictureFile.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.ProfilePictureFile.CopyToAsync(fileStream);
+                }
+
+                dto.ProfilePicture = "/images/avatars/" + uniqueFileName;
+            }
+
             var result = await _ApplicationUserService.UpdateUserAsync(CurrentUserId!, dto);
 
             if (result.IsFailure)

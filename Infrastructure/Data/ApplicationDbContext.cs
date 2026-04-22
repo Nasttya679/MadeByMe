@@ -111,6 +111,8 @@ namespace MadeByMe.Infrastructure.Data
 
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<Wishlist> Wishlists { get; set; }
+
         public DbSet<Cart> Carts { get; set; }
 
         public DbSet<BuyerCart> BuyerCarts { get; set; }
@@ -180,6 +182,19 @@ namespace MadeByMe.Infrastructure.Data
                 .HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId);
+
+            // Wishlist: зв'язок з User та Post
+            modelBuilder.Entity<Wishlist>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Wishlist>()
+                .HasOne(w => w.Post)
+                .WithMany()
+                .HasForeignKey(w => w.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Cart: зв'язок з User (Buyer)
             modelBuilder.Entity<Cart>()

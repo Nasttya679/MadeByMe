@@ -22,11 +22,29 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
                 <div class="relative bg-gray-50 border-r border-gray-100">
                     <img src="@(Model.Post.Photos?.FirstOrDefault()?.FilePath ?? "/images/default.jpg")" alt="@Model.Post.Title" class="w-full h-full min-h-[400px] md:max-h-[600px] object-cover">
+
                     <div class="absolute top-6 left-6">
                         <span class="px-4 py-1.5 rounded-full text-xs font-black bg-white text-orange-600 uppercase tracking-widest shadow-md">
                             @Model.Post.Category?.Name
                         </span>
                     </div>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <button type="button"
+                                onclick="toggleWishlist(this, @Model.Post.Id)"
+                                class="absolute top-6 right-6 bg-white/90 backdrop-blur-sm w-12 h-12 flex items-center justify-center rounded-full shadow-md hover:bg-white transition-all z-10 focus:outline-none group">
+
+                            @if (Model.IsFavorite)
+                            {
+                                <i class="fa-solid fa-heart text-2xl text-red-500 transition-transform duration-300 group-hover:scale-110"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-regular fa-heart text-2xl text-gray-400 transition-transform duration-300 group-hover:scale-110"></i>
+                            }
+                        </button>
+                    }
                 </div>
 
                 <div class="p-8 md:p-10 flex flex-col justify-between">
@@ -85,7 +103,7 @@
                                 }
                                 <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post" class="flex-1">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="w-full bg-red-50 text-red-600 border-2 border-red-100 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition" onclick="return confirm('Ви дійсно хочете видалити цей товар назавжди?');">
+                                    <button type="submit" class="w-full bg-red-50 text-red-600 border-2 border-red-100 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition" onclick="return confirm('Ви дійсно хочете видалити цей товар?');">
                                         <i class="fa-solid fa-trash-can mr-2"></i> Видалити
                                     </button>
                                 </form>

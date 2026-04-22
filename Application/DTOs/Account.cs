@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace MadeByMe.Application.DTOs
 {
@@ -22,6 +23,8 @@ namespace MadeByMe.Application.DTOs
         [MaxLength(255)]
         [Display(Name = "Аватар")]
         public string? ProfilePicture { get; set; }
+
+        public IFormFile? ProfilePictureFile { get; set; }
 
         [MaxLength(255)]
         [Display(Name = "Адреса")]

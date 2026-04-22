@@ -23,13 +23,20 @@ namespace MadeByMe.Web.Middlewares
             }
         }
 
-        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             Log.Error(exception, "Сталася необроблена помилка під час виконання запиту {Path}. Повідомлення: {Message}", context.Request.Path, exception.Message);
 
-            context.Response.Redirect("/Home/Error");
-
-            return Task.CompletedTask;
+            if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                context.Response.StatusCode = 500;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"success\": false, \"message\": \"Внутрішня помилка сервера.\"}");
+            }
+            else
+            {
+                context.Response.Redirect("/Home/Error");
+            }
         }
     }
 }
