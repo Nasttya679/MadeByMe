@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Serilog;
 
@@ -17,16 +19,29 @@ namespace MadeByMe.Web.Middlewares
         {
             var stopwatch = Stopwatch.StartNew();
 
-            await _next(context);
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Сталася помилка під час обробки запиту: [{Method}] {Url}",
+                    context.Request.Method,
+                    context.Request.Path);
 
-            stopwatch.Stop();
-            var executionTime = stopwatch.ElapsedMilliseconds;
+                throw;
+            }
+            finally
+            {
+                stopwatch.Stop();
+                var executionTime = stopwatch.ElapsedMilliseconds;
 
-            Log.Information(
-                " -- Запит до [{Method}] {Url} виконано за {ExecutionTime} мс --",
-                context.Request.Method,
-                context.Request.Path,
-                executionTime);
+                Log.Information(
+                    " -- Запит до [{Method}] {Url} виконано за {ExecutionTime} мс --",
+                    context.Request.Method,
+                    context.Request.Path,
+                    executionTime);
+            }
         }
     }
 }
