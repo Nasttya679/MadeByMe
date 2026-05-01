@@ -14,7 +14,7 @@ namespace MadeByMe.Application.Services.Interfaces
 
         Task<Result<Post>> UpdatePostAsync(int id, UpdatePostDto updatePostDto);
 
-        Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1);
+        Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1, string searchType = "products");
 
         Task<Result> DeletePostAsync(int id, string deleterId);
 
@@ -25,5 +25,7 @@ namespace MadeByMe.Application.Services.Interfaces
         Task<Result> HardDeletePostAsync(int id);
 
         Task<Result<List<Post>>> GetTopRatedPostsAsync(int count = 4);
+
+        Task<Result<List<Post>>> GetPostsBySellerIdAsync(string sellerId, string? searchTerm = null);
     }
 }

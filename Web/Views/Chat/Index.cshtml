@@ -1,0 +1,71 @@
+@model List<MadeByMe.Application.DTOs.Chat.ChatSummaryDto>
+@{
+    ViewData["Title"] = "Повідомлення";
+}
+
+<div class="max-w-5xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <h2 class="text-3xl font-extrabold text-gray-900">Мої чати</h2>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="py-24 text-center">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200">
+                    <i class="fa-regular fa-comment-dots text-4xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-700">Поки що порожньо</h3>
+                <p class="text-gray-400 mt-2">Ваші діалоги з продавцями або покупцями з'являться тут.</p>
+                <a href="/Post" class="inline-block mt-6 bg-orange-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg shadow-orange-200">Перейти до покупок</a>
+            </div>
+        }
+        else
+        {
+            <div class="divide-y divide-gray-50">
+                @foreach (var chat in Model.OrderByDescending(c => c.IsPinned).ThenByDescending(c => c.LastMessageTime))
+                {
+                    <a href="/Chat/Room/@chat.ChatId" class="flex items-center p-6 hover:bg-orange-50/30 transition group relative">
+                        @if (chat.IsPinned)
+                        {
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-orange-500 rounded-r-full shadow-[2px_0_8px_rgba(234,88,12,0.4)]"></div>
+                        }
+                        
+                        <div class="relative shrink-0">
+                            @if (!string.IsNullOrEmpty(chat.InterlocutorPhoto))
+                            {
+                                <img src="@chat.InterlocutorPhoto" class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+                            }
+                            else
+                            {
+                                <div class="w-14 h-14 rounded-full gradient-orange flex items-center justify-center text-white font-bold text-xl shadow-md">
+                                    @chat.InterlocutorName?[0].ToString().ToUpper()
+                                </div>
+                            }
+                            @if (chat.IsPinned)
+                            {
+                                <div class="absolute -top-1 -right-1 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border border-gray-100">
+                                    <i class="fa-solid fa-thumbtack text-[10px] text-orange-500"></i>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="ml-6 flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="text-lg font-bold text-gray-900 truncate group-hover:text-orange-600 transition">@chat.InterlocutorName</h4>
+                                <span class="text-xs font-bold text-gray-400">@chat.LastMessageTime.ToString("dd.MM HH:mm")</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <p class="text-gray-500 text-sm truncate font-medium pr-4">@chat.LastMessage</p>
+                                @if (chat.UnreadCount > 0)
+                                {
+                                    <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-1 rounded-full">@chat.UnreadCount</span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>

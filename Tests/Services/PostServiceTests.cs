@@ -168,11 +168,31 @@ namespace MadeByMe.Tests.Services
             };
             _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
 
-            var result = await _postService.GetFilteredPostsAsync("Apple", null, null);
+            var result = await _postService.GetFilteredPostsAsync("Apple", null, null, 1, "products");
 
             Assert.True(result.IsSuccess);
             Assert.Single(result.Value);
             Assert.Equal("Apple Vase", result.Value[0].Title);
+        }
+
+        [Fact]
+        public async Task GetFilteredPostsAsync_WithSearchTypeSellers_ShouldReturnMatchingSellers()
+        {
+            var posts = new List<Post>
+            {
+                new Post { Id = 1, Title = "Vase", IsDeleted = false, Seller = new ApplicationUser { UserName = "Veronika" } },
+                new Post { Id = 2, Title = "Cup", IsDeleted = false, Seller = new ApplicationUser { UserName = "Anna" } },
+                new Post { Id = 3, Title = "Bowl", IsDeleted = false, Seller = new ApplicationUser { UserName = "VeronicaCrafts" } },
+            };
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
+
+            var result = await _postService.GetFilteredPostsAsync("veron", null, null, 1, "sellers");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
+            Assert.Contains(result.Value, p => p.Id == 1);
+            Assert.Contains(result.Value, p => p.Id == 3);
+            Assert.DoesNotContain(result.Value, p => p.Id == 2);
         }
 
         [Fact]
@@ -340,6 +360,62 @@ namespace MadeByMe.Tests.Services
 
             Assert.True(result.IsSuccess);
             Assert.Empty(result.Value);
+        }
+
+        [Fact]
+        public async Task GetPostsBySellerIdAsync_WhenMatchesExist_ShouldReturnActivePostsOrderedByDateDesc()
+        {
+            var sellerId = "seller-123";
+            var posts = new List<Post>
+            {
+                new Post { Id = 1, SellerId = sellerId, IsDeleted = false, CreatedAt = DateTime.UtcNow.AddDays(-2) },
+                new Post { Id = 2, SellerId = "other-seller", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                new Post { Id = 3, SellerId = sellerId, IsDeleted = true, CreatedAt = DateTime.UtcNow },
+                new Post { Id = 4, SellerId = sellerId, IsDeleted = false, CreatedAt = DateTime.UtcNow.AddDays(-1), },
+            };
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
+
+            var result = await _postService.GetPostsBySellerIdAsync(sellerId, null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
+            Assert.Equal(4, result.Value[0].Id);
+            Assert.Equal(1, result.Value[1].Id);
+        }
+
+        [Fact]
+        public async Task GetPostsBySellerIdAsync_WhenNoMatches_ShouldReturnEmptyList()
+        {
+            var posts = new List<Post>
+            {
+                new Post { Id = 1, SellerId = "other-seller", IsDeleted = false },
+            };
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
+
+            var result = await _postService.GetPostsBySellerIdAsync("seller-123", null);
+
+            Assert.True(result.IsSuccess);
+            Assert.Empty(result.Value);
+        }
+
+        [Fact]
+        public async Task GetPostsBySellerIdAsync_WithSearchTerm_ShouldReturnFilteredPosts()
+        {
+            var sellerId = "seller-123";
+            var posts = new List<Post>
+            {
+                new Post { Id = 1, SellerId = sellerId, Title = "В'язана шапочка", Description = "Для котика", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                new Post { Id = 2, SellerId = sellerId, Title = "Чашка", Description = "Кераміка", IsDeleted = false, CreatedAt = DateTime.UtcNow },
+                new Post { Id = 3, SellerId = sellerId, Title = "Кігтеточка", Description = "В'язана основа", IsDeleted = false, CreatedAt = DateTime.UtcNow, },
+            };
+            _postRepoMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(posts);
+
+            var result = await _postService.GetPostsBySellerIdAsync(sellerId, "в'язана");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal(2, result.Value.Count);
+            Assert.Contains(result.Value, p => p.Id == 1);
+            Assert.Contains(result.Value, p => p.Id == 3);
         }
     }
 }

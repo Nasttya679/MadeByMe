@@ -1,6 +1,7 @@
 ﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
+using MadeByMe.Web.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -79,6 +80,7 @@ namespace MadeByMe.Web.Controllers
         }
 
         [HttpPost]
+        [RateLimit(3)]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             if (!ModelState.IsValid)

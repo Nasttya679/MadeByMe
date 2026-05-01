@@ -32,6 +32,8 @@ namespace MadeByMe.Application.DTOs
         [Required]
         public string Status { get; set; } = string.Empty;
 
+        public string? ReturnReason { get; set; }
+
         public List<SellerOrderItemDto> Items { get; set; } = new();
     }
 

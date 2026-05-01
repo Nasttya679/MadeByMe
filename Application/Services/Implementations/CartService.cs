@@ -14,17 +14,20 @@ namespace MadeByMe.Application.Services.Implementations
         private readonly IBuyerCartRepository _buyerCartRepo;
         private readonly IPostRepository _postRepo;
         private readonly ProjectSettings _settings;
+        private readonly IExchangeRateService _exchangeRateService;
 
         public CartService(
             ICartRepository cartRepo,
             IBuyerCartRepository buyerCartRepo,
             IPostRepository postRepo,
-            IOptions<ProjectSettings> options)
+            IOptions<ProjectSettings> options,
+            IExchangeRateService exchangeRateService)
         {
             _cartRepo = cartRepo;
             _buyerCartRepo = buyerCartRepo;
             _postRepo = postRepo;
             _settings = options.Value;
+            _exchangeRateService = exchangeRateService;
         }
 
         public async Task<Result<Cart>> GetUserCartEntityAsync(string buyerId)
@@ -43,13 +46,14 @@ namespace MadeByMe.Application.Services.Implementations
         {
             Log.Information("Отримання детального вмісту кошика для покупця {BuyerId}", buyerId);
             var cart = await _cartRepo.GetCartByBuyerIdAsync(buyerId);
+
             if (cart == null || cart.BuyerCarts == null || !cart.BuyerCarts.Any())
             {
-                Log.Information("Кошик покупця {BuyerId} порожній", buyerId);
                 return new CartViewModel
                 {
                     Items = new List<CartItem>(),
                     TotalPrice = 0,
+                    TotalPriceUsd = 0,
                 };
             }
 
@@ -60,7 +64,7 @@ namespace MadeByMe.Application.Services.Implementations
 
                 if (post == null)
                 {
-                    Log.Error("Помилка цілісності даних: товар {PostId} присутній у кошику {CartId}, але відсутній у таблиці товарів", bc.PostId, cart.CartId);
+                    Log.Error("Помилка цілісності даних: товар {PostId} відсутній", bc.PostId);
                     return $"Товар з ID {bc.PostId} більше не існує.";
                 }
 
@@ -81,12 +85,18 @@ namespace MadeByMe.Application.Services.Implementations
             }
 
             var total = items.Sum(i => i.Product!.Price * i.Quantity);
-            Log.Information("Кошик для {BuyerId} успішно завантажений. Кількість позицій: {Count}, Загальна сума: {Total}", buyerId, items.Count, total);
+
+            var usdRate = await _exchangeRateService.GetUsdRateAsync();
+            var totalUsd = Math.Round(total / usdRate, 2);
+
+            Log.Information("Кошик завантажений. Сума: {Total} грн (~{TotalUsd} USD)", total, totalUsd);
 
             return new CartViewModel
             {
                 Items = items,
                 TotalPrice = total,
+                TotalPriceUsd = totalUsd,
+                UsdRate = usdRate,
             };
         }
 

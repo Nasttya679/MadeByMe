@@ -1,0 +1,348 @@
+@using MadeByMe.Domain.Entities
+@model List<ChatMessage>
+@{
+    var allChats = ViewBag.AllChats as List<MadeByMe.Application.DTOs.Chat.ChatSummaryDto>;
+    var currentChatId = (int)ViewBag.CurrentChatId;
+    var interlocutorName = ViewBag.InterlocutorName as string;
+    var interlocutorPhoto = ViewBag.InterlocutorPhoto as string;
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var interlocutorId = ViewBag.InterlocutorId as string;
+}
+
+<div class="max-w-7xl mx-auto h-[calc(100vh-160px)] flex bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+    <div class="hidden lg:flex w-80 border-r border-gray-100 flex-col bg-gray-50/30">
+        <div class="p-6 border-b border-gray-100 bg-white">
+            <h3 class="font-black text-gray-900">Повідомлення</h3>
+        </div>
+        <div class="flex-1 overflow-y-auto divide-y divide-gray-50">
+            @foreach (var chat in allChats!)
+            {
+                <a href="/Chat/Room/@chat.ChatId" class="flex items-center p-4 hover:bg-white transition @(chat.ChatId == currentChatId ? "bg-white shadow-inner" : "") relative">
+                    <div class="relative shrink-0">
+                        <div class="w-10 h-10 rounded-full @(chat.ChatId == currentChatId ? "gradient-orange border-2 border-orange-200" : "bg-gray-200") flex items-center justify-center text-white text-xs font-bold overflow-hidden shadow-sm">
+                            @if (!string.IsNullOrEmpty(chat.InterlocutorPhoto))
+                            {
+                                <img src="@chat.InterlocutorPhoto" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                @chat.InterlocutorName?[0].ToString().ToUpper()
+                            }
+                        </div>
+
+                        @if (chat.IsPinned)
+                        {
+                            <div class="absolute -top-1 -right-1 bg-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm border border-gray-100">
+                                <i class="fa-solid fa-thumbtack text-[9px] text-orange-500"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="ml-3 flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-900 truncate">@chat.InterlocutorName</p>
+                        <p class="text-[11px] text-gray-400 truncate font-medium">@chat.LastMessage</p>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+    
+    <div class="flex-1 flex flex-col relative bg-white">
+        <div class="p-4 md:px-8 border-b border-gray-100 flex items-center justify-between bg-white/90 backdrop-blur-md sticky top-0 z-20">
+            <div class="flex items-center">
+                <a href="/Chat" class="lg:hidden mr-4 text-gray-400 hover:text-orange-600"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+                <div class="w-10 h-10 rounded-full gradient-orange flex items-center justify-center text-white font-bold shadow-md shrink-0 overflow-hidden border border-gray-100">
+                    @if (!string.IsNullOrEmpty(interlocutorPhoto))
+                    {
+                        <img src="@interlocutorPhoto" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        @interlocutorName?[0].ToString().ToUpper()
+                    }
+                </div>
+                <div class="ml-4">
+                    <h3 class="font-bold text-gray-900 leading-none">@interlocutorName</h3>
+                    <p id="userStatus" class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 transition-colors duration-300">Офлайн</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-1">
+                @{
+                    var isPinned = allChats?.FirstOrDefault(c => c.ChatId == currentChatId)?.IsPinned ?? false;
+                }
+                <button onclick="togglePin(@currentChatId)" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-50 transition" title="Закріпити чат">
+                    <i id="pinIcon" class="fa-solid fa-thumbtack @(isPinned ? "text-orange-500" : "text-gray-400")"></i>
+                </button>
+                
+                <div class="relative">
+                    <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-500 transition">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div id="chatMenu" class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 hidden z-50">
+                        <button onclick="confirmDeleteChat(false)" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center">
+                            <i class="fa-solid fa-user-slash mr-2 text-gray-400"></i> Видалити для мене
+                        </button>
+                        <button onclick="confirmDeleteChat(true)" class="w-full text-left px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center">
+                            <i class="fa-solid fa-trash-can mr-2"></i> Видалити для всіх
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-gray-50/50">
+            @foreach (var msg in Model)
+            {
+                bool isMine = msg.SenderId == currentUserId;
+                <div class="flex @(isMine ? "justify-end" : "justify-start") group" id="msg-@msg.Id">
+                    <div class="relative max-w-[80%] md:max-w-[60%]">
+                        @if (msg.IsDeletedForEveryone)
+                        {
+                            <div class="p-3 bg-gray-50 text-gray-400 rounded-2xl text-xs font-bold italic border border-gray-200 shadow-sm">
+                                <i class="fa-solid fa-ban mr-1"></i> Повідомлення видалено
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="p-4 @(isMine ? "bg-orange-600 text-white rounded-2xl rounded-tr-none shadow-lg shadow-orange-100" : "bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm")">
+
+                                @if (!string.IsNullOrEmpty(msg.FilePath))
+                                {
+                                    <div class="mb-3">
+                                        @if (msg.FileType == "Image") {
+                                            <img src="@msg.FilePath" class="rounded-xl w-full h-auto cursor-pointer shadow-sm hover:opacity-95 transition" onclick="window.open(this.src)" />
+                                        } else {
+                                            <a href="@msg.FilePath" target="_blank" class="flex items-center gap-3 p-3 @(isMine ? "bg-orange-700" : "bg-gray-100") rounded-xl text-xs font-bold transition">
+                                                <i class="fa-solid fa-file-arrow-down text-lg"></i>
+                                                <span class="truncate">@msg.FileName</span>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+
+                                <p class="text-sm font-medium leading-relaxed">@msg.Content</p>
+                                <div class="flex items-center justify-end gap-1 mt-2 opacity-60">
+                                    <span class="text-[9px] font-black uppercase">@msg.CreatedAt.ToString("HH:mm")</span>
+                                    @if (isMine) { <i class="fa-solid fa-check-double text-[10px]"></i> }
+                                </div>
+                            </div>
+
+                            @if (isMine)
+                            {
+                                <div class="absolute top-0 @(isMine ? "-left-10" : "-right-10") opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="deleteMessage(@msg.Id)" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="p-6 bg-white border-t border-gray-100">
+            <form id="chatForm" class="flex items-end gap-4" enctype="multipart/form-data">
+                <input type="hidden" name="ChatId" value="@currentChatId" />
+                @Html.AntiForgeryToken()
+
+                <div class="flex-1 bg-gray-50 rounded-2xl border-2 border-transparent focus-within:border-orange-500 focus-within:bg-white transition-all p-2">
+                    <div id="filePreview" class="hidden pb-2 mb-2 border-b border-gray-200 flex items-center justify-between px-2">
+                        <div class="flex items-center text-xs font-bold text-orange-600">
+                            <i class="fa-solid fa-paperclip mr-2"></i>
+                            <span id="fileName"></span>
+                        </div>
+                        <button type="button" onclick="resetFile()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="flex items-center">
+                        <label class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-orange-500 cursor-pointer transition">
+                            <i class="fa-solid fa-camera text-lg"></i>
+                            <input type="file" name="Attachment" id="fileInput" class="hidden" onchange="handleFileSelect()" />
+                        </label>
+                        <textarea id="messageInput" name="Content" rows="1" class="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 px-2 resize-none font-medium text-gray-700 max-h-32 overflow-y-auto" placeholder="Напишіть щось цікаве..."></textarea>                    </div>
+                </div>
+
+                <button type="submit" class="w-14 h-14 gradient-orange text-white rounded-2xl shadow-xl shadow-orange-100 hover:scale-105 active:scale-95 transition flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        const chatId = "@currentChatId";
+        const currentUserId = "@currentUserId";
+
+        connection.on("ReceiveMessage", function (json) {
+            console.log("Отримано повідомлення з сервера:", json);
+            const msg = JSON.parse(json);
+            renderMessage(msg);
+        });
+
+        connection.start().then(() => {
+            console.log("SignalR успішно підключено! Заходимо в кімнату:", chatId);
+
+            connection.invoke("JoinChat", parseInt(chatId))
+                .then(() => console.log("Успішно приєднано до групи чату!"))
+                .catch(err => console.error("Помилка приєднання до групи:", err));
+
+        }).catch(err => {
+            console.error("КРИТИЧНА ПОМИЛКА підключення SignalR:", err);
+        });
+        
+        document.getElementById("chatForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const input = document.getElementById("messageInput");
+            if (!input.value.trim() && !document.getElementById("fileInput").files.length) return;
+
+            const formData = new FormData(e.target);
+            const response = await fetch("/Chat/SendMessage", { method: "POST", body: formData });
+            
+            if (response.ok) {
+                e.target.reset();
+                resetFile();
+                messageInput.style.height = "auto";
+                scrollToBottom();
+            }
+        });
+
+        function renderMessage(msg) {
+            const container = document.getElementById("messagesContainer");
+            const isMine = msg.senderId === currentUserId;
+            
+            let timeText = "ЩОЙНО";
+            if (msg.createdAt) {
+                const d = new Date(msg.createdAt);
+                timeText = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            const html = `
+        <div class="flex ${isMine ? 'justify-end' : 'justify-start'} group">
+            <div class="max-w-[80%] md:max-w-[60%]">
+                <div class="p-4 ${isMine ? 'bg-orange-600 text-white rounded-2xl rounded-tr-none shadow-lg shadow-orange-100' : 'bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm'}">
+                    ${msg.filePath ? (msg.fileType === 'Image' ? `<img src="${msg.filePath}" class="rounded-xl w-full h-auto mb-2" />` : `<a href="${msg.filePath}" target="_blank" class="flex items-center gap-3 p-3 bg-black/10 rounded-xl text-xs font-bold transition mb-2"><i class="fa-solid fa-file-arrow-down text-lg"></i><span class="truncate">${msg.fileName}</span></a>`) : ''}
+                    <p class="text-sm font-medium leading-relaxed">${msg.content || ''}</p>
+                    <div class="flex items-center justify-end gap-1 mt-2 opacity-60">
+                        <span class="text-[9px] font-black uppercase">${timeText}</span>
+                        ${isMine ? '<i class="fa-solid fa-check-double text-[10px]"></i>' : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function handleFileSelect() {
+            const file = document.getElementById("fileInput").files[0];
+            if (file) {
+                document.getElementById("fileName").innerText = file.name;
+                document.getElementById("filePreview").classList.remove("hidden");
+            }
+        }
+
+        function resetFile() {
+            document.getElementById("fileInput").value = "";
+            document.getElementById("filePreview").classList.add("hidden");
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById("messagesContainer");
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm("Видалити це повідомлення для всіх?")) return;
+            const res = await fetch(`/Chat/DeleteMessage?messageId=${id}&forEveryone=true`, { method: 'POST' });
+            if (res.ok) location.reload();
+        }
+
+        scrollToBottom();
+
+        async function togglePin(id) {
+            const response = await fetch(`/Chat/TogglePin?chatId=${id}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                console.error("Помилка при закріпленні чату");
+            }
+}
+        
+        function toggleMenu() {
+            const menu = document.getElementById("chatMenu");
+            menu.classList.toggle("hidden");
+        }
+        
+        document.addEventListener("click", function(event) {
+            const menu = document.getElementById("chatMenu");
+            const button = menu.previousElementSibling;
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                menu.classList.add("hidden");
+            }
+        });
+        
+        async function confirmDeleteChat(forEveryone) {
+            const text = forEveryone ? "Видалити цей чат для вас і для співрозмовника?" : "Видалити цей чат тільки для себе?";
+            if (!confirm(text)) return;
+
+            const response = await fetch(`/Chat/DeleteChat?chatId=${chatId}&forEveryone=${forEveryone}`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                window.location.href = "/Chat"; 
+            } else {
+                alert("Помилка видалення чату.");
+            }
+        }
+        
+        const messageInput = document.getElementById("messageInput");
+
+        messageInput.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px"; 
+        });
+
+        const interlocutorId = "@interlocutorId";
+        
+        function updateStatusUI(isOnline) {
+            const statusEl = document.getElementById("userStatus");
+            if (isOnline) {
+                statusEl.textContent = "В мережі";
+                statusEl.className = "text-[10px] text-green-500 font-bold uppercase tracking-widest mt-1 transition-colors duration-300";
+            } else {
+                statusEl.textContent = "Офлайн";
+                statusEl.className = "text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 transition-colors duration-300";
+            }
+}
+        
+        connection.on("UserOnline", function(userId) {
+            if (userId === interlocutorId) updateStatusUI(true);
+        });
+
+        connection.on("UserOffline", function(userId) {
+            if (userId === interlocutorId) updateStatusUI(false);
+        });
+        
+        connection.start().then(async () => {
+            connection.invoke("JoinChat", parseInt(chatId));
+            
+            const isOnline = await connection.invoke("CheckUserOnline", interlocutorId);
+            updateStatusUI(isOnline);
+        });
+        
+    </script>
+    
+    
+}

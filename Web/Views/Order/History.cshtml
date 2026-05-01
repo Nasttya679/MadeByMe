@@ -15,20 +15,22 @@
 </style>
 
 <div class="max-w-5xl mx-auto py-12">
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-6">
-        <div class="text-center md:text-left">
+    <div class="mb-8">
+        <div class="mb-5 text-center md:text-left">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Історія покупок</h1>
             <p class="text-gray-500 font-medium">Стежте за статусом ваших замовлень</p>
         </div>
-
-        <div class="flex bg-gray-100 p-1.5 rounded-xl shadow-inner overflow-x-auto max-w-full">
-            @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлено"), ("Delivered", "Доставлено"), ("Cancelled", "Скасовано") })
-            {
-                <a href="?status=@s.Item1&search=@search&date=@date"
-                   class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
-                    @s.Item2
-                </a>
-            }
+        
+        <div class="w-full overflow-x-auto pb-2">
+            <div class="inline-flex bg-gray-100 p-1.5 rounded-xl shadow-inner min-w-full sm:min-w-0">
+                @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлено"), ("Delivered", "Доставлено"), ("Cancelled", "Скасовано"), ("ReturnRequested", "Запит на повернення"), ("Refunded", "Повернено") })
+                {
+                    <a href="?status=@s.Item1&search=@search&date=@date"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
+                        @s.Item2
+                    </a>
+                }
+            </div>
         </div>
     </div>
 
@@ -51,8 +53,7 @@
             <button type="submit" class="bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition flex items-center">
                 Знайти
             </button>
-
-            @* Кнопка очищення тільки для пошуку/дати *@
+            
             @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(date))
             {
                 <a href="/Order/History?status=@currentStatus" class="bg-gray-100 text-gray-600 px-5 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition flex items-center">
@@ -94,6 +95,8 @@
                             "Shipped" => "bg-purple-100 text-purple-700",
                             "Delivered" => "bg-green-100 text-green-700",
                             "Cancelled" => "bg-red-100 text-red-700",
+                            "ReturnRequested" => "bg-yellow-100 text-yellow-700",
+                            "Refunded" => "bg-yellow-200 text-yellow-800",
                             _ => "bg-gray-100 text-gray-700"
                         };
                         var statusUa = order.Status switch {
@@ -101,6 +104,8 @@
                             "Shipped" => "Відправлено",
                             "Delivered" => "Доставлено",
                             "Cancelled" => "Скасовано",
+                            "ReturnRequested" => "Запит на повернення",
+                            "Refunded" => "Повернено",
                             _ => order.Status
                         };
                     }
@@ -154,6 +159,12 @@
                     {
                         <a href="/Order/Cancel/@order.Id" class="px-6 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-300 transition text-sm flex items-center justify-center shadow-sm w-full sm:w-auto">
                             <i class="fa-solid fa-xmark mr-2"></i> Скасувати
+                        </a>
+                    }
+                    else if (order.Status == "Delivered")
+                    {
+                        <a href="/Order/Return/@order.Id" class="px-6 py-2.5 bg-white border border-amber-300 text-amber-700 rounded-xl font-bold hover:bg-amber-50 hover:border-amber-400 transition text-sm flex items-center justify-center shadow-sm w-full sm:w-auto">
+                            <i class="fa-solid fa-rotate-left mr-2"></i> Повернути товар
                         </a>
                     }
                 </div>

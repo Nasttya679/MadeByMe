@@ -10,9 +10,12 @@ namespace MadeByMe.Web.Controllers
     {
         private readonly IAdminService _adminService;
 
-        public AdminController(IAdminService adminService)
+        private readonly IComplaintService _complaintService;
+
+        public AdminController(IAdminService adminService, IComplaintService complaintService)
         {
             _adminService = adminService;
+            _complaintService = complaintService;
         }
 
         public async Task<IActionResult> Index(string searchTerm)
@@ -75,6 +78,49 @@ namespace MadeByMe.Web.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Complaints()
+        {
+            var result = await _complaintService.GetPendingComplaintsAsync();
+            return View(result.Value);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectComplaint(int id)
+        {
+            var result = await _complaintService.RejectComplaintAsync(id);
+
+            if (result.IsSuccess)
+            {
+                SetSuccessMessage("Скаргу відхилено.");
+            }
+            else
+            {
+                SetErrorMessage(result.ErrorMessage);
+            }
+
+            return RedirectToAction("Complaints");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveAndPunish(int id)
+        {
+            var result = await _complaintService.ApproveAndPunishAsync(id);
+
+            if (result.IsSuccess)
+            {
+                SetSuccessMessage("Скаргу схвалено! Каральні санкції успішно застосовано 😈");
+            }
+            else
+            {
+                SetErrorMessage(result.ErrorMessage);
+            }
+
+            return RedirectToAction("Complaints");
         }
     }
 }

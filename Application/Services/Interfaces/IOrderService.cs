@@ -19,5 +19,9 @@ namespace MadeByMe.Application.Services.Interfaces
         Task<Result<Order>> GetOrderByIdAndBuyerAsync(int orderId, string buyerId);
 
         Task<Result> CancelOrderAsync(int orderId, string buyerId, string? reason);
+
+        Task<Result> RequestReturnAsync(int orderId, string buyerId, string reason);
+
+        Task<Result> ApproveReturnAsync(int orderId, string sellerId);
     }
 }

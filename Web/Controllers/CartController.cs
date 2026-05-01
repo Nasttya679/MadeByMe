@@ -3,6 +3,7 @@ using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
 using MadeByMe.Domain.Entities;
+using MadeByMe.Web.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,7 @@ namespace MadeByMe.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RateLimit(5)]
         public async Task<IActionResult> AddToCart(AddToCartDto dto)
         {
             var buyerId = CurrentUserId;

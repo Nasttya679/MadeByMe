@@ -111,6 +111,44 @@ namespace MadeByMe.Web.Controllers
             return RedirectToAction("History");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Return(int id)
+        {
+            var result = await _orderService.GetOrderByIdAndBuyerAsync(id, CurrentUserId!);
+
+            if (result.IsFailure)
+            {
+                SetErrorMessage(result.ErrorMessage);
+                return RedirectToAction("History");
+            }
+
+            if (result.Value.Status != "Delivered")
+            {
+                SetErrorMessage("Повернути можна лише отримані (доставлені) замовлення.");
+                return RedirectToAction("History");
+            }
+
+            return View(result.Value);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReturnConfirm(int id, string reason)
+        {
+            var result = await _orderService.RequestReturnAsync(id, CurrentUserId!, reason);
+
+            if (result.IsFailure)
+            {
+                SetErrorMessage(result.ErrorMessage);
+            }
+            else
+            {
+                SetSuccessMessage("Ваш запит на повернення надіслано продавцю. Очікуйте підтвердження.");
+            }
+
+            return RedirectToAction("History");
+        }
+
         public IActionResult Success() => View();
     }
 }

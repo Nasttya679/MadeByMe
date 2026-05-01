@@ -30,5 +30,8 @@ namespace MadeByMe.Domain.Entities
 
         [MaxLength(255)]
         public string? Address { get; set; }
+
+        [MaxLength(2000)]
+        public string? SellerDescription { get; set; }
     }
 }

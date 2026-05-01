@@ -103,7 +103,7 @@ namespace MadeByMe.Application.Services.Implementations
             return Result.Success();
         }
 
-        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1)
+        public async Task<Result<List<Post>>> GetFilteredPostsAsync(string? searchTerm, int? categoryId, string? sortBy, int page = 1, string searchType = "products")
         {
             var postsQuery = (await _repo.GetAllAsync()).AsQueryable().Where(p => !p.IsDeleted);
 
@@ -115,8 +115,16 @@ namespace MadeByMe.Application.Services.Implementations
             if (!string.IsNullOrWhiteSpace(searchTerm) && searchTerm.Length >= _settings.Pagination.MinSearchLength)
             {
                 var lowerSearch = searchTerm.ToLower().Trim();
-                postsQuery = postsQuery.Where(p => (p.Title != null && p.Title.ToLower().Contains(lowerSearch)) ||
-                                                   (p.Description != null && p.Description.ToLower().Contains(lowerSearch)));
+
+                if (searchType == "sellers")
+                {
+                    postsQuery = postsQuery.Where(p => p.Seller != null && p.Seller.UserName != null && p.Seller.UserName.ToLower().Contains(lowerSearch));
+                }
+                else
+                {
+                    postsQuery = postsQuery.Where(p => (p.Title != null && p.Title.ToLower().Contains(lowerSearch)) ||
+                                                       (p.Description != null && p.Description.ToLower().Contains(lowerSearch)));
+                }
             }
 
             postsQuery = sortBy switch
@@ -134,13 +142,13 @@ namespace MadeByMe.Application.Services.Implementations
                 .Take(pageSize)
                 .ToList();
 
-            Log.Information("Фільтрація завершена. Знайдено: {Count} для сторінки {Page}", resultList.Count, page);
+            Log.Information("Фільтрація завершена. Знайдено: {Count} для сторінки {Page}. Тип пошуку: {SearchType}", resultList.Count, page, searchType);
 
             return resultList;
         }
 
         public async Task<Result<List<Post>>> SearchPostsAsync(string searchTerm)
-            => await GetFilteredPostsAsync(searchTerm, null, null, 1);
+            => await GetFilteredPostsAsync(searchTerm, null, null, 1, "products");
 
         public async Task<Result<List<Post>>> GetDeletedPostsAsync(string? userId = null)
         {
@@ -208,6 +216,27 @@ namespace MadeByMe.Application.Services.Implementations
                 .ToList();
 
             return topPosts;
+        }
+
+        public async Task<Result<List<Post>>> GetPostsBySellerIdAsync(string sellerId, string? searchTerm = null)
+        {
+            var query = (await _repo.GetAllAsync())
+                .AsQueryable()
+                .Where(p => p.SellerId == sellerId && !p.IsDeleted);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var lowerTerm = searchTerm.ToLower();
+                query = query.Where(p =>
+                    (p.Title != null && p.Title.ToLower().Contains(lowerTerm)) ||
+                    (p.Description != null && p.Description.ToLower().Contains(lowerTerm)));
+            }
+
+            var resultList = query.OrderByDescending(p => p.CreatedAt).ToList();
+
+            Log.Information("Отримано {Count} товарів для вітрини продавця {SellerId}", resultList.Count, sellerId);
+
+            return resultList;
         }
     }
 }

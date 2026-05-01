@@ -1,5 +1,6 @@
 ﻿using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
+using MadeByMe.Web.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -31,6 +32,7 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
+        [RateLimit(3)]
         public async Task<IActionResult> Create(CreateCommentDto dto)
         {
             if (!ModelState.IsValid)

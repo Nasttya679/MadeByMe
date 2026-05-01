@@ -122,9 +122,18 @@
                     </div>
 
                     <div class="border-t border-gray-200 pt-6">
-                        <div class="flex justify-between items-center text-xl font-bold text-gray-900">
-                            <span>До сплати:</span>
-                            <span class="text-3xl font-black text-orange-600">@cart.TotalPrice.ToString("F2") ₴</span>
+                        <div class="flex justify-between items-start">
+                            <span class="text-xl font-bold text-gray-900">До сплати:</span>
+                            <div class="text-right">
+                                <!-- Сума в гривнях -->
+                                <div class="text-3xl font-black text-orange-600">@cart.TotalPrice.ToString("F2") ₴</div>
+            
+                                <!-- Додаємо конвертацію в USD -->
+                                <div class="text-sm text-gray-400 font-bold mt-1 uppercase tracking-tighter">
+                                    ≈ $@cart.TotalPriceUsd.ToString("F2")
+                                    <span class="block text-[10px] opacity-75 font-medium">(Курс НБУ: @cart.UsdRate.ToString("F2"))</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 }

@@ -34,9 +34,9 @@ namespace MadeByMe.Web.Controllers
             _wishlistService = wishlistService;
         }
 
-        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? sortBy)
+        public async Task<IActionResult> Index(string? searchTerm, int? categoryId, string? sortBy, string searchType = "products")
         {
-            var result = await _postService.GetFilteredPostsAsync(searchTerm, categoryId, sortBy);
+            var result = await _postService.GetFilteredPostsAsync(searchTerm, categoryId, sortBy, 1, searchType);
 
             if (result.IsFailure)
             {
@@ -50,6 +50,7 @@ namespace MadeByMe.Web.Controllers
             ViewBag.CurrentSearch = searchTerm;
             ViewBag.CurrentCategory = categoryId;
             ViewBag.CurrentSort = sortBy;
+            ViewBag.CurrentSearchType = searchType;
 
             var currentUserId = CurrentUserId;
             var favoritePostIds = new HashSet<int>();
@@ -74,6 +75,7 @@ namespace MadeByMe.Web.Controllers
                 Status = post.Status,
                 CategoryName = post.Category,
                 SellerName = post.Seller,
+                SellerId = post.SellerId,
                 CreatedAt = post.CreatedAt,
                 IsFavorite = favoritePostIds.Contains(post.Id),
                 IsDeleted = post.IsDeleted,
@@ -155,7 +157,13 @@ namespace MadeByMe.Web.Controllers
             }
 
             Log.Information("Користувач {UserId} успішно створив пост '{PostTitle}' (ID: {PostId})", userId, createPostDto.Title, postResult.Value.Id);
-            return RedirectToAction(nameof(Index));
+
+            if (User.IsInRole("Admin"))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction("Storefront", "Seller", new { id = userId });
         }
 
         [Authorize(Roles = "Seller, Admin")]
@@ -242,7 +250,13 @@ namespace MadeByMe.Web.Controllers
             }
 
             Log.Information("Користувач {UserId} успішно оновив пост {PostId}", currentUserId, id);
-            return RedirectToAction(nameof(Details), new { id = id });
+
+            if (User.IsInRole("Admin"))
+            {
+                return RedirectToAction(nameof(Details), new { id = id });
+            }
+
+            return RedirectToAction("Storefront", "Seller", new { id = currentUserId });
         }
 
         [Authorize(Roles = "Seller, Admin")]
@@ -297,7 +311,13 @@ namespace MadeByMe.Web.Controllers
             }
 
             SetSuccessMessage("Виріб успішно переміщено до кошика!");
-            return RedirectToAction(nameof(Index));
+
+            if (User.IsInRole("Admin"))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction("Storefront", "Seller", new { id = CurrentUserId });
         }
 
         [Authorize(Roles = "Seller, Admin")]
@@ -359,13 +379,17 @@ namespace MadeByMe.Web.Controllers
             if (restoreResult.IsFailure)
             {
                 SetErrorMessage(restoreResult.ErrorMessage);
-            }
-            else
-            {
-                SetSuccessMessage($"Товар '{post.Title}' успішно відновлено і повернуто на вітрину!");
+                return RedirectToAction(nameof(DeletedPosts));
             }
 
-            return RedirectToAction(nameof(DeletedPosts));
+            SetSuccessMessage($"Товар '{post.Title}' успішно відновлено і повернуто на вітрину!");
+
+            if (User.IsInRole("Admin"))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            return RedirectToAction("Storefront", "Seller", new { id = CurrentUserId });
         }
 
         [Authorize(Roles = "Seller, Admin")]

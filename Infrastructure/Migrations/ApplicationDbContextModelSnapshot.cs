@@ -78,6 +78,10 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
+                    b.Property<string>("SellerDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
@@ -101,7 +105,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f525fdc8-77b0-4dc1-98a0-e86cd1e1d114",
+                            ConcurrencyStamp = "5e710ab1-e03b-4a1b-b343-6ec73f224f5c",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -110,7 +114,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "72389312-8ccb-4c1a-9dce-e271d51122c5",
+                            SecurityStamp = "40f8f8d5-210c-4794-98d5-ef8d96f99d37",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -118,7 +122,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0c81f914-1379-42cc-a067-ac2d368bc1c1",
+                            ConcurrencyStamp = "bb75373a-daa0-41c3-ab4a-c8f6f08a3aa4",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -127,7 +131,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "a9ec0e2b-b8bf-4760-a8fb-23ffb235073a",
+                            SecurityStamp = "a559e256-b60d-49fd-acc1-3ebdf03daa1a",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -135,7 +139,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "db964f37-0deb-4346-8350-ecf73ea4c869",
+                            ConcurrencyStamp = "017eacd6-cd54-4bd4-bee9-2c4963dcbd3d",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -144,7 +148,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "f0f7c1c8-80f7-4c3f-946e-c8cc42628910",
+                            SecurityStamp = "14052a19-0ca3-4451-a9ed-917316d6e4e9",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -264,6 +268,99 @@ namespace MadeByMe.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Chat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeletedByBuyer")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeletedBySeller")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeletedForEveryone")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPinnedByBuyer")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPinnedBySeller")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_message_at");
+
+                    b.Property<string>("SellerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.HasIndex("SellerId");
+
+                    b.ToTable("Chats");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChatId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileType")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeletedByRecipient")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeletedBySender")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeletedForEveryone")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("ChatMessages");
+                });
+
             modelBuilder.Entity("MadeByMe.Domain.Entities.Comment", b =>
                 {
                     b.Property<int>("CommentId")
@@ -318,6 +415,53 @@ namespace MadeByMe.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Complaint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReporterId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SellerId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.HasIndex("SellerId");
+
+                    b.ToTable("Complaints");
+                });
+
             modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -364,6 +508,10 @@ namespace MadeByMe.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ReturnReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -807,6 +955,44 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Navigation("Buyer");
                 });
 
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Chat", b =>
+                {
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Seller")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Buyer");
+
+                    b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("MadeByMe.Domain.Entities.Chat", "Chat")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("MadeByMe.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("MadeByMe.Domain.Entities.Post", "Post")
@@ -822,6 +1008,31 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Complaint", b =>
+                {
+                    b.HasOne("MadeByMe.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MadeByMe.Domain.Entities.ApplicationUser", "Seller")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("Seller");
                 });
 
             modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
@@ -979,6 +1190,11 @@ namespace MadeByMe.Infrastructure.Migrations
             modelBuilder.Entity("MadeByMe.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("MadeByMe.Domain.Entities.Chat", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("MadeByMe.Domain.Entities.Order", b =>
