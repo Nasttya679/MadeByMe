@@ -289,5 +289,110 @@ namespace MadeByMe.Tests.Services
             Assert.Equal("Скасувати можна лише замовлення, які ще знаходяться в обробці.", result.ErrorMessage);
             _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never); // Перевіряємо що БД НЕ оновилась
         }
+
+        [Fact]
+        public async Task RequestReturnAsync_WhenDelivered_ShouldReturnSuccessfully()
+        {
+            var order = new Order { Id = 1, BuyerId = "buyer-1", Status = "Delivered" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.RequestReturnAsync(1, "buyer-1", "Не підійшов розмір");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal("ReturnRequested", order.Status);
+            Assert.Equal("Не підійшов розмір", order.ReturnReason);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(1, "ReturnRequested"), Times.Once);
+        }
+
+        [Fact]
+        public async Task RequestReturnAsync_WhenNotDelivered_ShouldReturnFailure()
+        {
+            var order = new Order { Id = 1, BuyerId = "buyer-1", Status = "Shipped" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.RequestReturnAsync(1, "buyer-1", "Причина");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("Повернути можна лише ті замовлення, які вже доставлені.", result.ErrorMessage);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task RequestReturnAsync_WhenWrongBuyerOrNotFound_ShouldReturnFailure()
+        {
+            var existingOrder = new Order { Id = 1, BuyerId = "buyer-1", Status = "Delivered" };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(existingOrder);
+
+            var result = await _orderService.RequestReturnAsync(1, "hacker-user", "Причина");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("Замовлення не знайдено.", result.ErrorMessage);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ApproveReturnAsync_WhenValidRequest_ShouldReturnSuccessfully()
+        {
+            var order = new Order
+            {
+                Id = 1,
+                Status = "ReturnRequested",
+                OrderItems = new List<OrderItem>
+                {
+                    new OrderItem { Post = new Post { SellerId = "seller-1" }, },
+                },
+            };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.ApproveReturnAsync(1, "seller-1");
+
+            Assert.True(result.IsSuccess);
+            Assert.Equal("Refunded", order.Status);
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(1, "Refunded"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ApproveReturnAsync_WhenWrongSeller_ShouldReturnFailure()
+        {
+            var order = new Order
+            {
+                Id = 1,
+                Status = "ReturnRequested",
+                OrderItems = new List<OrderItem>
+                {
+                    new OrderItem { Post = new Post { SellerId = "seller-1" }, },
+                },
+            };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.ApproveReturnAsync(1, "hacker-seller");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("У вас немає прав змінювати статус цього замовлення.", result.ErrorMessage);
+
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ApproveReturnAsync_WhenStatusIsNotReturnRequested_ShouldReturnFailure()
+        {
+            var order = new Order
+            {
+                Id = 1,
+                Status = "Delivered",
+                OrderItems = new List<OrderItem>
+                {
+                    new OrderItem { Post = new Post { SellerId = "seller-1" }, },
+                },
+            };
+            _orderRepoMock.Setup(r => r.GetOrderByIdAsync(1)).ReturnsAsync(order);
+
+            var result = await _orderService.ApproveReturnAsync(1, "seller-1");
+
+            Assert.True(result.IsFailure);
+            Assert.Equal("Це замовлення не очікує на повернення.", result.ErrorMessage);
+
+            _orderRepoMock.Verify(r => r.UpdateOrderStatusAsync(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
     }
 }

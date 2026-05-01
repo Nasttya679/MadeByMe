@@ -46,6 +46,9 @@ namespace MadeByMe.Domain.Entities
         [MaxLength(500)]
         public string? CancellationReason { get; set; }
 
+        [MaxLength(500)]
+        public string? ReturnReason { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

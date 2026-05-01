@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1309;SA1101;SA1306;SA1516;SA1600;SA1117</NoWarn>
+    <NoWarn>$(NoWarn);SA1633;SA1200;SA0001;SA1309;SA1101;SA1306;SA1516;SA1600;SA1117;SA1000</NoWarn>
     <UserSecretsId>89dbfa9b-5985-4381-ba4e-24ef1c6900f5</UserSecretsId>
   </PropertyGroup>
 
@@ -23,6 +23,8 @@
     </PackageReference>
 
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.10" />
+
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 
     <PackageReference Include="Serilog" Version="4.3.1" />
 

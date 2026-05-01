@@ -125,6 +125,12 @@ namespace MadeByMe.Infrastructure.Data
 
         public DbSet<OrderItem> OrderItems { get; set; }
 
+        public DbSet<Complaint> Complaints { get; set; }
+
+        public DbSet<Chat> Chats { get; set; }
+
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -224,6 +230,51 @@ namespace MadeByMe.Infrastructure.Data
                 .WithMany(p => p.Photos)
                 .HasForeignKey(p => p.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Налаштування для скарг (Complaint)
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Reporter)
+                .WithMany()
+                .HasForeignKey(c => c.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict); // Restrict, щоб при видаленні користувача не падала база
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Seller)
+                .WithMany()
+                .HasForeignKey(c => c.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Post)
+                .WithMany()
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade); // Якщо видаляють пост, скарги на нього теж можна видалити
+
+            // Налаштування для чатів (Chat)
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.Buyer)
+                .WithMany()
+                .HasForeignKey(c => c.BuyerId)
+                .OnDelete(DeleteBehavior.Restrict); // Використовуємо Restrict, щоб уникнути конфліктів
+
+            modelBuilder.Entity<Chat>()
+                .HasOne(c => c.Seller)
+                .WithMany()
+                .HasForeignKey(c => c.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Налаштування для повідомлень (ChatMessage)
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Chat)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ChatId)
+                .OnDelete(DeleteBehavior.Cascade); // Якщо видаляється чат (для всіх), видаляються і повідомлення
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

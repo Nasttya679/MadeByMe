@@ -2,6 +2,7 @@
 using MadeByMe.Application.DTOs;
 using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Application.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
@@ -14,6 +15,12 @@ namespace MadeByMe.Web.Controllers
         public HomeController(IPostService postService)
         {
             _postService = postService;
+        }
+
+        [AllowAnonymous]
+        public IActionResult TooManyRequests()
+        {
+            return View();
         }
 
         public async Task<IActionResult> Index()

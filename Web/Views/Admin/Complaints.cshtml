@@ -1,0 +1,105 @@
+@model List<MadeByMe.Domain.Entities.Complaint>
+
+@{
+    ViewData["Title"] = "Модерація скарг";
+}
+
+<div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+    <div>
+        <h2 class="text-3xl font-extrabold text-gray-900">Модерація скарг</h2>
+        <p class="text-gray-500 mt-2 font-medium">Опрацювання запитів від користувачів та застосування санкцій</p>
+    </div>
+    
+    <a href="/Admin/Index" class="bg-gray-100 text-gray-700 font-bold px-5 py-2.5 rounded-xl hover:bg-gray-200 transition flex items-center shadow-sm">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Назад до панелі
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm mt-8">
+        <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+            <i class="fa-solid fa-shield-check"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">Все спокійно!</h2>
+        <p class="text-gray-500 mt-2 font-medium">Немає жодної активної скарги. Платформа в безпеці.</p>
+    </div>
+}
+else
+{
+    <div class="grid gap-6">
+        @foreach (var complaint in Model)
+        {
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex flex-col lg:flex-row gap-6 hover:shadow-md transition">
+                
+                <div class="flex-1 space-y-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">
+                            @complaint.Reason
+                        </span>
+                        <span class="text-xs font-bold text-gray-400">
+                            <i class="fa-regular fa-clock mr-1"></i> @complaint.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                        </span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <p class="text-sm text-gray-800 font-medium italic">
+                            "@(string.IsNullOrEmpty(complaint.Description) ? "Користувач не залишив коментаря." : complaint.Description)"
+                        </p>
+                        <p class="text-xs font-bold text-gray-400 mt-3 flex items-center">
+                            <i class="fa-solid fa-user-shield mr-1.5"></i> Репортер: @(complaint.Reporter?.UserName ?? "Невідомо")
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex-1 border-t lg:border-t-0 lg:border-l border-gray-100 pt-4 lg:pt-0 lg:pl-6 flex flex-col justify-center">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Об'єкт скарги</p>
+                    
+                    @if (complaint.PostId != null)
+                    {
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500 shrink-0">
+                                <i class="fa-solid fa-box-open text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-900 line-clamp-1">@(complaint.Post?.Title ?? "Товар видалено")</p>
+                                <a href="/Post/Details/@complaint.PostId" target="_blank" class="text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+                                    Переглянути товар <i class="fa-solid fa-arrow-up-right-from-square ml-0.5 text-[10px]"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 shrink-0">
+                            <i class="fa-solid fa-store text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">@(complaint.Seller?.UserName ?? complaint.Post?.Seller?.UserName ?? "Невідомо")</p>
+                            <p class="text-xs font-bold text-gray-500">Продавець</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:w-64 border-t lg:border-t-0 lg:border-l border-gray-100 pt-6 lg:pt-0 lg:pl-6 flex flex-col justify-center gap-3">
+                    <form asp-controller="Admin" asp-action="ApproveAndPunish" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@complaint.Id" />
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-3.5 rounded-xl transition shadow-md flex justify-center items-center" onclick="return confirm('Увага! Це зніме рейтинг з товару, а при 3-х порушеннях — заблокує продавця. Ви впевнені?');">
+                            <i class="fa-solid"></i> Підтвердити
+                        </button>
+                    </form>
+
+                    <form asp-controller="Admin" asp-action="RejectComplaint" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@complaint.Id" />
+                        <button type="submit" class="w-full bg-white border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 text-sm font-bold py-3 rounded-xl transition flex justify-center items-center">
+                            Відхилити
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        }
+    </div>
+}

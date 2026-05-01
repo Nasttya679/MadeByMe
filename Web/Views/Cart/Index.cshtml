@@ -66,11 +66,17 @@
                             <span class="text-green-600 font-bold">Безкоштовно</span>
                         </div>
                     </div>
-                    
+
                     <div class="border-t border-gray-100 pt-6 mb-8">
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-start">
                             <span class="text-lg font-bold text-gray-900">Разом</span>
-                            <span class="text-3xl font-black text-orange-600">@Model.TotalPrice ₴</span>
+                            <div class="text-right">
+                                <div class="text-3xl font-black text-orange-600">@Model.TotalPrice ₴</div>
+                                <div class="text-sm text-gray-400 font-bold mt-1 uppercase tracking-tighter">
+                                    ≈ $@Model.TotalPriceUsd
+                                    <span class="block text-[10px] opacity-75">(Курс НБУ: @Model.UsdRate)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

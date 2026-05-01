@@ -5,6 +5,7 @@
 
 @{
     ViewData["Title"] = Model.Post?.Title ?? "Деталі товару";
+    var currentUserId = UserManager.GetUserId(User);
 }
 
 <div class="max-w-6xl mx-auto py-8">
@@ -50,8 +51,17 @@
                 <div class="p-8 md:p-10 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start mb-4">
-                            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight pr-4">@Model.Post.Title</h1>
-                            <div class="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl border border-orange-100 shadow-sm text-center">
+                            <div>
+                                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight pr-4 mb-2">@Model.Post.Title</h1>
+                                
+                                @if (User.Identity?.IsAuthenticated == true && currentUserId != Model.Post.SellerId && !User.IsInRole("Admin"))
+                                {
+                                    <a href="/Complaint/Create?postId=@Model.Post.Id&sellerId=@Model.Post.SellerId" class="inline-flex items-center text-xs font-bold text-gray-400 hover:text-red-500 transition px-2 py-1 -ml-2 rounded-lg hover:bg-red-50">
+                                        <i class="fa-regular fa-flag mr-1.5"></i> Поскаржитися на товар
+                                    </a>
+                                }
+                            </div>
+                            <div class="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl border border-orange-100 shadow-sm text-center shrink-0">
                                 <span class="block text-xs font-bold uppercase tracking-widest text-orange-400 mb-0.5">Ціна</span>
                                 <span class="text-2xl font-black whitespace-nowrap">@Model.Post.Price ₴</span>
                             </div>
@@ -69,15 +79,23 @@
                             <span class="text-sm font-medium text-gray-500">Відгуків: @(Model.CommentsList?.Count ?? 0)</span>
                         </div>
 
-                        <div class="flex items-center mb-8 p-4 border border-gray-100 rounded-2xl">
-                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-black text-xl">
+                        <a href="/Seller/Storefront/@Model.Post.SellerId" class="flex items-center mb-8 p-4 border border-gray-100 rounded-2xl hover:border-orange-200 hover:bg-orange-50/50 transition group">
+                            <div class="h-12 w-12 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-black text-xl group-hover:scale-110 transition">
                                 @(string.IsNullOrEmpty(Model.Post.Seller?.UserName) ? "?" : Model.Post.Seller!.UserName.Substring(0, 1).ToUpper())
                             </div>
                             <div class="ml-4">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Продавець</p>
-                                <p class="text-lg font-bold text-gray-900">@(Model.Post.Seller?.UserName ?? "Невідомий майстер")</p>
+                                <p class="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition">@(Model.Post.Seller?.UserName ?? "Невідомий майстер")</p>
                             </div>
-                        </div>
+                        </a>
+
+                        @if (User.Identity?.IsAuthenticated == true && currentUserId != Model.Post.SellerId)
+                        {
+                            <a href="/Chat/GetOrCreateChat?targetUserId=@Model.Post.SellerId"
+                               class="w-full mb-6 flex items-center justify-center bg-white border-2 border-orange-600 text-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-50 transition shadow-sm">
+                                <i class="fa-regular fa-comment-dots mr-2"></i> Написати майстру
+                            </a>
+                        }
 
                         <div class="mb-8">
                             <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Опис товару</h3>
@@ -87,7 +105,6 @@
 
                     <div class="space-y-4 pt-6 border-t border-gray-100">
                         @{
-                            var currentUserId = UserManager.GetUserId(User);
                             var isAdmin = User.IsInRole("Admin");
                             var isOwner = currentUserId != null && currentUserId == Model.Post.SellerId;
                         }

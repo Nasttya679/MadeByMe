@@ -155,6 +155,7 @@ namespace MadeByMe.Application.Services.Implementations
                 ShippingAddress = $"{o.City}, {o.PostOffice}",
                 OrderDate = o.CreatedAt,
                 Status = o.Status,
+                ReturnReason = o.ReturnReason,
                 CancellationReason = o.CancellationReason,
                 TotalPrice = o.OrderItems
                     .Where(oi => oi.Post != null && oi.Post.SellerId == sellerId)
@@ -204,6 +205,58 @@ namespace MadeByMe.Application.Services.Implementations
             await _orderRepo.UpdateOrderStatusAsync(orderId, "Cancelled");
 
             Log.Information("Покупець {BuyerId} скасував замовлення {OrderId}. Причина: {Reason}", buyerId, orderId, reason);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> RequestReturnAsync(int orderId, string buyerId, string reason)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+            if (order == null || order.BuyerId != buyerId)
+            {
+                return "Замовлення не знайдено.";
+            }
+
+            if (order.Status != "Delivered")
+            {
+                return "Повернути можна лише ті замовлення, які вже доставлені.";
+            }
+
+            order.Status = "ReturnRequested";
+            order.ReturnReason = reason;
+
+            await _orderRepo.UpdateOrderStatusAsync(orderId, "ReturnRequested");
+
+            Log.Information("Покупець {BuyerId} оформив запит на повернення замовлення {OrderId}. Причина: {Reason}", buyerId, orderId, reason);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> ApproveReturnAsync(int orderId, string sellerId)
+        {
+            var order = await _orderRepo.GetOrderByIdAsync(orderId);
+
+            if (order == null)
+            {
+                return "Замовлення не знайдено.";
+            }
+
+            bool isSeller = order.OrderItems.Any(oi => oi.Post != null && oi.Post.SellerId == sellerId);
+            if (!isSeller)
+            {
+                return "У вас немає прав змінювати статус цього замовлення.";
+            }
+
+            if (order.Status != "ReturnRequested")
+            {
+                return "Це замовлення не очікує на повернення.";
+            }
+
+            order.Status = "Refunded";
+            await _orderRepo.UpdateOrderStatusAsync(orderId, "Refunded");
+
+            Log.Information("Продавець {SellerId} схвалив повернення коштів за замовлення {OrderId}", sellerId, orderId);
 
             return Result.Success();
         }

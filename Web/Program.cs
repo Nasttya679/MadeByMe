@@ -7,6 +7,7 @@ using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories;
 using MadeByMe.Infrastructure.Repositories.Implementations;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using MadeByMe.Web.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -65,6 +66,14 @@ builder.Services.AddScoped<IPhotoService, PhotoService>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IComplaintService, ComplaintService>();
+builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<IChatService, ChatService>();
+
+builder.Services.AddSignalR();
+
+builder.Services.AddHttpClient<IExchangeRateService, MadeByMe.Application.Services.Implementations.Client.NbuApiClient>();
 
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
@@ -132,6 +141,8 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Помилка при ініціалізації БД");
     }
 }
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 

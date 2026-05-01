@@ -9,5 +9,9 @@ namespace MadeByMe.Application.ViewModels
         public decimal TotalPrice { get; set; }
 
         public int ItemCount => Items?.Count ?? 0;
+
+        public decimal TotalPriceUsd { get; set; }
+
+        public decimal UsdRate { get; set; }
     }
 }

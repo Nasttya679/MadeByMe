@@ -15,17 +15,18 @@
 </style>
 
 <div class="max-w-6xl mx-auto py-10">
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-        <div>
-            <h1 class="text-3xl font-extrabold text-gray-900">Журнал замовлень</h1>
-            <p class="text-gray-500 mt-2 font-medium">Керуйте продажами та статусами замовлень клієнтів</p>
+    <div class="mb-8">
+        <div class="mb-5 text-center md:text-left">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Журнал замовлень</h1>
+            <p class="text-gray-500 font-medium">Керуйте продажами та статусами замовлень клієнтів</p>
         </div>
-
-        <div class="flex items-center">
-            <div class="flex bg-gray-100 p-1.5 rounded-xl shadow-inner overflow-x-auto max-w-full">
-                @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлені"), ("Delivered", "Доставлені"), ("Cancelled", "Скасовані") })
+        
+        <div class="w-full overflow-x-auto pb-2">
+            <div class="inline-flex bg-gray-100 p-1.5 rounded-xl shadow-inner min-w-full sm:min-w-0">
+                @foreach (var s in new[] { ("All", "Усі"), ("Processing", "В обробці"), ("Shipped", "Відправлено"), ("Delivered", "Доставлено"), ("Cancelled", "Скасовано"), ("ReturnRequested", "Запит на повернення"), ("Refunded", "Повернено") })
                 {
-                    <a href="?status=@s.Item1&search=@search&date=@date" class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
+                    <a href="?status=@s.Item1&search=@search&date=@date"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0 @(currentStatus == s.Item1 ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700")">
                         @s.Item2
                     </a>
                 }
@@ -95,6 +96,8 @@
                                 "Shipped" => "bg-purple-50 text-purple-700 border-purple-200",
                                 "Delivered" => "bg-green-100 text-green-700 border-green-200",
                                 "Cancelled" => "bg-red-50 text-red-700 border-red-200",
+                                "ReturnRequested" => "bg-yellow-50 text-yellow-700 border-yellow-200", 
+                                "Refunded" => "bg-yellow-100 text-yellow-800 border-yellow-300",
                                 _ => "bg-gray-50 text-gray-700 border-gray-200"
                             };
                             var statusUa = order.Status switch {
@@ -102,6 +105,8 @@
                                 "Shipped" => "Відправлено",
                                 "Delivered" => "Доставлено",
                                 "Cancelled" => "Скасовано",
+                                "ReturnRequested" => "Запит на повернення",
+                                "Refunded" => "Повернено",
                                 _ => order.Status
                             };
                         }
@@ -149,11 +154,18 @@
                                 <p class="text-3xl font-black text-orange-600">@order.TotalPrice.ToString("N2") ₴</p>
                             </div>
 
-                            <div class="space-y-3">
-                                <a href="tel:@order.BuyerPhone" class="flex items-center justify-center w-full bg-white border-2 border-orange-200 text-orange-600 text-sm font-bold py-3 rounded-xl hover:bg-orange-50 hover:border-orange-300 transition shadow-sm">
-                                    <i class="fa-solid fa-phone mr-2"></i> Зателефонувати
-                                </a>
-
+                            @if (order.Status == "ReturnRequested")
+                            {
+                                <form asp-controller="Seller" asp-action="ApproveReturn" method="post" class="w-full">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderId" value="@order.OrderId" />
+                                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold py-3 rounded-xl transition shadow-md">
+                                        <i class="fa-solid fa-check-double mr-2"></i> Схвалити повернення
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
                                 <form asp-controller="Seller" asp-action="UpdateStatus" method="post" class="w-full">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="orderId" value="@order.OrderId" />
@@ -166,24 +178,29 @@
                                         <option value="Cancelled">Скасовано</option>
                                     </select>
                                 </form>
-                            </div>
+                            }
                         </div>
 
-                        @if (order.Status == "Cancelled")
+                        @if (order.Status == "Cancelled" || order.Status == "ReturnRequested" || order.Status == "Refunded")
                         {
+                            bool isReturn = order.Status == "ReturnRequested" || order.Status == "Refunded";
+                            string? reasonText = isReturn ? order.ReturnReason : order.CancellationReason;
+                            
                             <div class="md:col-span-12 mt-2 pt-6 border-t border-gray-100">
-                                <div class="bg-red-50 rounded-2xl p-5 border border-red-100 flex items-start gap-4 shadow-sm">
-                                    <div class="w-10 h-10 bg-red-100 text-red-500 rounded-full flex items-center justify-center shrink-0">
-                                        <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                                <div class="@(isReturn ? "bg-yellow-50 border-yellow-200" : "bg-red-50 border-red-100") rounded-2xl p-5 border flex items-start gap-4 shadow-sm">
+                                    <div class="w-10 h-10 @(isReturn ? "bg-yellow-100 text-yellow-600" : "bg-red-100 text-red-500") rounded-full flex items-center justify-center shrink-0">
+                                        <i class="fa-solid @(isReturn ? "fa-box-open" : "fa-circle-exclamation") text-lg"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <p class="text-xs font-bold text-red-800 uppercase tracking-widest mb-1">Причина скасування покупцем</p>
-                                        <p class="text-sm font-medium text-red-700 italic">
-                                            "@(string.IsNullOrEmpty(order.CancellationReason) ? "Покупець не вказав причину скасування." : order.CancellationReason)"
+                                        <p class="text-xs font-bold @(isReturn ? "text-yellow-800" : "text-red-800") uppercase tracking-widest mb-1">
+                                            Причина @(isReturn ? "повернення" : "скасування") покупцем
+                                        </p>
+                                        <p class="text-sm font-medium @(isReturn ? "text-yellow-700" : "text-red-700") italic">
+                                            "@(string.IsNullOrEmpty(reasonText) ? "Клієнт не вказав причину." : reasonText)"
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </div> 
                         }
 
                     </div>

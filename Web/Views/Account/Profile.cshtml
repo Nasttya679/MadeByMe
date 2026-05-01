@@ -132,8 +132,8 @@
 
                                 @if (isSeller)
                                 {
-                                    <a href="/Profile/Seller" class="inline-flex items-center justify-center bg-white text-orange-600 border-2 border-orange-100 px-6 py-3 rounded-2xl hover:bg-orange-50 hover:border-orange-200 transition font-bold shadow-sm">
-                                        <i class="fa-solid fa-chart-line mr-3"></i>
+                                    <a asp-controller="Seller" asp-action="Storefront" asp-route-id="@Model.Id" class="inline-flex items-center justify-center bg-white text-orange-600 border-2 border-orange-100 px-6 py-3 rounded-2xl hover:bg-orange-50 hover:border-orange-200 transition font-bold shadow-sm group">
+                                        <i class="fa-solid fa-store mr-3 group-hover:scale-110 transition-transform"></i>
                                         Панель продавця
                                     </a>
                                 }

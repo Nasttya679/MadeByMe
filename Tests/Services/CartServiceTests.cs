@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MadeByMe.Application.Common;
 using MadeByMe.Application.Services.Implementations;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ namespace MadeByMe.Tests.Services
         private readonly Mock<IBuyerCartRepository> _buyerCartRepoMock;
         private readonly Mock<IPostRepository> _postRepoMock;
         private readonly Mock<IOptions<ProjectSettings>> _optionsMock;
+        private readonly Mock<IExchangeRateService> _exchangeRateServiceMock;
         private readonly CartService _cartService;
 
         public CartServiceTests()
@@ -24,17 +26,21 @@ namespace MadeByMe.Tests.Services
             _cartRepoMock = new Mock<ICartRepository>();
             _buyerCartRepoMock = new Mock<IBuyerCartRepository>();
             _postRepoMock = new Mock<IPostRepository>();
+            _exchangeRateServiceMock = new Mock<IExchangeRateService>();
 
             _optionsMock = new Mock<IOptions<ProjectSettings>>();
             var settings = new ProjectSettings();
             settings.FileStorage.DefaultImagePath = "/images/default.jpg";
             _optionsMock.Setup(o => o.Value).Returns(settings);
 
+            _exchangeRateServiceMock.Setup(s => s.GetUsdRateAsync()).ReturnsAsync(40.0m);
+
             _cartService = new CartService(
                 _cartRepoMock.Object,
                 _buyerCartRepoMock.Object,
                 _postRepoMock.Object,
-                _optionsMock.Object);
+                _optionsMock.Object,
+                _exchangeRateServiceMock.Object);
         }
 
         [Fact]
@@ -49,6 +55,7 @@ namespace MadeByMe.Tests.Services
             Assert.True(result.IsSuccess);
             Assert.Empty(result.Value.Items);
             Assert.Equal(0, result.Value.TotalPrice);
+            Assert.Equal(0, result.Value.TotalPriceUsd);
         }
 
         [Fact]
@@ -81,16 +88,19 @@ namespace MadeByMe.Tests.Services
                 BuyerId = buyerId,
                 BuyerCarts = new List<BuyerCart> { new BuyerCart { PostId = 1, Quantity = 2 }, },
             };
-            var post = new Post { Id = 1, Title = "Handmade Item", Price = 150, Photos = new List<Photo>() };
+            var post = new Post { Id = 1, Title = "Handmade Item", Price = 200, Photos = new List<Photo>() };
 
             _cartRepoMock.Setup(repo => repo.GetCartByBuyerIdAsync(buyerId)).ReturnsAsync(cart);
             _postRepoMock.Setup(repo => repo.GetByIdAsync(1)).ReturnsAsync(post);
+            _exchangeRateServiceMock.Setup(s => s.GetUsdRateAsync()).ReturnsAsync(40.0m);
 
             var result = await _cartService.GetUserCartAsync(buyerId);
 
             Assert.True(result.IsSuccess);
             Assert.Single(result.Value.Items);
-            Assert.Equal(300, result.Value.TotalPrice); // 150 * 2
+            Assert.Equal(400, result.Value.TotalPrice);
+            Assert.Equal(10, result.Value.TotalPriceUsd);
+            Assert.Equal(40, result.Value.UsdRate);
             Assert.Equal("/images/default.jpg", result.Value.Items.First().Product!.ImageUrl);
         }
 
@@ -144,6 +154,7 @@ namespace MadeByMe.Tests.Services
             _buyerCartRepoMock.Setup(repo => repo.GetItemsByCartIdAsync(cartId)).ReturnsAsync(items);
             _postRepoMock.Setup(repo => repo.GetByIdAsync(10)).ReturnsAsync(new Post { Id = 10, Price = 100 });
             _postRepoMock.Setup(repo => repo.GetByIdAsync(20)).ReturnsAsync(new Post { Id = 20, Price = 50 });
+            _exchangeRateServiceMock.Setup(s => s.GetUsdRateAsync()).ReturnsAsync(40.0m);
 
             var result = await _cartService.GetCartTotalAsync(cartId);
 
