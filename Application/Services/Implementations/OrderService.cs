@@ -11,11 +11,13 @@ namespace MadeByMe.Application.Services.Implementations
     {
         private readonly IOrderRepository _orderRepo;
         private readonly ICartService _cartService;
+        private readonly INotificationService _notificationService;
 
-        public OrderService(IOrderRepository orderRepo, ICartService cartService)
+        public OrderService(IOrderRepository orderRepo, ICartService cartService, INotificationService notificationService)
         {
             _orderRepo = orderRepo;
             _cartService = cartService;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<Order>> CreateOrderAsync(string buyerId, OrderDto dto)
@@ -66,8 +68,23 @@ namespace MadeByMe.Application.Services.Implementations
             }
 
             order.TotalAmount = total;
+
+            var sellerIds = cart.BuyerCarts
+                .Where(bc => bc.Post != null && !string.IsNullOrEmpty(bc.Post.SellerId))
+                .Select(bc => bc.Post!.SellerId)
+                .Distinct()
+                .ToList();
+
             await _orderRepo.CreateOrderAsync(order);
             await _cartService.ClearCartAsync(cart.CartId);
+
+            foreach (var sellerId in sellerIds)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    sellerId!,
+                    $"У вас нове замовлення №{order.Id}. Перейдіть у Журнал замовлень, щоб опрацювати його.",
+                    "/Seller/Orders");
+            }
 
             Log.Information("Замовлення {OrderId} успішно створено", order.Id);
             return order;
@@ -121,6 +138,19 @@ namespace MadeByMe.Application.Services.Implementations
 
             await _orderRepo.UpdateOrderStatusAsync(orderId, status);
             Log.Information("Статус замовлення {OrderId} змінено на {Status} продавцем {UserId}", orderId, status, currentUserId);
+
+            if (status == "Shipped" || status == "Delivered")
+            {
+                string statusUa = status == "Shipped" ? "відправлено" : "доставлено";
+
+                if (!string.IsNullOrEmpty(order.BuyerId))
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        order.BuyerId,
+                        $"Ваше замовлення №{orderId} було {statusUa}! Дякуємо за покупку.",
+                        "/Order/History");
+                }
+            }
 
             return Result.Success();
         }

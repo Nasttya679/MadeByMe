@@ -36,5 +36,7 @@ namespace MadeByMe.Domain.Entities
         public bool IsDeletedByRecipient { get; set; } = false;
 
         public bool IsDeletedForEveryone { get; set; } = false;
+
+        public bool IsRead { get; set; } = false;
     }
 }

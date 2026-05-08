@@ -1,5 +1,6 @@
 using MadeByMe.Application.DTOs.Chat;
 using MadeByMe.Application.Services.Implementations;
+using MadeByMe.Application.Services.Interfaces;
 using MadeByMe.Domain.Entities;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
 using Microsoft.AspNetCore.Hosting;
@@ -13,16 +14,18 @@ namespace MadeByMe.Tests.Services
     {
         private readonly Mock<IChatRepository> _chatRepoMock;
         private readonly Mock<IWebHostEnvironment> _envMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly ChatService _chatService;
 
         public ChatServiceTests()
         {
             _chatRepoMock = new Mock<IChatRepository>();
             _envMock = new Mock<IWebHostEnvironment>();
+            _notificationServiceMock = new Mock<INotificationService>();
 
             _envMock.Setup(e => e.WebRootPath).Returns(Path.GetTempPath());
 
-            _chatService = new ChatService(_chatRepoMock.Object, _envMock.Object);
+            _chatService = new ChatService(_chatRepoMock.Object, _envMock.Object, _notificationServiceMock.Object);
         }
 
         [Fact]

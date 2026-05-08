@@ -1,89 +1,104 @@
 @model IEnumerable<MadeByMe.Application.DTOs.PostResponseDto>
 
 @{
-    ViewData["Title"] = "Кошик товарів";
+    ViewData["Title"] = "Видалені товари";
 }
 
-<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center">
-            <i class="fa-solid fa-trash-can text-red-500 mr-3"></i> Видалені товари
-        </h1>
-        <p class="text-gray-500 mt-1">Тут знаходяться товари, які були приховані з вітрини магазину.</p>
+<div class="max-w-7xl mx-auto py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center">
+                <i class="fa-solid fa-trash-can text-red-500 mr-3"></i> Видалені товари
+            </h1>
+            <p class="text-gray-500 mt-2 font-medium">Тут знаходяться товари, які були приховані з вітрини магазину.</p>
+        </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Post" asp-action="Index"
+               class="inline-flex items-center text-blue-600 hover:text-blue-700 font-bold transition bg-blue-50 px-5 py-2.5 rounded-xl border border-blue-100 shadow-sm hover:bg-blue-100">
+                <i class="fa-solid fa-list-ul mr-2"></i> До каталогу
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Seller" asp-action="Storefront" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"
+               class="inline-flex items-center text-orange-600 hover:text-orange-700 font-bold transition bg-orange-50 px-5 py-2.5 rounded-xl border border-orange-100 shadow-sm hover:bg-orange-100">
+                <i class="fa-solid fa-arrow-left mr-2"></i> До панелі продавця
+            </a>
+        }
     </div>
 
-    @if (User.IsInRole("Admin"))
+    @if (!Model.Any())
     {
-        <a asp-controller="Post" asp-action="Index"
-           class="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold transition bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
-            <i class="fa-solid fa-list-ul mr-2"></i> Повернутися до каталогу
-        </a>
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-16 text-center">
+            <div class="text-7xl text-gray-200 mb-6 animate-pulse">
+                <i class="fa-solid fa-box-archive"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">Кошик порожній</h2>
+            <p class="text-gray-500 mb-8 max-w-md mx-auto">У вас немає видалених товарів. Усі ваші активні вироби знаходяться в каталозі.</p>
+            
+            @if (User.IsInRole("Admin"))
+            {
+                <a href="/Post" class="bg-gray-900 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition inline-block shadow-sm">
+                    Перейти до каталогу
+                </a>
+            }
+            else
+            {
+                <a href="/Seller/Storefront/@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" class="bg-orange-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-orange-700 transition inline-block shadow-sm">
+                    Повернутися до вітрини
+                </a>
+            }
+        </div>
     }
     else
     {
-        <a asp-controller="Seller" asp-action="Storefront" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value"
-           class="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold transition bg-orange-50 px-4 py-2 rounded-lg border border-orange-100">
-            <i class="fa-solid fa-arrow-left mr-2"></i> Повернутися до панелі продавця
-        </a>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach (var post in Model)
+            {
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group opacity-90 hover:opacity-100 transition duration-300 hover:shadow-md" id="deleted-item-@post.Id">
+                    <div class="relative bg-gray-100 h-48 overflow-hidden">
+                        <img src="@post.PhotoUrl" alt="@post.Title" class="object-cover w-full h-full grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110" />
+                        
+                        <div class="absolute top-3 right-3 bg-red-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm">
+                            <i class="fa-solid fa-trash mr-1"></i> Видалено
+                        </div>
+                    </div>
+                    
+                    <div class="p-5 flex-grow flex flex-col justify-between">
+                        <div>
+                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">
+                                @(post.CategoryName?.Name ?? "Без категорії")
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1" title="@post.Title">
+                                @post.Title
+                            </h3>
+                            <div class="text-2xl font-black text-gray-400 group-hover:text-gray-900 transition-colors mb-5 mt-auto">
+                                @post.Price ₴
+                            </div>
+                        </div>
+
+                        <div class="mt-auto flex gap-2">
+                            <form asp-controller="Post" asp-action="Restore" method="post" class="flex-grow" onsubmit="return animateRemoval(event, 'deleted-item-@post.Id')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@post.Id" />
+                                <button type="submit" class="w-full bg-green-50 text-green-600 border border-transparent rounded-xl py-2.5 font-bold hover:bg-green-600 hover:text-white transition-all duration-200 flex justify-center items-center shadow-sm text-sm">
+                                    <i class="fa-solid fa-rotate-left mr-2"></i> Відновити
+                                </button>
+                            </form>
+
+                            <form asp-controller="Post" asp-action="HardDelete" method="post" class="flex-shrink-0" onsubmit="if(!confirm('Ви впевнені, що хочете видалити цей товар назавжди? Цю дію неможливо скасувати!')) return false; return animateRemoval(event, 'deleted-item-@post.Id');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@post.Id" />
+                                <button type="submit" title="Видалити назавжди" class="h-full px-4 bg-red-50 text-red-600 border border-transparent rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all duration-200 flex justify-center items-center shadow-sm">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
-
-@if (!Model.Any())
-{
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center mt-6">
-        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-5">
-            <i class="fa-solid fa-box-open text-4xl text-gray-300"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Кошик порожній</h2>
-        <p class="text-gray-500 max-w-md mx-auto">У вас немає видалених товарів. Усі ваші активні вироби знаходяться в каталозі.</p>
-    </div>
-}
-else
-{
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        @foreach (var post in Model)
-        {
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col group opacity-80 hover:opacity-100 transition duration-300">
-                <div class="relative bg-gray-100">
-                    <img src="@post.PhotoUrl" alt="@post.Title" class="object-cover w-full h-48 grayscale group-hover:grayscale-0 transition duration-300" />
-                    
-                    <div class="absolute top-3 right-3 bg-red-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-sm">
-                        <i class="fa-solid fa-trash mr-1"></i> Видалено
-                    </div>
-                </div>
-                
-                <div class="p-5 flex-grow flex flex-col">
-                    <div class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">
-                        @(post.CategoryName?.Name ?? "Без категорії")
-                    </div>
-                    
-                    <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1" title="@post.Title">
-                        @post.Title
-                    </h3>
-                    
-                    <div class="text-xl font-extrabold text-gray-900 mb-5 mt-auto">
-                        @post.Price.ToString("C0", new System.Globalization.CultureInfo("uk-UA"))
-                    </div>
-
-                    <div class="mt-auto flex gap-2">
-                        <form asp-controller="Post" asp-action="Restore" method="post" class="flex-grow">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@post.Id" />
-                            <button type="submit" class="w-full bg-green-50 text-green-600 border border-green-200 rounded-xl py-2 font-bold hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 flex justify-center items-center shadow-sm">
-                                <i class="fa-solid fa-rotate-left mr-2"></i> Відновити
-                            </button>
-                        </form>
-
-                        <form asp-controller="Post" asp-action="HardDelete" method="post" class="flex-shrink-0" onsubmit="return confirm('Ви впевнені, що хочете видалити цей товар назавжди? Цю дію неможливо скасувати!');">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@post.Id" />
-                            <button type="submit" title="Видалити назавжди" class="h-full px-4 bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-200 flex justify-center items-center shadow-sm">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-}

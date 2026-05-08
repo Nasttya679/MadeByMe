@@ -28,18 +28,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    function clearCartAndRedirect() {
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        fetch('/Cart/ClearCart', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': token
-            }
-        }).then(() => {
-            window.location.href = '/Order/History';
-        });
-    }
-</script>

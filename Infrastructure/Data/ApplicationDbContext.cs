@@ -1,6 +1,7 @@
 ﻿using MadeByMe.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 // namespace MadeByMe.Infrastructure.Data
 // {
@@ -131,9 +132,33 @@ namespace MadeByMe.Infrastructure.Data
 
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            var kyivTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows() ? "FLE Standard Time" : "Europe/Kyiv");
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime, DateTime>(
+                            v => v.ToUniversalTime(),
+                            v => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(v, DateTimeKind.Utc), kyivTimeZone)));
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime?, DateTime?>(
+                            v => v.HasValue ? v.Value.ToUniversalTime() : v,
+                            v => v.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(v.Value, DateTimeKind.Utc), kyivTimeZone) : v));
+                    }
+                }
+            }
 
             // Налаштування зв'язків та обмежень
 
@@ -207,7 +232,7 @@ namespace MadeByMe.Infrastructure.Data
                 .HasOne(c => c.Buyer)
                 .WithMany()
                 .HasForeignKey(c => c.BuyerId)
-                .OnDelete(DeleteBehavior.SetNull); // BuyerId може бути NULL
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<BuyerCart>()
                 .HasOne(bc => bc.Cart)
@@ -236,7 +261,7 @@ namespace MadeByMe.Infrastructure.Data
                 .HasOne(c => c.Reporter)
                 .WithMany()
                 .HasForeignKey(c => c.ReporterId)
-                .OnDelete(DeleteBehavior.Restrict); // Restrict, щоб при видаленні користувача не падала база
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Complaint>()
                 .HasOne(c => c.Seller)
@@ -248,14 +273,14 @@ namespace MadeByMe.Infrastructure.Data
                 .HasOne(c => c.Post)
                 .WithMany()
                 .HasForeignKey(c => c.PostId)
-                .OnDelete(DeleteBehavior.Cascade); // Якщо видаляють пост, скарги на нього теж можна видалити
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Налаштування для чатів (Chat)
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.Buyer)
                 .WithMany()
                 .HasForeignKey(c => c.BuyerId)
-                .OnDelete(DeleteBehavior.Restrict); // Використовуємо Restrict, щоб уникнути конфліктів
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Chat>()
                 .HasOne(c => c.Seller)
@@ -268,12 +293,19 @@ namespace MadeByMe.Infrastructure.Data
                 .HasOne(m => m.Chat)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ChatId)
-                .OnDelete(DeleteBehavior.Cascade); // Якщо видаляється чат (для всіх), видаляються і повідомлення
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ChatMessage>()
                 .HasOne(m => m.Sender)
                 .WithMany()
                 .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Налаштування для сповіщень (Notification)
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

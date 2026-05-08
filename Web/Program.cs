@@ -7,6 +7,7 @@ using MadeByMe.Infrastructure.Data;
 using MadeByMe.Infrastructure.Repositories;
 using MadeByMe.Infrastructure.Repositories.Implementations;
 using MadeByMe.Infrastructure.Repositories.Interfaces;
+using MadeByMe.Web.BackgroundServices;
 using MadeByMe.Web.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -70,8 +71,11 @@ builder.Services.AddScoped<IComplaintService, ComplaintService>();
 builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<NotificationBackgroundService>();
 
 builder.Services.AddHttpClient<IExchangeRateService, MadeByMe.Application.Services.Implementations.Client.NbuApiClient>();
 
@@ -143,6 +147,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapHub<ChatHub>("/chatHub");
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 

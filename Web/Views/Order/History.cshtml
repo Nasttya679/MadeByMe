@@ -7,12 +7,6 @@
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-    .flatpickr-day.selected { background: #ea580c !important; border-color: #ea580c !important; }
-    .flatpickr-months .flatpickr-month { background: #ea580c !important; color: white !important; fill: white !important; }
-    .flatpickr-current-month .flatpickr-monthDropdown-months { background: #ea580c !important; }
-    .flatpickr-calendar { border-radius: 1rem !important; border: none !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-</style>
 
 <div class="max-w-5xl mx-auto py-12">
     <div class="mb-8">
@@ -175,13 +169,3 @@
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/uk.js"></script>
-
-<script>
-    flatpickr("#datePicker", {
-        locale: "uk",
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d.m.Y",
-        disableMobile: "true",
-    });
-</script>
