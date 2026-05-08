@@ -3,6 +3,7 @@ using System;
 using MadeByMe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MadeByMe.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507190857_AddSenderAvatarToNotifications")]
+    partial class AddSenderAvatarToNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,7 +108,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "11111111-1111-1111-1111-111111111111",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6503b22c-7269-4849-90a6-c67732145d99",
+                            ConcurrencyStamp = "4bb3ee39-2d13-4f0d-9acc-56ad58765b3d",
                             Email = "admin@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -114,7 +117,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/admin.jpg",
-                            SecurityStamp = "113d5c57-7418-4270-a401-4640d5f62c0d",
+                            SecurityStamp = "d5703922-a9f2-4c59-9223-db22f0c9f6d5",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         },
@@ -122,7 +125,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "22222222-2222-2222-2222-222222222222",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b3d7fb73-99eb-4c15-8886-c5e80fc2f1bd",
+                            ConcurrencyStamp = "fa8985eb-8c4c-4fb4-9de3-c43cf3f57744",
                             Email = "artist@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -131,7 +134,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/artist.jpg",
-                            SecurityStamp = "a9506d1c-e546-4ded-ab40-62f1426164a8",
+                            SecurityStamp = "3a1428a8-6614-4b46-ad5d-3b27be7b6a0d",
                             TwoFactorEnabled = false,
                             UserName = "artist123"
                         },
@@ -139,7 +142,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = "33333333-3333-3333-3333-333333333333",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "08847f23-7d26-4335-8f1c-5252694f410b",
+                            ConcurrencyStamp = "5b773a46-8dd9-4747-8f0d-09fb5cdfc39c",
                             Email = "customer@example.com",
                             EmailConfirmed = false,
                             IsBlocked = false,
@@ -148,7 +151,7 @@ namespace MadeByMe.Infrastructure.Migrations
                             PasswordHash = "AQAAAAIAAYagAAAAEEXivHFqQPnenCGcYWQxSSsPJodGdx5QOp7RutIpcF4XHrBMNdJS3RHWvJJmJvQm4w==",
                             PhoneNumberConfirmed = false,
                             ProfilePicture = "/images/customer.jpg",
-                            SecurityStamp = "b6cc4a89-4ffb-49b5-84fd-31c4ad30e676",
+                            SecurityStamp = "a23fdeb7-c261-4508-b7d0-cdba7422df2c",
                             TwoFactorEnabled = false,
                             UserName = "customer1"
                         });
@@ -348,9 +351,6 @@ namespace MadeByMe.Infrastructure.Migrations
                     b.Property<bool>("IsDeletedForEveryone")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("SenderId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -402,7 +402,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             CommentId = 1,
                             Content = "Дуже гарна сережка! Якісне виконання.",
-                            CreatedAt = new DateTime(2024, 1, 10, 8, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 1,
                             Stars = 5,
                             UserId = "33333333-3333-3333-3333-333333333333"
@@ -411,7 +411,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             CommentId = 2,
                             Content = "Чудова картина, автор - талановитий!",
-                            CreatedAt = new DateTime(2024, 1, 9, 10, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             PostId = 3,
                             Stars = 5,
                             UserId = "11111111-1111-1111-1111-111111111111"
@@ -690,7 +690,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = 1,
                             CategoryId = 1,
-                            CreatedAt = new DateTime(2024, 1, 10, 10, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Ручної роботи з натуральним каменем",
                             IsDeleted = false,
                             Price = 799.99m,
@@ -703,7 +703,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = 2,
                             CategoryId = 2,
-                            CreatedAt = new DateTime(2024, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2024, 1, 5, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Керамічна ваза з українським орнаментом",
                             IsDeleted = false,
                             Price = 1200.50m,
@@ -716,7 +716,7 @@ namespace MadeByMe.Infrastructure.Migrations
                         {
                             Id = 3,
                             CategoryId = 3,
-                            CreatedAt = new DateTime(2023, 12, 30, 10, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2023, 12, 30, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Олія на полотні, 40x60 см",
                             IsDeleted = false,
                             Price = 2500.00m,

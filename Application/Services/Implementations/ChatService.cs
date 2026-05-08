@@ -11,11 +11,13 @@ namespace MadeByMe.Application.Services.Implementations
     {
         private readonly IChatRepository _chatRepo;
         private readonly IWebHostEnvironment _env;
+        private readonly INotificationService _notificationService;
 
-        public ChatService(IChatRepository chatRepo, IWebHostEnvironment env)
+        public ChatService(IChatRepository chatRepo, IWebHostEnvironment env, INotificationService notificationService)
         {
             _chatRepo = chatRepo;
             _env = env;
+            _notificationService = notificationService;
         }
 
         public async Task<Result<Chat>> GetOrCreateChatAsync(string currentUserId, string targetUserId)
@@ -37,6 +39,8 @@ namespace MadeByMe.Application.Services.Implementations
                     lastMessageText = !string.IsNullOrEmpty(lastMsg.Content) ? lastMsg.Content : "Файл";
                 }
 
+                int unreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead);
+
                 return new ChatSummaryDto
                 {
                     ChatId = c.Id,
@@ -46,6 +50,7 @@ namespace MadeByMe.Application.Services.Implementations
                     LastMessage = lastMessageText,
                     LastMessageTime = c.LastMessageAt,
                     IsPinned = c.BuyerId == userId ? c.IsPinnedByBuyer : c.IsPinnedBySeller,
+                    UnreadCount = unreadCount,
                 };
             }).ToList();
 
@@ -89,6 +94,42 @@ namespace MadeByMe.Application.Services.Implementations
             }
 
             await _chatRepo.SaveMessageAsync(message);
+
+            var chat = await _chatRepo.GetChatByIdAsync(dto.ChatId);
+            if (chat != null)
+            {
+                string? recipientId = chat.BuyerId == senderId ? chat.SellerId : chat.BuyerId;
+
+                string senderName = "Користувач";
+                string? senderPhoto = null;
+
+                if (chat.BuyerId == senderId && chat.Buyer != null)
+                {
+                    senderName = chat.Buyer.UserName ?? "Користувач";
+                    senderPhoto = chat.Buyer.ProfilePicture;
+                }
+                else if (chat.SellerId == senderId && chat.Seller != null)
+                {
+                    senderName = chat.Seller.UserName ?? "Користувач";
+                    senderPhoto = chat.Seller.ProfilePicture;
+                }
+
+                string msgContent = string.IsNullOrEmpty(dto.Content) ? "Файл" : dto.Content;
+                if (msgContent.Length > 50)
+                {
+                    msgContent = msgContent.Substring(0, 47) + "...";
+                }
+
+                if (!string.IsNullOrEmpty(recipientId))
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        recipientId,
+                        $"{senderName} - {msgContent}",
+                        $"/Chat/Room/{chat.Id}",
+                        senderPhoto);
+                }
+            }
+
             return message;
         }
 

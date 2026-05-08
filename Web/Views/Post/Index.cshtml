@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Каталог товарів";
+
+    bool hasActiveFilters = !string.IsNullOrEmpty(ViewBag.CurrentSearch) ||
+                            ViewBag.CurrentCategory != null ||
+                            !string.IsNullOrEmpty(ViewBag.CurrentSort);
 }
 
 <div class="mb-8">
@@ -20,84 +24,108 @@
         }
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <form asp-controller="Post" asp-action="Index" method="get" class="flex flex-col gap-5">
-            
-            <div class="flex items-center gap-6 px-2">
-                <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">Шукати:</span>
+    <div class="bg-white p-3 md:p-4 rounded-2xl shadow-sm border border-gray-100">
+        <form asp-controller="Post" asp-action="Index" method="get">
+
+            <div class="flex items-center gap-4 mb-4 px-2">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Шукати:</span>
 
                 <label class="relative flex items-center cursor-pointer">
                     <input type="radio" name="searchType" value="products" class="peer sr-only" onchange="this.form.submit()"
                            @(ViewBag.CurrentSearchType == "products" || string.IsNullOrEmpty(ViewBag.CurrentSearchType) ? "checked" : "")>
-                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 text-gray-600 font-medium peer-checked:bg-orange-100 peer-checked:text-orange-700 peer-checked:font-bold transition shadow-sm border border-transparent peer-checked:border-orange-200">
-                        <i class="fa-solid fa-box"></i> Товари
+                    <div class="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-transparent text-gray-500 font-medium peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:font-bold transition border border-transparent peer-checked:border-orange-200 hover:bg-gray-50">
+                        <i class="fa-solid fa-box text-sm"></i> Товари
                     </div>
                 </label>
 
                 <label class="relative flex items-center cursor-pointer">
                     <input type="radio" name="searchType" value="sellers" class="peer sr-only" onchange="this.form.submit()"
                            @(ViewBag.CurrentSearchType == "sellers" ? "checked" : "")>
-                    <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 text-gray-600 font-medium peer-checked:bg-orange-100 peer-checked:text-orange-700 peer-checked:font-bold transition shadow-sm border border-transparent peer-checked:border-orange-200">
-                        <i class="fa-solid fa-store"></i> Продавців
+                    <div class="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-transparent text-gray-500 font-medium peer-checked:bg-orange-50 peer-checked:text-orange-600 peer-checked:font-bold transition border border-transparent peer-checked:border-orange-200 hover:bg-gray-50">
+                        <i class="fa-solid fa-store text-sm"></i> Продавців
                     </div>
                 </label>
             </div>
-            
-            <div class="flex flex-wrap gap-4 items-center">
-                <div class="flex-1 min-w-[250px] relative">
+
+            <div class="flex flex-col lg:flex-row gap-3 items-center">
+
+                <div class="w-full lg:flex-1 relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                     <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch"
                            placeholder="@(ViewBag.CurrentSearchType == "sellers" ? "Введіть ім'я продавця..." : "Що ви шукаєте?")"
-                           class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium">
-                    <i class="fas fa-search absolute left-4 top-4 text-gray-400"></i>
+                           class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition font-medium text-gray-700">
                 </div>
 
-                <select name="categoryId" onchange="this.form.submit()"
-                        class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white outline-none cursor-pointer font-medium text-gray-700">
-                    <option value="">Всі категорії</option>
-                    @foreach (var item in (IEnumerable<SelectListItem>)ViewBag.Categories)
+                <div class="w-full lg:w-auto min-w-[220px] relative">
+                    <i class="fa-solid fa-layer-group absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <select name="categoryId" onchange="this.form.submit()"
+                            class="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white outline-none cursor-pointer font-medium text-gray-700 appearance-none">
+                        <option value="">Всі категорії</option>
+                        @foreach (var item in (IEnumerable<SelectListItem>)ViewBag.Categories)
+                        {
+                            <option value="@item.Value" selected="@(item.Value == ViewBag.CurrentCategory?.ToString() ? "selected" : null)">
+                                @item.Text
+                            </option>
+                        }
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                </div>
+
+                <div class="w-full lg:w-auto min-w-[220px] relative">
+                    <i class="fa-solid fa-arrow-down-a-z absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <select name="sortBy" onchange="this.form.submit()"
+                            class="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white outline-none cursor-pointer font-medium text-gray-700 appearance-none">
+                        <option value="" selected="@(ViewBag.CurrentSort == null ? "selected" : null)">Сортувати за</option>
+                        <option value="price_asc" selected="@(ViewBag.CurrentSort == "price_asc" ? "selected" : null)">Найдешевші</option>
+                        <option value="price_desc" selected="@(ViewBag.CurrentSort == "price_desc" ? "selected" : null)">Найдорожчі</option>
+                        <option value="rating" selected="@(ViewBag.CurrentSort == "rating" ? "selected" : null)">Найвищий рейтинг</option>
+                        <option value="newest" selected="@(ViewBag.CurrentSort == "newest" ? "selected" : null)">Новинки</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+                </div>
+
+                <div class="w-full lg:w-auto flex gap-3">
+                    <button type="submit" class="flex-1 lg:flex-none px-8 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition font-bold shadow-sm">
+                        Знайти
+                    </button>
+
+                    @if (hasActiveFilters)
                     {
-                        <option value="@item.Value" selected="@(item.Value == ViewBag.CurrentCategory?.ToString() ? "selected" : null)">
-                            @item.Text
-                        </option>
+                        <a href="/Post" class="flex-1 lg:flex-none px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-bold text-center border border-gray-200">
+                            Очистити пошук
+                        </a>
                     }
-                </select>
-
-                <select name="sortBy" onchange="this.form.submit()"
-                        class="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white outline-none cursor-pointer font-medium text-gray-700">
-                    <option value="" selected="@(ViewBag.CurrentSort == null ? "selected" : null)">Сортувати за</option>
-                    <option value="price_asc" selected="@(ViewBag.CurrentSort == "price_asc" ? "selected" : null)">Найдешевші</option>
-                    <option value="price_desc" selected="@(ViewBag.CurrentSort == "price_desc" ? "selected" : null)">Найдорожчі</option>
-                    <option value="rating" selected="@(ViewBag.CurrentSort == "rating" ? "selected" : null)">Найвищий рейтинг</option>
-                    <option value="newest" selected="@(ViewBag.CurrentSort == "newest" ? "selected" : null)">Новинки</option>
-                </select>
-
-                <button type="submit" class="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-sm">
-                    Знайти
-                </button>
-
-                <a href="/Post" class="text-sm font-bold text-gray-400 hover:text-orange-600 transition underline ml-2">Скинути</a>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
 <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
     @if (!Model.Any())
     {
-        <div class="col-span-full py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-            <div class="w-20 h-20 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-                <i class="fas fa-search"></i>
+        <div class="col-span-full py-24 flex flex-col items-center justify-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <div class="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                <i class="fa-solid fa-box-open text-5xl text-orange-400"></i>
             </div>
-            <p class="text-xl font-bold text-gray-500">Товарів не знайдено за вашим запитом.</p>
+
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Нічого не знайдено</h2>
+            <p class="text-gray-500 font-medium mb-8">За вашим запитом результатів немає.</p>
+
+            @if(hasActiveFilters)
+            {
+                <a href="/Post" class="px-8 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Скинути все
+                </a>
+            }
         </div>
     }
 
     @foreach (var post in Model)
     {
         <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-4 border border-gray-100 flex flex-col">
-
             <div class="relative w-full h-56 mb-4">
-
                 <a href="/Post/Details/@post.Id" class="block w-full h-full overflow-hidden rounded-xl bg-gray-100">
                     <img src="@post.PhotoUrl" alt="@post.Title" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                 </a>

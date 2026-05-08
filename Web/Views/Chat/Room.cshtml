@@ -121,18 +121,24 @@
                                 }
 
                                 <p class="text-sm font-medium leading-relaxed">@msg.Content</p>
-                                <div class="flex items-center justify-end gap-1 mt-2 opacity-60">
-                                    <span class="text-[9px] font-black uppercase">@msg.CreatedAt.ToString("HH:mm")</span>
-                                    @if (isMine) { <i class="fa-solid fa-check-double text-[10px]"></i> }
+
+                                <div class="flex items-center justify-end gap-1 mt-2 opacity-80">
+                        <span class="text-[9px] font-black uppercase @(isMine ? "text-orange-100" : "text-gray-400")">
+                            @msg.CreatedAt.ToString("HH:mm")
+                        </span>
+
+                                    @if (isMine)
+                                    {
+                                        @if (msg.IsRead) {
+                                            @* Коли прочитано — яскраві зелено-блакитні галочки *@
+                                            <i class="fa-solid fa-check-double text-[11px] text-green-300 message-status" title="Прочитано"></i>
+                                        } else {
+                                            @* Коли тільки доставлено — одна сіра або біла галочка *@
+                                            <i class="fa-solid fa-check text-[11px] text-orange-200 message-status" title="Доставлено"></i>
+                                        }
+                                    }
                                 </div>
                             </div>
-
-                            @if (isMine)
-                            {
-                                <div class="absolute top-0 @(isMine ? "-left-10" : "-right-10") opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="deleteMessage(@msg.Id)" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                                </div>
-                            }
                         }
                     </div>
                 </div>
@@ -172,177 +178,11 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chatHub")
-            .configureLogging(signalR.LogLevel.Information)
-            .build();
-
-        const chatId = "@currentChatId";
-        const currentUserId = "@currentUserId";
-
-        connection.on("ReceiveMessage", function (json) {
-            console.log("Отримано повідомлення з сервера:", json);
-            const msg = JSON.parse(json);
-            renderMessage(msg);
-        });
-
-        connection.start().then(() => {
-            console.log("SignalR успішно підключено! Заходимо в кімнату:", chatId);
-
-            connection.invoke("JoinChat", parseInt(chatId))
-                .then(() => console.log("Успішно приєднано до групи чату!"))
-                .catch(err => console.error("Помилка приєднання до групи:", err));
-
-        }).catch(err => {
-            console.error("КРИТИЧНА ПОМИЛКА підключення SignalR:", err);
-        });
-        
-        document.getElementById("chatForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const input = document.getElementById("messageInput");
-            if (!input.value.trim() && !document.getElementById("fileInput").files.length) return;
-
-            const formData = new FormData(e.target);
-            const response = await fetch("/Chat/SendMessage", { method: "POST", body: formData });
-            
-            if (response.ok) {
-                e.target.reset();
-                resetFile();
-                messageInput.style.height = "auto";
-                scrollToBottom();
-            }
-        });
-
-        function renderMessage(msg) {
-            const container = document.getElementById("messagesContainer");
-            const isMine = msg.senderId === currentUserId;
-            
-            let timeText = "ЩОЙНО";
-            if (msg.createdAt) {
-                const d = new Date(msg.createdAt);
-                timeText = d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
-            }
-            
-            const html = `
-        <div class="flex ${isMine ? 'justify-end' : 'justify-start'} group">
-            <div class="max-w-[80%] md:max-w-[60%]">
-                <div class="p-4 ${isMine ? 'bg-orange-600 text-white rounded-2xl rounded-tr-none shadow-lg shadow-orange-100' : 'bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm'}">
-                    ${msg.filePath ? (msg.fileType === 'Image' ? `<img src="${msg.filePath}" class="rounded-xl w-full h-auto mb-2" />` : `<a href="${msg.filePath}" target="_blank" class="flex items-center gap-3 p-3 bg-black/10 rounded-xl text-xs font-bold transition mb-2"><i class="fa-solid fa-file-arrow-down text-lg"></i><span class="truncate">${msg.fileName}</span></a>`) : ''}
-                    <p class="text-sm font-medium leading-relaxed">${msg.content || ''}</p>
-                    <div class="flex items-center justify-end gap-1 mt-2 opacity-60">
-                        <span class="text-[9px] font-black uppercase">${timeText}</span>
-                        ${isMine ? '<i class="fa-solid fa-check-double text-[10px]"></i>' : ''}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-            container.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
-        }
-
-        function handleFileSelect() {
-            const file = document.getElementById("fileInput").files[0];
-            if (file) {
-                document.getElementById("fileName").innerText = file.name;
-                document.getElementById("filePreview").classList.remove("hidden");
-            }
-        }
-
-        function resetFile() {
-            document.getElementById("fileInput").value = "";
-            document.getElementById("filePreview").classList.add("hidden");
-        }
-
-        function scrollToBottom() {
-            const container = document.getElementById("messagesContainer");
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function deleteMessage(id) {
-            if (!confirm("Видалити це повідомлення для всіх?")) return;
-            const res = await fetch(`/Chat/DeleteMessage?messageId=${id}&forEveryone=true`, { method: 'POST' });
-            if (res.ok) location.reload();
-        }
-
-        scrollToBottom();
-
-        async function togglePin(id) {
-            const response = await fetch(`/Chat/TogglePin?chatId=${id}`, {
-                method: 'POST'
-            });
-
-            if (response.ok) {
-                location.reload();
-            } else {
-                console.error("Помилка при закріпленні чату");
-            }
-}
-        
-        function toggleMenu() {
-            const menu = document.getElementById("chatMenu");
-            menu.classList.toggle("hidden");
-        }
-        
-        document.addEventListener("click", function(event) {
-            const menu = document.getElementById("chatMenu");
-            const button = menu.previousElementSibling;
-            if (!menu.contains(event.target) && !button.contains(event.target)) {
-                menu.classList.add("hidden");
-            }
-        });
-        
-        async function confirmDeleteChat(forEveryone) {
-            const text = forEveryone ? "Видалити цей чат для вас і для співрозмовника?" : "Видалити цей чат тільки для себе?";
-            if (!confirm(text)) return;
-
-            const response = await fetch(`/Chat/DeleteChat?chatId=${chatId}&forEveryone=${forEveryone}`, {
-                method: 'POST'
-            });
-
-            if (response.ok) {
-                window.location.href = "/Chat"; 
-            } else {
-                alert("Помилка видалення чату.");
-            }
-        }
-        
-        const messageInput = document.getElementById("messageInput");
-
-        messageInput.addEventListener("input", function () {
-            this.style.height = "auto";
-            this.style.height = (this.scrollHeight) + "px"; 
-        });
-
-        const interlocutorId = "@interlocutorId";
-        
-        function updateStatusUI(isOnline) {
-            const statusEl = document.getElementById("userStatus");
-            if (isOnline) {
-                statusEl.textContent = "В мережі";
-                statusEl.className = "text-[10px] text-green-500 font-bold uppercase tracking-widest mt-1 transition-colors duration-300";
-            } else {
-                statusEl.textContent = "Офлайн";
-                statusEl.className = "text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 transition-colors duration-300";
-            }
-}
-        
-        connection.on("UserOnline", function(userId) {
-            if (userId === interlocutorId) updateStatusUI(true);
-        });
-
-        connection.on("UserOffline", function(userId) {
-            if (userId === interlocutorId) updateStatusUI(false);
-        });
-        
-        connection.start().then(async () => {
-            connection.invoke("JoinChat", parseInt(chatId));
-            
-            const isOnline = await connection.invoke("CheckUserOnline", interlocutorId);
-            updateStatusUI(isOnline);
-        });
-        
+        window.chatConfig = {
+            chatId: "@currentChatId",
+            currentUserId: "@currentUserId",
+            interlocutorId: "@interlocutorId"
+        };
     </script>
-    
-    
+    <script src="~/js/chat.js" asp-append-version="true"></script>
 }

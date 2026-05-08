@@ -114,8 +114,8 @@
                             <div class="flex flex-col sm:flex-row gap-3">
                                 @if (isOwner)
                                 {
-                                    <a href="/Post/Edit/@Model.Post.Id" class="flex-1 text-center bg-white text-gray-700 border-2 border-gray-200 px-6 py-3 rounded-xl font-bold hover:border-gray-300 transition">
-                                        <i class="fa-solid fa-pen mr-2"></i> Редагувати
+                                    <a href="/Post/Edit/@Model.Post.Id" class="flex-1 text-center bg-gray-100 border border-gray-200 shadow-sm text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 hover:text-gray-900 transition">
+                                         <i class="fa-solid fa-pen mr-2"></i> Редагувати
                                     </a>
                                 }
                                 <form asp-controller="Post" asp-action="Delete" asp-route-id="@Model.Post.Id" method="post" class="flex-1">
@@ -154,16 +154,17 @@
 
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <form asp-controller="Comment" asp-action="Create" method="post" class="bg-gray-50 p-6 rounded-2xl mb-10 border border-gray-100">
+                <form asp-controller="Comment" asp-action="Create" method="post" class="bg-gray-50 p-6 rounded-2xl mb-10 border border-gray-100" onsubmit="if(document.getElementById('ratingInput').value == 0) { alert('Будь ласка, виставте оцінку зірочками!'); return false; }">
                     <input type="hidden" name="PostId" value="@Model.Post.Id" />
-                    <input type="hidden" id="ratingInput" name="Stars" value="5" />
+    
+                    <input type="hidden" id="ratingInput" name="Stars" value="0" />
 
                     <div class="mb-4 flex items-center">
                         <label class="text-sm font-bold text-gray-700 uppercase tracking-widest mr-4">Оцінка:</label>
                         <div class="flex space-x-1" id="starRating">
                             @for (int i = 1; i <= 5; i++)
                             {
-                                <i class="fa-solid fa-star text-2xl cursor-pointer text-yellow-400 hover:scale-110 transition" data-value="@i"></i>
+                                <i class="fa-solid fa-star text-2xl cursor-pointer text-gray-300 hover:scale-110 transition" data-value="@i"></i>
                             }
                         </div>
                     </div>
@@ -172,8 +173,8 @@
                         <textarea name="Content" rows="3" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none font-medium" placeholder="Поділіться своїми враженнями від виробу..."></textarea>
                     </div>
 
-                    <button type="submit" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-sm">
-                        Надіслати відгук
+                    <button type="submit" class="bg-orange-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg transform hover:-translate-y-0.5 active:scale-95 flex items-center">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Надіслати відгук
                     </button>
                 </form>
             }
@@ -228,38 +229,3 @@
         </div>
     }
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const stars = document.querySelectorAll('#starRating i');
-        const ratingInput = document.getElementById('ratingInput');
-
-        if(stars.length > 0) {
-            stars.forEach(star => {
-                star.addEventListener('mouseover', function() {
-                    highlightStars(this.getAttribute('data-value'));
-                });
-                star.addEventListener('mouseout', function() {
-                    highlightStars(ratingInput.value);
-                });
-                star.addEventListener('click', function() {
-                    ratingInput.value = this.getAttribute('data-value');
-                    highlightStars(this.getAttribute('data-value'));
-                });
-            });
-
-            function highlightStars(count) {
-                stars.forEach(star => {
-                    const value = star.getAttribute('data-value');
-                    if (value <= count) {
-                        star.classList.remove('text-gray-300');
-                        star.classList.add('text-yellow-400');
-                    } else {
-                        star.classList.remove('text-yellow-400');
-                        star.classList.add('text-gray-300');
-                    }
-                });
-            }
-        }
-    });
-</script>

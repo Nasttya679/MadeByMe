@@ -7,7 +7,7 @@
 <div class="max-w-4xl mx-auto py-8">
     <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
         <div class="h-24 bg-gradient-to-r from-orange-400 to-orange-600"></div>
-        
+
         <div class="p-8 -mt-12">
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8 flex justify-between items-center relative z-10">
                 <div class="flex items-center">
@@ -23,7 +23,7 @@
 
             <form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-8">
                 @Html.AntiForgeryToken()
-                
+
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mb-6 text-sm text-red-700">
@@ -36,28 +36,34 @@
                     <div class="space-y-6">
                         <div>
                             <label asp-for="Title" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Назва товару</label>
-                            <input asp-for="Title" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-medium" placeholder="Наприклад: В'язаний кіт" />
+                            <input asp-for="Title" class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-medium" placeholder="Наприклад: В'язаний кіт" />
                             <span asp-validation-for="Title" class="mt-1 text-sm text-red-600 font-medium"></span>
                         </div>
 
                         <div>
                             <label asp-for="Description" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Опис товару</label>
-                            <textarea asp-for="Description" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-medium" placeholder="Опишіть матеріал, розміри..."></textarea>
+                            <textarea asp-for="Description" rows="5" class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-medium" placeholder="Опишіть матеріал, розміри..."></textarea>
                             <span asp-validation-for="Description" class="mt-1 text-sm text-red-600 font-medium"></span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label asp-for="Price" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Ціна (₴)</label>
-                                <input asp-for="Price" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-black text-orange-600 text-lg" placeholder="0.00" />
+                                <input asp-for="Price" type="text" class="w-full px-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-black text-orange-600 text-lg" placeholder="0.00" />
                                 <span asp-validation-for="Price" class="mt-1 text-sm text-red-600 font-medium"></span>
                             </div>
-                            <div>
-                                <label asp-for="CategoryId" class="block text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Категорія</label>
-                                <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition font-medium bg-white">
-                                    <option value="">Оберіть...</option>
-                                </select>
-                                <span asp-validation-for="CategoryId" class="mt-1 text-sm text-red-600 font-medium"></span>
+                            <div class="mb-6">
+                                <label asp-for="CategoryId" class="block text-sm font-semibold text-gray-700 mb-2">Категорія</label>
+                                <div class="relative">
+                                    <select asp-for="CategoryId" asp-items="ViewBag.Categories"
+                                            class="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition shadow-sm text-gray-900 appearance-none cursor-pointer">
+                                        <option value="">Оберіть категорію</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                        <i class="fa-solid fa-chevron-down text-sm"></i>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="CategoryId" class="mt-1 text-sm text-red-600 font-medium block"></span>
                             </div>
                         </div>
                     </div>
@@ -76,7 +82,7 @@
                                 <p class="text-xs text-gray-500 mt-1">PNG, JPG до 10MB</p>
                                 <p class="text-xs text-gray-400 mt-2 font-medium">(Залиште порожнім, щоб зберегти поточне фото)</p>
                             </div>
-                            
+
                             <div id="imagePreview" class="absolute inset-0 hidden p-2">
                                 <img id="preview" src="#" alt="Preview" class="w-full h-full object-cover rounded-xl shadow-sm">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center cursor-pointer" onclick="document.getElementById('Photo').click()">
@@ -103,24 +109,4 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        function previewImage(input) {
-            const preview = document.getElementById('preview');
-            const previewContainer = document.getElementById('imagePreview');
-            const uploadPrompt = document.getElementById('uploadPrompt');
-            
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    previewContainer.classList.remove('hidden');
-                    uploadPrompt.classList.add('hidden');
-                }
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                previewContainer.classList.add('hidden');
-                uploadPrompt.classList.remove('hidden');
-            }
-        }
-    </script>
 }

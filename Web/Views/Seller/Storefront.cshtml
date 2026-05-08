@@ -4,79 +4,97 @@
     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
     bool isOwner = currentUserId == Model.SellerId;
     bool isAdmin = User.IsInRole("Admin");
+    bool hasSearch = !string.IsNullOrEmpty(ViewBag.CurrentSearch as string);
 }
 
-<div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10 mb-12">
-        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
-            
-            <div class="shrink-0">
-                @if (!string.IsNullOrEmpty(Model.SellerAvatar))
-                {
-                    <img src="@Model.SellerAvatar" alt="@Model.SellerName" class="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-orange-50 shadow-md" />
-                }
-                else
-                {
-                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-5xl md:text-6xl font-extrabold shadow-md">
-                        @(Model.SellerName?.Substring(0, 1).ToUpper() ?? "S")
-                    </div>
-                }
-            </div>
-            
-            <div class="flex-1 text-center md:text-left w-full">
-                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">@Model.SellerName</h1>
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 mb-12 overflow-hidden">
+
+        <div class="h-32 md:h-48 w-full bg-gradient-to-r from-orange-100 via-orange-50 to-white relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-48 h-48 bg-orange-200 rounded-full mix-blend-multiply filter blur-2xl opacity-60"></div>
+            <div class="absolute -bottom-10 left-10 w-40 h-40 bg-yellow-200 rounded-full mix-blend-multiply filter blur-2xl opacity-60"></div>
+        </div>
+
+        <div class="px-6 md:px-10 pb-8 relative">
+            <div class="flex flex-col md:flex-row items-center md:items-center gap-5 md:gap-6 -mt-16 md:-mt-20 relative z-10">
+
+                <div class="shrink-0">
+                    @if (!string.IsNullOrEmpty(Model.SellerAvatar))
+                    {
+                        <img src="@Model.SellerAvatar" alt="@Model.SellerName" class="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-md bg-white" />
+                    }
+                    else
+                    {
+                        <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-5xl md:text-6xl font-extrabold shadow-md border-4 border-white">
+                            @(Model.SellerName?.Substring(0, 1).ToUpper() ?? "S")
+                        </div>
+                    }
+                </div>
+
+                <div class="flex-1 text-center md:text-left">
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight drop-shadow-sm mt-2 md:mt-0">@Model.SellerName</h1>
+                </div>
+            </div>
+
+            <div class="mt-6 md:mt-8 w-full">
                 @if (isOwner)
                 {
-                    <div id="viewDescriptionBlock" class="mt-4 w-full">
-                        <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-4">
-                            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">@(string.IsNullOrEmpty(Model.SellerDescription) ? "Ви ще не додали опис своєї вітрини. Зробіть це, щоб покупці знали більше про ваші вироби!" : Model.SellerDescription)</p>
+                    <div id="viewDescriptionBlock" class="w-full">
+                        <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 mb-4 shadow-inner">
+                            <p class="text-gray-700 text-sm font-medium leading-relaxed whitespace-pre-wrap">@(string.IsNullOrEmpty(Model.SellerDescription) ? "Ви ще не додали опис своєї вітрини. Зробіть це, щоб покупці знали більше про ваші вироби!" : Model.SellerDescription)</p>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <button type="button" onclick="toggleDescriptionEdit(true)" class="text-sm px-5 py-2.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition shadow-md flex items-center justify-center w-full sm:w-auto">
-                                <i class="fa-solid fa-pen mr-2"></i> Редагувати опис
+                            <button type="button" onclick="toggleDescriptionEdit(true)" class="text-sm px-6 py-2.5 bg-[#ea580c] text-white font-bold rounded-xl hover:bg-[#c2410c] transition shadow-sm flex items-center justify-center w-full sm:w-auto">
+                                <i class="fa-solid fa-pen mr-2 text-white/90"></i> Редагувати опис
                             </button>
-        
-                            <a href="/Post/DeletedPosts" class="text-sm px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition flex items-center shadow-sm w-full sm:w-auto justify-center">
-                                <i class="fa-solid fa-trash-can mr-2 text-gray-500"></i> Кошик видалених товарів
+                            <a href="/Post/DeletedPosts" class="text-sm px-6 py-2.5 bg-white text-gray-700 font-bold rounded-xl hover:bg-gray-50 border border-gray-200 transition flex items-center justify-center shadow-sm w-full sm:w-auto">
+                                <i class="fa-solid fa-trash-can mr-2 text-gray-400"></i> Кошик видалених товарів
                             </a>
                         </div>
                     </div>
-                    
-                    <form id="editDescriptionForm" asp-controller="Seller" asp-action="EditDescription" method="post" class="mt-4 w-full hidden">
+
+                    <form id="editDescriptionForm" asp-controller="Seller" asp-action="EditDescription" method="post" class="w-full hidden">
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Опис вашого магазину (бачать усі)</label>
+                        <textarea id="sellerDescriptionInput" name="Description" rows="3" data-original="@Model.SellerDescription" class="w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition text-sm text-gray-700 bg-gray-50 focus:bg-white resize-y shadow-inner" placeholder="Розкажіть про свій магазин...">@Model.SellerDescription</textarea>
 
-                        <textarea id="sellerDescriptionInput" name="Description" rows="4" data-original="@Model.SellerDescription" class="w-full px-5 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none transition text-gray-700 bg-gray-50 focus:bg-white resize-y shadow-inner" placeholder="Розкажіть про свій магазин, матеріали, філософію або особливості створення ваших товарів...">@Model.SellerDescription</textarea>
-
-                        <div class="mt-4 flex flex-col sm:flex-row justify-end items-center gap-3">
-                            <button type="button" onclick="toggleDescriptionEdit(false)" class="text-sm px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition shadow-sm w-full sm:w-auto">
-                                Скасувати
+                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                            <button type="submit" class="text-sm px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md w-full sm:w-auto transform hover:-translate-y-0.5">
+                                <i class="fa-solid fa-check mr-2"></i> Зберегти опис
                             </button>
-                            <button type="submit" class="text-sm px-6 py-2.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition shadow-md w-full sm:w-auto">
-                                Зберегти опис
+                            <button type="button" onclick="toggleDescriptionEdit(false)" class="text-sm px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition shadow-sm w-full sm:w-auto">
+                                Скасувати
                             </button>
                         </div>
                     </form>
                 }
                 else
                 {
-                    <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 mt-4">
-                        <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">@(string.IsNullOrEmpty(Model.SellerDescription) ? "Цей продавець ще не додав опис своєї вітрини." : Model.SellerDescription)</p>
+                    <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 mb-4">
+                        <p class="text-gray-700 text-sm font-medium leading-relaxed whitespace-pre-wrap">@(string.IsNullOrEmpty(Model.SellerDescription) ? "Цей продавець ще не додав опис своєї вітрини." : Model.SellerDescription)</p>
                     </div>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <a href="/Chat/GetOrCreateChat?targetUserId=@Model.SellerId" class="text-sm px-6 py-2.5 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-xl hover:bg-orange-50 transition shadow-sm flex items-center justify-center w-full sm:w-auto transform hover:-translate-y-0.5">
+                                <i class="fa-regular fa-comment-dots text-lg mr-2"></i> Написати майстру
+                            </a>
+                        </div>
+                    }
                 }
             </div>
         </div>
     </div>
 
-    <div class="flex items-center justify-between mb-8 border-b border-gray-200 pb-4">
-        <h2 class="text-2xl font-extrabold text-gray-900">
-            Асортимент <span class="text-orange-500 ml-1">@Model.Posts.Count</span>
+    <div class="flex flex-col sm:flex-row items-center justify-between mb-8 border-b border-gray-100 pb-4 gap-4">
+        <h2 class="text-2xl font-extrabold text-gray-900 flex items-center">
+            Асортимент <span class="bg-gray-100 text-gray-600 text-sm py-1 px-3 rounded-full ml-3 font-bold">@Model.Posts.Count товарів</span>
         </h2>
         @if (isOwner)
         {
-            <a href="/Post/Create" class="text-sm font-bold text-orange-600 bg-orange-50 px-4 py-2 rounded-xl hover:bg-orange-100 transition">
-                <i class="fa-solid fa-plus mr-1"></i> Додати товар
+            <a href="/Post/Create" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 rounded-xl shadow-md font-bold text-white bg-orange-600 hover:bg-orange-700 transition transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus mr-2"></i> Додати товар
             </a>
         }
     </div>
@@ -87,10 +105,10 @@
                 <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
             </div>
             <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch"
-                   class="block w-full pl-11 pr-10 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition text-sm bg-gray-50 focus:bg-white shadow-inner outline-none"
+                   class="block w-full pl-11 pr-10 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition text-sm bg-white shadow-sm outline-none font-medium"
                    placeholder="Знайти товар на цій вітрині..." />
-            
-            @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch as string))
+
+            @if (hasSearch)
             {
                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <a asp-controller="Seller" asp-action="Storefront" asp-route-id="@Model.SellerId" title="Скинути пошук"
@@ -104,31 +122,47 @@
 
     @if (!Model.Posts.Any())
     {
-        <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
-            <div class="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
-                <i class="fa-solid fa-store-slash"></i>
+        if (hasSearch)
+        {
+            <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
+                <div class="w-20 h-20 bg-orange-50 text-orange-400 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-inner">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-gray-900 mb-2">Нічого не знайдено</h3>
+                <p class="text-gray-500 font-medium mb-6">За вашим запитом результатів на цій вітрині немає.</p>
+                <a href="/Seller/Storefront/@Model.SellerId" class="px-8 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition shadow-md inline-block transform hover:-translate-y-0.5">
+                    Скинути пошук
+                </a>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">На вітрині порожньо</h3>
-            <p class="text-gray-500 font-medium">Продавець ще не додав активних товарів для продажу.</p>
-        </div>
+        }
+        else
+        {
+            <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
+                <div class="w-20 h-20 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl shadow-inner">
+                    <i class="fa-solid fa-store-slash"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-gray-900 mb-2">На вітрині порожньо</h3>
+                <p class="text-gray-500 font-medium">Продавець ще не додав активних товарів для продажу.</p>
+            </div>
+        }
     }
     else
     {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @foreach (var post in Model.Posts)
             {
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
-                    
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full">
+
                     <div class="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
                         <a href="/Post/Details/@post.Id" class="block w-full h-full">
                             <img src="@post.PhotoUrl" alt="@post.Title" class="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-in-out" />
                         </a>
 
-                        @if (User.Identity?.IsAuthenticated == true && !isOwner)                        {
+                        @if (User.Identity?.IsAuthenticated == true && !isOwner)
+                        {
                             <button type="button"
                                     onclick="toggleWishlist(this, @post.Id)"
                                     class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm w-10 h-10 flex items-center justify-center rounded-full shadow-sm hover:bg-white transition-all z-10 focus:outline-none hover:scale-110">
-
                                 @if (post.IsFavorite)
                                 {
                                     <i class="fa-solid fa-heart text-xl text-red-500"></i>
@@ -140,40 +174,38 @@
                             </button>
                         }
                     </div>
-                    
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="flex justify-between items-start mb-3 gap-2">
-                            <h3 class="font-extrabold text-gray-900 text-lg leading-tight line-clamp-2">
-                                <a href="/Post/Details/@post.Id" class="hover:text-orange-600 transition">@post.Title</a>
-                            </h3>
-                        </div>
-                        
+
+                    <div class="p-5 flex flex-col flex-grow">
+                        <h3 class="font-bold text-gray-900 text-lg leading-tight line-clamp-1 mb-2">
+                            <a href="/Post/Details/@post.Id" class="hover:text-orange-600 transition">@post.Title</a>
+                        </h3>
+
                         <p class="text-sm text-gray-500 line-clamp-2 mb-4 flex-grow">@post.Description</p>
 
-                        <div class="mt-auto border-t border-gray-100 pt-4 flex items-center justify-between">
-                            <span class="text-xl font-black text-orange-600">@post.Price.ToString("N0") <span class="text-sm">₴</span></span>
+                        <div class="mt-auto pt-4 flex flex-col gap-3 border-t border-gray-50">
+                            <span class="text-2xl font-black text-orange-600">@post.Price.ToString("N0") <span class="text-sm">₴</span></span>
 
                             @if (isOwner)
                             {
-                                <div class="flex gap-2">
-                                    <a href="/Post/Edit/@post.Id" class="flex items-center justify-center text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-3 py-2 rounded-lg transition shadow-sm" title="Редагувати">
-                                        <i class="fa-solid fa-pen"></i>
+                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                    <a href="/Post/Edit/@post.Id" class="flex items-center justify-center text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-600 hover:text-white px-3 py-2.5 rounded-xl transition shadow-sm" title="Редагувати">
+                                        <i class="fa-solid fa-pen mr-2"></i> Змінити
                                     </a>
-                                    
-                                    <form asp-controller="Post" asp-action="Delete" asp-route-id="@post.Id" method="post" onsubmit="return confirm('Ви впевнені, що хочете перемістити цей товар у кошик?');">
+
+                                    <form asp-controller="Post" asp-action="Delete" asp-route-id="@post.Id" method="post" onsubmit="return confirm('Ви впевнені, що хочете перемістити цей товар у кошик?');" class="m-0">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="flex items-center justify-center text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg transition shadow-sm" title="Видалити">
-                                            <i class="fa-solid fa-trash-can"></i>
+                                        <button type="submit" class="w-full flex items-center justify-center text-xs font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-600 hover:text-white px-3 py-2.5 rounded-xl transition shadow-sm" title="Видалити">
+                                            <i class="fa-solid fa-trash-can mr-2"></i> Видалити
                                         </button>
                                     </form>
                                 </div>
                             }
                             else
                             {
-                                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="m-0">
+                                <form asp-controller="Cart" asp-action="AddToCart" method="post" class="m-0 mt-2">
                                     <input type="hidden" name="PostId" value="@post.Id" />
                                     <input type="hidden" name="Quantity" value="1" />
-                                    <button type="submit" class="flex items-center justify-center text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-xl transition shadow-sm">
+                                    <button type="submit" class="w-full flex items-center justify-center text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 px-4 py-3 rounded-xl transition shadow-sm transform hover:-translate-y-0.5">
                                         <i class="fa-solid fa-cart-plus mr-2"></i> В кошик
                                     </button>
                                 </form>
@@ -185,24 +217,3 @@
         </div>
     }
 </div>
-
-@if (isOwner)
-{
-    <script>
-        function toggleDescriptionEdit(showEdit) {
-            const viewBlock = document.getElementById('viewDescriptionBlock');
-            const editForm = document.getElementById('editDescriptionForm');
-            const inputField = document.getElementById('sellerDescriptionInput');
-
-            if (showEdit) {
-                viewBlock.classList.add('hidden');
-                editForm.classList.remove('hidden');
-                inputField.focus(); 
-            } else {
-                viewBlock.classList.remove('hidden');
-                editForm.classList.add('hidden');
-                inputField.value = inputField.getAttribute('data-original');
-            }
-        }
-    </script>
-}

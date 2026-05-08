@@ -16,6 +16,7 @@ namespace MadeByMe.Tests.Services
     {
         private readonly Mock<IOrderRepository> _orderRepoMock;
         private readonly Mock<ICartService> _cartServiceMock;
+        private readonly Mock<INotificationService> _notificationServiceMock;
         private readonly OrderService _orderService;
 
         public OrderServiceTests()
@@ -23,7 +24,8 @@ namespace MadeByMe.Tests.Services
             Log.Logger = Serilog.Core.Logger.None;
             _orderRepoMock = new Mock<IOrderRepository>();
             _cartServiceMock = new Mock<ICartService>();
-            _orderService = new OrderService(_orderRepoMock.Object, _cartServiceMock.Object);
+            _notificationServiceMock = new Mock<INotificationService>();
+            _orderService = new OrderService(_orderRepoMock.Object, _cartServiceMock.Object, _notificationServiceMock.Object);
         }
 
         [Fact]
