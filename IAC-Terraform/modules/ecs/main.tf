@@ -1,6 +1,10 @@
 
 resource "aws_ecs_cluster" "main_cluster" {
   name = "MadeByMeApp-cluster"
+
+  tags = {
+    Name = "main-ecs-cluster-mbm"
+  }
 }
 
 
@@ -47,7 +51,7 @@ resource "aws_ecs_task_definition" "app_task" {
   ])
 
   tags = {
-    Name = "App-task"
+    Name = "app-task-mbm"
   }
 }
 
@@ -75,6 +79,6 @@ resource "aws_ecs_service" "app_service" {
   depends_on = [var.listener_arn, var.database_id]
 
   tags = {
-    Name = "App-service"
+    Name = "app-service-mbm"
   }
 }

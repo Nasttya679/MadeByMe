@@ -5,7 +5,7 @@ resource "aws_vpc" "main_vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "main-vpc"
+    Name = "main-vpc-mbm"
   }
 }
 
@@ -22,7 +22,7 @@ resource "aws_subnet" "public_subnets" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "public-subnet-${each.key + 1}"
+    Name = "public-subnet-${each.key + 1}-mbm"
   }
 }
 
@@ -38,7 +38,7 @@ resource "aws_subnet" "private_db_subnets" {
   availability_zone = element(var.available_zones_list, each.key % length(var.available_zones_list))
 
   tags = {
-    Name = "private-subnet-database-${each.key + 1}"
+    Name = "private-subnet-database-${each.key + 1}-mbm"
   }
 }
 
@@ -47,7 +47,7 @@ resource "aws_internet_gateway" "main_igw" {
   vpc_id = aws_vpc.main_vpc.id
 
   tags = {
-    Name = "main-igw"
+    Name = "main-igw-mbm"
   }
 }
 
@@ -56,7 +56,7 @@ resource "aws_eip" "main_eip" {
   domain = "vpc"
 
   tags = {
-    Name = "main-eip"
+    Name = "main-eip-mbm"
   }
 }
 
@@ -64,6 +64,10 @@ resource "aws_eip" "main_eip" {
 resource "aws_nat_gateway" "main_nat" {
   allocation_id = aws_eip.main_eip.id
   subnet_id     = values(aws_subnet.public_subnets)[0].id
+
+  tags = {
+    Name = "main-nat-mbm"
+  }
 }
 
 
@@ -76,7 +80,7 @@ resource "aws_route_table" "main_public_route_table" {
   }
 
   tags = {
-    Name = "main-public-route-table"
+    Name = "main-public-route-table-mbm"
   }
 }
 
@@ -98,7 +102,7 @@ resource "aws_route_table" "main_private_route_table" {
   }
 
   tags = {
-    Name = "main-private-route-table"
+    Name = "main-private-route-table-mbm"
   }
 }
 

@@ -7,6 +7,10 @@ resource "aws_appautoscaling_target" "app_scaling_target" {
   resource_id        = "service/${var.ecs_cluster_name}/${var.ecs_app_service_name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace   = "ecs"
+
+  tags = {
+    Name = "main-ecs-sc-target-mbm"
+  }
 }
 
 

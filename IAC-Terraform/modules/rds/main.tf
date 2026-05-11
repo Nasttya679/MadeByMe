@@ -4,7 +4,7 @@ resource "aws_db_subnet_group" "db_subnets" {
   subnet_ids = var.private_subnet_db_ids
 
   tags = {
-    Name = "database-subnet-group"
+    Name = "db-sg-mbm"
   }
 }
 
@@ -22,4 +22,8 @@ resource "aws_db_instance" "postgres_db" {
   db_subnet_group_name        = aws_db_subnet_group.db_subnets.name
   skip_final_snapshot         = true
   multi_az                    = true
+
+  tags = {
+    Name = "postgres-db-mbm"
+  }
 }

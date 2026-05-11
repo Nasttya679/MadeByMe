@@ -1,0 +1,35 @@
+name: "Application: CI (.NET)"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore: [ "IAC-Terraform/**" ] 
+
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+
+  quality-check:
+
+    name: "Build & Test (.NET 8)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: "NuGet: Restore Dependencies"
+        run: dotnet restore
+
+      - name: "Build: Compilation"
+        run: dotnet build --no-restore -c Release
+
+      - name: "Test: Run Unit Tests"
+        run: dotnet test --no-build -c Release

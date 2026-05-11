@@ -7,7 +7,7 @@ resource "aws_lb" "main_lb" {
   internal           = false
 
   tags = {
-    Name = "Main-ALB"
+    Name = "alb-mbm"
   }
 }
 
@@ -29,7 +29,7 @@ resource "aws_lb_target_group" "app_tg" {
   }
 
   tags = {
-    Name = "App-tg"
+    Name = "app-tg-mbm"
   }
 }
 
@@ -58,7 +58,7 @@ resource "aws_lb_listener" "http_listener" {
   # }
 
   tags = {
-    Name = "Main-ALB-listener"
+    Name = "http-listener-alb-mbm"
   }
 }
 
@@ -74,6 +74,11 @@ resource "aws_lb_listener" "http_listener" {
 #   default_action {
 #     type             = "forward"
 #     target_group_arn = aws_lb_target_group.app_tg.arn
+#   }
+
+
+#   tags = {
+#     Name = "https-listener-alb-mbm"
 #   }
 # }
 
@@ -91,5 +96,9 @@ resource "aws_lb_listener" "http_listener" {
 #     host_header {
 #       values = ["madebyme.trainee-keycloack.store"]
 #     }
+#   }
+
+#   tags = {
+#     Name = "alb-listener-rule-mbm"
 #   }
 # }
