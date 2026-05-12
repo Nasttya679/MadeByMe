@@ -1,6 +1,6 @@
 
 output "alb_dns_name" {
-  description = "ALB access DNS name"
+  description = "Application load balancer DNS name"
   value       = "http://${module.alb.alb_dns_name}"
 }
 
