@@ -33,3 +33,47 @@ jobs:
 
       - name: "Test: Run Unit Tests"
         run: dotnet test --no-build -c Release
+  
+
+  docker-build-push:
+
+    name: "Docker: Build & Push to ECR"
+
+    environment: image-build-push
+
+    if: github.event_name == 'pull_request'
+    needs: quality-check 
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read 
+      id-token: write   
+
+
+    steps:
+
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "AWS Auth (OIDC)"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::971778147356:role/GitHubActionsTerraformRole
+          aws-region: us-east-1
+
+      - name: "Login to Amazon ECR"
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: "Extract Git Commit Hash"
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: "Build, Tag, and Push"
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: made-by-me-app
+          IMAGE_TAG: ${{ steps.vars.outputs.sha_short }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

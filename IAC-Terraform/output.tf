@@ -9,3 +9,4 @@ output "app_dns_name" {
   description = "MadeByMe App DNS URL"
   value       = "https://madebyme.trainee-keycloack.store"
 }
+
