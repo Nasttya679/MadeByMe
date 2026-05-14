@@ -178,6 +178,12 @@ namespace MadeByMe.Web.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                SetErrorMessage("Перевірте правильність введених даних.");
+                return RedirectToAction("Profile");
+            }
+
             if (dto.ProfilePictureFile != null && dto.ProfilePictureFile.Length > 0)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "avatars");

@@ -28,6 +28,11 @@ namespace MadeByMe.Web.Controllers
 
         public async Task<IActionResult> Orders(string status = "All", string? search = null, DateTime? date = null)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             Log.Information("Продавець {SellerId} переглядає журнал замовлень: статус={Status}, пошук={Search}, дата={Date}", CurrentUserId, status, search, date);
 
             var result = await _orderService.GetSellerOrdersAsync(CurrentUserId!, status, search, date);
@@ -49,6 +54,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int orderId, string newStatus)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var result = await _orderService.UpdateOrderStatusAsync(orderId, newStatus, CurrentUserId!);
 
             if (result.IsFailure)
@@ -118,6 +128,12 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditDescription(UpdateDescriptionDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                SetErrorMessage("Некоректні дані опису.");
+                return RedirectToAction("Storefront", new { id = CurrentUserId });
+            }
+
             var result = await _applicationUserService.UpdateSellerDescriptionAsync(CurrentUserId!, dto.Description);
 
             if (result.IsFailure)
@@ -137,6 +153,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveReturn(int orderId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var result = await _orderService.ApproveReturnAsync(orderId, CurrentUserId!);
             if (result.IsFailure)
             {

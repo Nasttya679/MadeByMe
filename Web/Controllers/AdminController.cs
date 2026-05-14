@@ -91,6 +91,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectComplaint(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var result = await _complaintService.RejectComplaintAsync(id);
 
             if (result.IsSuccess)
@@ -109,6 +114,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveAndPunish(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var result = await _complaintService.ApproveAndPunishAsync(id);
 
             if (result.IsSuccess)

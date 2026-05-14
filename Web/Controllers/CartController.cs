@@ -44,6 +44,11 @@ namespace MadeByMe.Web.Controllers
         [RateLimit(5)]
         public async Task<IActionResult> AddToCart(AddToCartDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var buyerId = CurrentUserId;
 
             var result = await _buyerCartService.AddToCartAsync(buyerId!, dto);
@@ -62,6 +67,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFromCart(int postId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var buyerId = CurrentUserId;
 
             var result = await _buyerCartService.RemoveFromCartAsync(buyerId!, postId);
@@ -81,6 +91,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateQuantity(int productId, string action)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var buyerId = CurrentUserId;
 
             var cartResult = await _cartService.GetUserCartEntityAsync(buyerId!);
@@ -190,6 +205,11 @@ namespace MadeByMe.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCartSilent(AddToCartDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var buyerId = CurrentUserId;
 
             var result = await _buyerCartService.AddToCartAsync(buyerId!, dto);

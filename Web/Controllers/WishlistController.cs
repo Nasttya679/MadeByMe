@@ -30,6 +30,11 @@ namespace MadeByMe.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleFavorite(int postId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             if (string.IsNullOrEmpty(CurrentUserId))
             {
                 return Json(new { success = false, message = "Не авторизовано" });
