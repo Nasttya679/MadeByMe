@@ -206,10 +206,11 @@ POSTGRES_DB=MadeByMeExam
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres12345
 
+DB_HOST=postgres
+DB_NAME=MadeByMeExam
+
 ASPNETCORE_ENVIRONMENT=Development
 ASPNETCORE_URLS=http://0.0.0.0:5000
-
-DEFAULT_CONNECTION=Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
 ```
 
 there are secret environment variables

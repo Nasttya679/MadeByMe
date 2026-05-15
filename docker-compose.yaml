@@ -40,7 +40,10 @@ services:
 
     env_file: .env
     environment:
-      - DEFAULT_CONNECTION=${DEFAULT_CONNECTION}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 
 volumes:
   postgres_data:

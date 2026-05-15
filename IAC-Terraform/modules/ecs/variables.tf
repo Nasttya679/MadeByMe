@@ -75,8 +75,18 @@ variable "app_task_resources" {
 }
 
 
-variable "app_default_connection_string" {
-  description = "App credentials connetion string"
+variable "db_host" {
+  description = "RDS database host"
+  type        = string
+}
+
+variable "db_name" {
+  description = "RDS database name"
+  type        = string
+}
+
+variable "db_secret_creds_arn" {
+  description = "Secrets Manager ARN for DB credentials"
   type        = string
 }
 

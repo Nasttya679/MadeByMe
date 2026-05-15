@@ -124,7 +124,9 @@ module "ecs" {
   app_task_resources              = "medium"
   database_id                     = module.rds.database_id
 
-  app_default_connection_string   = "Host=${module.rds.database_dns};Port=5432;Database=${var.db_name};Username=${local.postgres_creds.POSTGRES_USER};Password=${local.postgres_creds.POSTGRES_PASSWORD};"
+  db_host                         = module.rds.database_dns
+  db_name                         = var.db_name
+  db_secret_creds_arn             = data.aws_secretsmanager_secret.postgres_db.arn
 }
 
 

@@ -29,8 +29,14 @@ if (builder.Environment.IsDevelopment())
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
-string? connectionString = Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+var host = Environment.GetEnvironmentVariable("DB_HOST");
+var db = Environment.GetEnvironmentVariable("DB_NAME");
+var user = Environment.GetEnvironmentVariable("POSTGRES_USER");
+var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+
+string? connectionString =
+    Environment.GetEnvironmentVariable("DEFAULT_CONNECTION")
+    ?? $"Host={host};Port=5432;Database={db};Username={user};Password={password}";
 
 if (string.IsNullOrEmpty(connectionString))
 {

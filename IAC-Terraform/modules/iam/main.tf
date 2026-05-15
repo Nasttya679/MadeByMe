@@ -9,6 +9,32 @@ resource "aws_iam_role" "ecsTaskExecutionRole" {
 }
 
 
+resource "aws_iam_role_policy" "ecs_secrets_access" {
+  name = "ecs-secrets-access"
+  role = aws_iam_role.ecsTaskExecutionRole.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "kms:Decrypt"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
 resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
   role       = "${aws_iam_role.ecsTaskExecutionRole.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"

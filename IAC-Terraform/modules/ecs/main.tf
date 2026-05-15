@@ -36,15 +36,28 @@ resource "aws_ecs_task_definition" "app_task" {
           name  = "ASPNETCORE_ENVIRONMENT"
           value = "Production"
         },
-
-        {
-          name  = "DEFAULT_CONNECTION"
-          value = var.app_default_connection_string
-        }, 
-
         {
           name  = "ASPNETCORE_URLS"
           value = "http://0.0.0.0:5000"
+        },
+        {
+          name  = "DB_HOST"
+          value = var.db_host
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "POSTGRES_USER"
+          valueFrom = "${var.db_secret_creds_arn}:POSTGRES_USER::"
+        },
+        {
+          name      = "POSTGRES_PASSWORD"
+          valueFrom = "${var.db_secret_creds_arn}:POSTGRES_PASSWORD::"
         }
       ]
     }
